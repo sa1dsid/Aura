@@ -35,7 +35,7 @@ import com.aura.feature.home.presentation.format.formatHoursMinutesSeconds
 import com.aura.feature.home.presentation.format.formatMinutesSeconds
 
 private val RingDiameter = 226.dp
-private val RingStroke = 3.dp
+private val RingStroke = 4.5.dp
 
 @Composable
 fun TestRingButton(

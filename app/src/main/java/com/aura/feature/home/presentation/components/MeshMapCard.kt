@@ -19,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
@@ -41,9 +43,15 @@ fun MeshMapCard(
             Row(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(colors.surfaceElevated)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(colors.surfaceElevated, colors.surface),
+                        )
+                    )
+                    .border(0.5.dp, Color(0xFF17202A), RoundedCornerShape(8.dp))
+                    .height(25.dp)
+                    .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {

@@ -153,13 +153,14 @@ private fun TierDot(isActive: Boolean, modifier: Modifier = Modifier) {
     if (isActive) {
         Box(
             modifier = modifier
-                .size(14.dp)
+                .size(16.dp)
                 .drawBehind {
                     val radius = size.minDimension / 2f
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                colors.green.copy(alpha = 0.45f),
+                                colors.green.copy(alpha = 0.50f),
+                                colors.green.copy(alpha = 0.12f),
                                 Color.Transparent,
                             ),
                             radius = radius,
@@ -171,7 +172,7 @@ private fun TierDot(isActive: Boolean, modifier: Modifier = Modifier) {
         ) {
             Box(
                 Modifier
-                    .size(7.dp)
+                    .size(6.dp)
                     .clip(CircleShape)
                     .background(colors.green)
             )

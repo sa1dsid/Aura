@@ -32,10 +32,10 @@ val AuraDefaultTypography = AuraTypography(
     ),
     cardLabel = TextStyle(
         fontFamily = AuraFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 9.sp,
-        lineHeight = 12.sp,
-        letterSpacing = 1.1.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.12.sp,
     ),
     displayNumber = TextStyle(
         fontFamily = AuraFontFamily,

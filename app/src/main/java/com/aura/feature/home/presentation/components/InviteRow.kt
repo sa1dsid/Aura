@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraPill
@@ -59,25 +61,40 @@ fun InviteRow(
     }
 }
 
+private val AvatarCellSize = 44.dp
+private const val AvatarBodyFraction = 24f / 44f
+
+private val AvatarStep = 11.dp
+
 @Composable
 private fun FriendAvatars(count: Int, modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy((-9).dp),
+        horizontalArrangement = Arrangement.spacedBy(AvatarStep - AvatarCellSize),
     ) {
         repeat(count) {
             Box(
                 Modifier
-                    .size(28.dp)
+                    .size(AvatarCellSize)
                     .drawBehind {
-                        drawCircle(color = colors.background, radius = size.minDimension / 2f * 0.86f)
+                        val bodyRadius = size.minDimension / 2f * AvatarBodyFraction
+
+                        drawCircle(color = colors.surface, radius = bodyRadius + 1.dp.toPx())
+
                         drawPlanet(
-                            bodyFraction = 0.86f,
-                            bodyColor = colors.surfaceElevated,
-                            dotColor = colors.mapDotIdle,
-                            haloAlpha = 0f,
+                            bodyFraction = AvatarBodyFraction,
+                            bodyColor = colors.background,
+                            dotColor = colors.textTertiary,
+                            haloAlpha = 0.32f,
+                        )
+
+                        val rimWidth = 0.5.dp.toPx()
+                        drawCircle(
+                            color = Color.White,
+                            radius = bodyRadius - rimWidth / 2f,
+                            style = Stroke(width = rimWidth),
                         )
                     }
             )

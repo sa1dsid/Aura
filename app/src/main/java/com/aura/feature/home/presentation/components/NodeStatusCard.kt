@@ -62,7 +62,14 @@ fun NodeStatusCard(
                     text = "×${nodeStatus.referralRate.formatRate()} rate",
                     contentColor = colors.iceBlue,
                     borderColor = colors.iceBlue.copy(alpha = 0.60f),
-                    backgroundColor = colors.iceBlue.copy(alpha = 0.22f),
+                    backgroundBrush = Brush.linearGradient(
+                        colors = listOf(
+                            colors.iceBlue.copy(alpha = 0.34f),
+                            colors.iceBlue.copy(alpha = 0.13f),
+                        ),
+                        start = Offset(Float.POSITIVE_INFINITY, 0f),
+                        end = Offset(0f, Float.POSITIVE_INFINITY),
+                    ),
                     borderWidth = 0.5.dp,
                     horizontalPadding = 12.dp,
                     verticalPadding = 5.dp,

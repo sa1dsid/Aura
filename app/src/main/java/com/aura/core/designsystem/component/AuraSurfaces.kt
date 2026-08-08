@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -82,6 +83,7 @@ fun AuraPill(
     contentColor: Color = AuraTheme.colors.textPrimary,
     borderColor: Color = AuraTheme.colors.borderStrong,
     backgroundColor: Color = Color.Transparent,
+    backgroundBrush: Brush? = null,
     leadingDotColor: Color? = null,
     horizontalPadding: Dp = 10.dp,
     verticalPadding: Dp = 5.dp,
@@ -102,6 +104,7 @@ fun AuraPill(
         modifier = modifier
             .pressScale(pressed = isPressed, enabled = onClick != null, pressedScale = 0.94f)
             .clip(CircleShape)
+            .then(if (backgroundBrush != null) Modifier.background(backgroundBrush) else Modifier)
             .background(background)
             .border(borderWidth, borderColor, CircleShape)
             .then(

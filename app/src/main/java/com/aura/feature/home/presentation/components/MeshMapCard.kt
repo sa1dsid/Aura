@@ -68,25 +68,25 @@ fun MeshMapCard(
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(14.dp))
 
-            Box(Modifier.fillMaxWidth()) {
-                MeshMap(
-                    cities = mesh.cities,
-                    userPresence = mesh.userPresence,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .aspectRatio(MeshMapDefaults.Projection.aspectRatio),
-                )
+            MeshMap(
+                cities = mesh.cities,
+                userPresence = mesh.userPresence,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .aspectRatio(MeshMapDefaults.Projection.aspectRatio),
+            )
 
-                NodesOnlineCounter(
-                    nodesOnline = mesh.nodesOnline,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 14.dp),
-                )
-            }
+            Spacer(Modifier.height(14.dp))
+
+            NodesOnlineCounter(
+                nodesOnline = mesh.nodesOnline,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(end = 14.dp),
+            )
         }
     }
 }
@@ -110,7 +110,7 @@ private fun NodesOnlineCounter(
         Text(
             text = count.formatGrouped(),
             style = AuraTheme.typography.displayNumber,
-            color = colors.textPrimary,
+            color = colors.textSecondary,
         )
         Text(
             text = "NODES ONLINE",

@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -44,16 +43,17 @@ object MeshMapDefaults {
     val Projection: WorldProjection =
         WorldProjection.Equirectangular(GeoBounds(north = 84.0, south = -84.0))
 
-    const val DOT_COLUMNS = 116
+    const val DOT_COLUMNS = 60
 
     const val MIN_SCALE = 1f
     const val MAX_SCALE = 6f
 
     const val IDLE_DOT_RATIO = 0.40f
-    const val LIVE_DOT_RATIO = 1.50f
-    const val LIVE_GLOW_RATIO = 6.0f
+    const val LIVE_DOT_RATIO = 0.85f
+    const val LIVE_GLOW_RATIO = 4.0f
+
     const val USER_DOT_RATIO = 1.60f
-    const val USER_GLOW_RATIO = 6.5f
+    const val USER_GLOW_RATIO = 4.5f
 }
 
 @Composable
@@ -213,11 +213,5 @@ private fun DrawScope.drawUserDot(
         glowRadius = glowRadius,
         phase = phase,
         alpha = alpha,
-    )
-    drawCircle(
-        color = color.copy(alpha = 0.35f * alpha),
-        radius = coreRadius * 2.4f,
-        center = center,
-        style = Stroke(width = coreRadius * 0.5f),
     )
 }

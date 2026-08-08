@@ -114,7 +114,7 @@ private fun NewsPlanet(
     Box(
         modifier = modifier
             .pressScale(interactionSource, pressedScale = 0.9f)
-            .size(44.dp)
+            .size(48.dp)
             .drawBehind { drawPlanet(bodyColor = colors.background, dotColor = colors.mapDotIdle) }
             .clip(CircleShape)
             .clickable(
@@ -127,7 +127,7 @@ private fun NewsPlanet(
         if (hasUnread) {
             Box(
                 Modifier
-                    .size(34.dp)
+                    .size(24.dp)
                     .drawBehind {
                         val radius = size.minDimension / 2f
                         drawCircle(

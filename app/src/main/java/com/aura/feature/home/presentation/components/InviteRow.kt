@@ -74,6 +74,7 @@ private fun FriendAvatars(count: Int, modifier: Modifier = Modifier) {
                     .drawBehind {
                         drawCircle(color = colors.background, radius = size.minDimension / 2f * 0.86f)
                         drawPlanet(
+                            bodyFraction = 0.86f,
                             bodyColor = colors.surfaceElevated,
                             dotColor = colors.mapDotIdle,
                             haloAlpha = 0f,

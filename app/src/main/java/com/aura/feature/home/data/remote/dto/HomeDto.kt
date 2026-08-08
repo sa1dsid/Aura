@@ -1,0 +1,26 @@
+package com.aura.feature.home.data.remote.dto
+
+data class HomeSnapshotDto(
+    val accruedIon: Long,
+    val availableToWithdrawIon: Long,
+    val tier: String,
+    val referralRate: Double,
+    val tierProgress: Long,
+    val tierTarget: Long,
+    val nextTier: String?,
+    val bonusStepsComplete: Int,
+    val bonusStepsTotal: Int,
+    val sparkCollected: Long,
+    val sparkTarget: Long,
+    val vpnSaleEnabled: Boolean,
+    val vpnTierGaugePercent: Int,
+    val vpnContributionPercent: Int,
+    val networkType: String,
+    val vpnActive: Boolean,
+    val testRewardIon: Int,
+    val friendsJoined: Int,
+    val friendsTarget: Int,
+    val referralRatePercent: Int,
+    val inviteLink: String,
+    val hasUnreadNews: Boolean,
+)

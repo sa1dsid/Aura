@@ -2,24 +2,34 @@ package com.aura
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.aura.core.designsystem.theme.AuraTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         setContent {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-            )
+            AuraTheme {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AuraTheme.colors.background),
+                )
+            }
         }
+    }
+
+    private companion object {
+        const val TRANSPARENT = 0x00000000
     }
 }

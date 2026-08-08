@@ -60,9 +60,12 @@ fun NodeStatusCard(
                 )
                 AuraPill(
                     text = "×${nodeStatus.referralRate.formatRate()} rate",
-                    contentColor = colors.textPrimary,
-                    borderColor = colors.mint.copy(alpha = 0.55f),
-                    backgroundColor = colors.mint.copy(alpha = 0.06f),
+                    contentColor = colors.iceBlue,
+                    borderColor = colors.iceBlue.copy(alpha = 0.60f),
+                    backgroundColor = colors.iceBlue.copy(alpha = 0.22f),
+                    borderWidth = 0.5.dp,
+                    horizontalPadding = 12.dp,
+                    verticalPadding = 5.dp,
                 )
             }
 
@@ -194,9 +197,13 @@ private fun TierProgressLine(
     val nextTier = nodeStatus.nextTier
 
     val text = buildAnnotatedString {
-        withStyle(SpanStyle(color = colors.danger)) {
+        withStyle(SpanStyle(color = colors.progressValue)) {
             append(nodeStatus.progressToNext.formatGrouped())
-            if (target != null) append(" / ${target.formatGrouped()}")
+        }
+        if (target != null) {
+            withStyle(SpanStyle(color = colors.progressTarget)) {
+                append(" / ${target.formatGrouped()}")
+            }
         }
         if (nextTier != null) {
             withStyle(SpanStyle(color = colors.textSecondary)) { append(" to ") }

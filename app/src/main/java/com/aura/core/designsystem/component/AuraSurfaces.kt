@@ -1,0 +1,137 @@
+package com.aura.core.designsystem.component
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.aura.core.designsystem.theme.AuraTheme
+
+@Composable
+fun AuraCard(
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(18.dp),
+    onClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val colors = AuraTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by rememberPressedState(interactionSource)
+
+    val isInteractive = onClick != null && enabled
+    val isHighlighted = isPressed && isInteractive
+
+    val background by animateColorAsState(
+        targetValue = if (isHighlighted) colors.surfaceElevated else colors.surface,
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "card-background",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isHighlighted) colors.borderStrong else colors.border,
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "card-border",
+    )
+
+    Box(
+        modifier = modifier
+            .pressScale(pressed = isPressed, enabled = isInteractive)
+            .clip(shape)
+            .background(background)
+            .border(1.dp, borderColor, shape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        enabled = enabled,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun AuraPill(
+    text: String,
+    modifier: Modifier = Modifier,
+    contentColor: Color = AuraTheme.colors.textPrimary,
+    borderColor: Color = AuraTheme.colors.borderStrong,
+    backgroundColor: Color = Color.Transparent,
+    leadingDotColor: Color? = null,
+    horizontalPadding: Dp = 10.dp,
+    verticalPadding: Dp = 5.dp,
+    borderWidth: Dp = 1.dp,
+    onClick: (() -> Unit)? = null,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by rememberPressedState(interactionSource)
+    val isHighlighted = isPressed && onClick != null
+
+    val background by animateColorAsState(
+        targetValue = if (isHighlighted) borderColor.copy(alpha = 0.22f) else backgroundColor,
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "pill-background",
+    )
+
+    Row(
+        modifier = modifier
+            .pressScale(pressed = isPressed, enabled = onClick != null, pressedScale = 0.94f)
+            .clip(CircleShape)
+            .background(background)
+            .border(borderWidth, borderColor, CircleShape)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (leadingDotColor != null) {
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(leadingDotColor)
+            )
+        }
+        Text(
+            text = text,
+            style = AuraTheme.typography.badge,
+            color = contentColor,
+            textAlign = TextAlign.Center,
+        )
+    }
+}

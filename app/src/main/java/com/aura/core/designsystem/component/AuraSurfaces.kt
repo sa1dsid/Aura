@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,9 +32,10 @@ import com.aura.core.designsystem.theme.AuraTheme
 @Composable
 fun AuraCard(
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(18.dp),
+    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    flat: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colors = AuraTheme.colors
@@ -42,10 +45,19 @@ fun AuraCard(
     val isInteractive = onClick != null && enabled
     val isHighlighted = isPressed && isInteractive
 
-    val background by animateColorAsState(
-        targetValue = if (isHighlighted) colors.surfaceElevated else colors.surface,
+    val topColor by animateColorAsState(
+        targetValue = if (isHighlighted) colors.surfaceElevated else colors.surfaceTop,
         animationSpec = tween(PRESS_FADE_MILLIS),
-        label = "card-background",
+        label = "card-background-top",
+    )
+    val bottomColor by animateColorAsState(
+        targetValue = when {
+            isHighlighted -> colors.surfaceElevated
+            flat -> colors.surfaceTop
+            else -> colors.surfaceBottom
+        },
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "card-background-bottom",
     )
     val borderColor by animateColorAsState(
         targetValue = if (isHighlighted) colors.borderStrong else colors.border,
@@ -57,8 +69,8 @@ fun AuraCard(
         modifier = modifier
             .pressScale(pressed = isPressed, enabled = isInteractive)
             .clip(shape)
-            .background(background)
-            .border(1.dp, borderColor, shape)
+            .background(Brush.verticalGradient(listOf(topColor, bottomColor)))
+            .border(0.5.dp, borderColor, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(
@@ -88,6 +100,8 @@ fun AuraPill(
     horizontalPadding: Dp = 10.dp,
     verticalPadding: Dp = 5.dp,
     borderWidth: Dp = 1.dp,
+    contentShadow: Shadow? = null,
+    textStyle: TextStyle? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -132,7 +146,7 @@ fun AuraPill(
         }
         Text(
             text = text,
-            style = AuraTheme.typography.badge,
+            style = (textStyle ?: AuraTheme.typography.badge).copy(shadow = contentShadow),
             color = contentColor,
             textAlign = TextAlign.Center,
         )

@@ -87,8 +87,13 @@ fun TestRingButton(
                             colors.accentBlue.copy(alpha = 0.15f),
                         )
                     } else {
-                        listOf(colors.accentBlueSoft, colors.accentBlue)
+                        listOf(colors.accentBlue, colors.accentBlue)
                     },
+                    glowColor = colors.glowSky,
+                    coreColor = colors.planetCore,
+                    coreEdgeColor = colors.surfaceBottom,
+                    coreBorderColor = colors.accentBlueSoft.copy(alpha = 0.22f),
+                    coreInnerGlowColor = colors.accentBlue,
                     glowAlpha = glowAlpha,
                 )
         )
@@ -105,14 +110,28 @@ private fun Modifier.ringGraphics(
     fraction: Float,
     trackColor: Color,
     arcColors: List<Color>,
+    glowColor: Color,
+    coreColor: Color,
+    coreEdgeColor: Color,
+    coreBorderColor: Color,
+    coreInnerGlowColor: Color,
     glowAlpha: Float,
 ): Modifier = drawBehind {
     val strokePx = RingStroke.toPx()
     val inset = strokePx * 2.5f
     val arcTopLeft = Offset(inset, inset)
     val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+    val coreRadius = arcSize.minDimension / 2f - strokePx
 
-    drawHalo(glowAlpha, arcColors.first())
+    drawHalo(glowAlpha, glowColor)
+
+    drawPlanetCore(
+        radius = coreRadius,
+        coreColor = coreColor,
+        edgeColor = coreEdgeColor,
+        borderColor = coreBorderColor,
+        innerGlowColor = coreInnerGlowColor,
+    )
 
     drawArc(
         color = trackColor,
@@ -142,6 +161,49 @@ private fun Modifier.ringGraphics(
             alpha = alpha,
         )
     }
+}
+
+private fun DrawScope.drawPlanetCore(
+    radius: Float,
+    coreColor: Color,
+    edgeColor: Color,
+    borderColor: Color,
+    innerGlowColor: Color,
+) {
+    if (radius <= 0f) return
+
+    val lightCenter = Offset(center.x, center.y - radius * 0.16f)
+
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(coreColor, edgeColor),
+            center = lightCenter,
+            radius = radius,
+        ),
+        radius = radius,
+        center = center,
+    )
+
+    drawCircle(
+        brush = Brush.radialGradient(
+            colorStops = arrayOf(
+                0.45f to Color.Transparent,
+                0.85f to innerGlowColor.copy(alpha = 0.08f),
+                1f to innerGlowColor.copy(alpha = 0.16f),
+            ),
+            center = center,
+            radius = radius,
+        ),
+        radius = radius,
+        center = center,
+    )
+
+    drawCircle(
+        color = borderColor,
+        radius = radius - 0.5f,
+        center = center,
+        style = Stroke(width = 1f),
+    )
 }
 
 private fun DrawScope.drawHalo(glowAlpha: Float, color: Color) {
@@ -188,14 +250,14 @@ private fun RingLabels(session: TestSessionState) {
         Text(
             text = value,
             style = AuraTheme.typography.timer,
-            color = colors.textPrimary,
+            color = colors.textBright,
         )
         if (footnote.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
             Text(
                 text = footnote,
-                style = AuraTheme.typography.caption,
-                color = colors.textSecondary,
+                style = AuraTheme.typography.title,
+                color = colors.glowSky,
             )
         }
     }

@@ -34,9 +34,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
+import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.component.drawPlanet
 import com.aura.core.designsystem.component.pressScale
 import com.aura.core.designsystem.theme.AuraTheme
+
+private const val PLANET_BODY_FRACTION = 21.5f / 48f
 
 @Composable
 fun HomeTopBar(
@@ -59,7 +62,7 @@ fun HomeTopBar(
         Text(
             text = "I Ø Aura",
             style = AuraTheme.typography.logo,
-            color = colors.textPrimary,
+            color = colors.textBright,
         )
 
         NewsPlanet(hasUnread = hasUnreadNews, onClick = onNewsClick)
@@ -115,7 +118,17 @@ private fun NewsPlanet(
         modifier = modifier
             .pressScale(interactionSource, pressedScale = 0.9f)
             .size(48.dp)
-            .drawBehind { drawPlanet(bodyColor = colors.background, dotColor = colors.mapDotIdle) }
+            .auraGlow(Color.White.copy(alpha = 0.40f), width = 30.dp, height = 30.dp, blurRadius = 40.dp)
+            .auraGlow(Color.White.copy(alpha = 0.52f), width = 24.dp, height = 24.dp, blurRadius = 16.dp)
+            .auraGlow(Color.White.copy(alpha = 0.40f), width = 26.dp, height = 26.dp, blurRadius = 8.dp)
+            .drawBehind {
+                drawPlanet(
+                    bodyColor = colors.surfaceTop,
+                    dotColor = colors.mapDotIdle,
+                    bodyFraction = PLANET_BODY_FRACTION,
+                    haloAlpha = 0f,
+                )
+            }
             .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,

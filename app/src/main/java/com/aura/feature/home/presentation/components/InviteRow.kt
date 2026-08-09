@@ -13,12 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraPill
+import com.aura.core.designsystem.component.auraGlowLayers
+import com.aura.core.designsystem.component.avatarShadows
 import com.aura.core.designsystem.component.drawPlanet
+import com.aura.core.designsystem.component.leadAvatarShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.InviteState
 
@@ -44,15 +46,18 @@ fun InviteRow(
             Text(
                 text = "${invite.friendsJoined}/${invite.friendsTarget} friends " +
                     "+${invite.referralRatePercent}% rate",
-                style = AuraTheme.typography.caption,
-                color = colors.textPrimary,
+                style = AuraTheme.typography.title,
+                color = colors.textBright,
                 modifier = Modifier.weight(1f),
             )
 
             AuraPill(
                 text = "INVITE",
-                contentColor = colors.textPrimary,
-                borderColor = colors.borderStrong,
+                textStyle = AuraTheme.typography.caption,
+                contentColor = colors.accentBlue,
+                borderColor = colors.iceBlue.copy(alpha = 0.55f),
+                backgroundColor = colors.iceBlue.copy(alpha = 0.22f),
+                borderWidth = 0.5.dp,
                 horizontalPadding = 12.dp,
                 verticalPadding = 6.dp,
                 onClick = onInviteClick,
@@ -74,25 +79,29 @@ private fun FriendAvatars(count: Int, modifier: Modifier = Modifier) {
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(AvatarStep - AvatarCellSize),
     ) {
-        repeat(count) {
+        repeat(count) { index ->
             Box(
                 Modifier
                     .size(AvatarCellSize)
+                    .auraGlowLayers(
+                        shadows = if (index == 0) colors.leadAvatarShadows else colors.avatarShadows,
+                        coreSize = AvatarCellSize * AvatarBodyFraction,
+                    )
                     .drawBehind {
                         val bodyRadius = size.minDimension / 2f * AvatarBodyFraction
 
-                        drawCircle(color = colors.surface, radius = bodyRadius + 1.dp.toPx())
+                        drawCircle(color = colors.surfaceTop, radius = bodyRadius + 1.dp.toPx())
 
                         drawPlanet(
                             bodyFraction = AvatarBodyFraction,
                             bodyColor = colors.background,
                             dotColor = colors.textTertiary,
-                            haloAlpha = 0.32f,
+                            haloAlpha = 0f,
                         )
 
-                        val rimWidth = 0.5.dp.toPx()
+                        val rimWidth = if (index == count - 1) 0.5.dp.toPx() else 0.2.dp.toPx()
                         drawCircle(
-                            color = Color.White,
+                            color = colors.textBright,
                             radius = bodyRadius - rimWidth / 2f,
                             style = Stroke(width = rimWidth),
                         )

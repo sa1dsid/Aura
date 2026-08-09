@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +29,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraPill
+import com.aura.core.designsystem.component.activeDotShadows
+import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
@@ -60,19 +62,16 @@ fun NodeStatusCard(
                 )
                 AuraPill(
                     text = "×${nodeStatus.referralRate.formatRate()} rate",
-                    contentColor = colors.iceBlue,
+                    contentColor = colors.accentBlue,
                     borderColor = colors.iceBlue.copy(alpha = 0.60f),
-                    backgroundBrush = Brush.linearGradient(
-                        colors = listOf(
-                            colors.iceBlue.copy(alpha = 0.34f),
-                            colors.iceBlue.copy(alpha = 0.13f),
-                        ),
-                        start = Offset(Float.POSITIVE_INFINITY, 0f),
-                        end = Offset(0f, Float.POSITIVE_INFINITY),
-                    ),
+                    backgroundColor = colors.iceBlue.copy(alpha = 0.22f),
                     borderWidth = 0.5.dp,
                     horizontalPadding = 12.dp,
                     verticalPadding = 5.dp,
+                    contentShadow = Shadow(
+                        color = colors.glowCyan.copy(alpha = 0.50f),
+                        blurRadius = 6f,
+                    ),
                 )
             }
 
@@ -118,11 +117,26 @@ private fun TierLadder(
                 .drawBehind {
                     val y = size.height / 2f
                     val step = size.width / tiers.size
+                    val dotRadius = 3.dp.toPx()
+                    val stroke = 0.5.dp.toPx()
+                    var segmentStart = 0f
+
+                    tiers.indices.forEach { index ->
+                        val dotCenter = step * index + step / 2f
+                        drawLine(
+                            color = colors.textSecondary,
+                            start = Offset(segmentStart, y),
+                            end = Offset(dotCenter - dotRadius, y),
+                            strokeWidth = stroke,
+                        )
+                        segmentStart = dotCenter + dotRadius
+                    }
+
                     drawLine(
-                        color = colors.borderStrong,
-                        start = Offset(step / 2f, y),
-                        end = Offset(size.width - step / 2f, y),
-                        strokeWidth = 1.dp.toPx(),
+                        color = colors.textSecondary,
+                        start = Offset(segmentStart, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = stroke,
                     )
                 },
             verticalAlignment = Alignment.CenterVertically,
@@ -144,7 +158,7 @@ private fun TierLadder(
                 Text(
                     text = tier.stepLabel(),
                     style = AuraTheme.typography.stepLabel,
-                    color = if (tier == currentTier) colors.textPrimary else colors.textTertiary,
+                    color = if (tier == currentTier) colors.textBright else colors.textSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
@@ -160,37 +174,17 @@ private fun TierDot(isActive: Boolean, modifier: Modifier = Modifier) {
     if (isActive) {
         Box(
             modifier = modifier
-                .size(16.dp)
-                .drawBehind {
-                    val radius = size.minDimension / 2f
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                colors.green.copy(alpha = 0.50f),
-                                colors.green.copy(alpha = 0.12f),
-                                Color.Transparent,
-                            ),
-                            radius = radius,
-                        ),
-                        radius = radius,
-                    )
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(colors.green)
-            )
-        }
+                .size(6.dp)
+                .auraGlowLayers(colors.activeDotShadows)
+                .clip(CircleShape)
+                .background(colors.green)
+                .border(1.dp, Color.Black, CircleShape)
+        )
     } else {
         Box(
             modifier = modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(colors.surface)
-                .border(1.dp, colors.borderStrong, CircleShape)
+                .size(6.dp)
+                .border(0.5.dp, colors.textSecondary, CircleShape)
         )
     }
 }
@@ -215,7 +209,7 @@ private fun TierProgressLine(
         }
         if (nextTier != null) {
             withStyle(SpanStyle(color = colors.textSecondary)) { append(" to ") }
-            withStyle(SpanStyle(color = colors.textPrimary, fontWeight = FontWeight.Bold)) {
+            withStyle(SpanStyle(color = colors.textBright, fontWeight = FontWeight.Bold)) {
                 append(nextTier.displayName())
             }
         }
@@ -223,7 +217,7 @@ private fun TierProgressLine(
 
     Text(
         text = text,
-        style = AuraTheme.typography.body,
+        style = AuraTheme.typography.title,
         modifier = modifier,
     )
 }

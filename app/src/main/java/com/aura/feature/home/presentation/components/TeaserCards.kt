@@ -29,6 +29,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
+import com.aura.core.designsystem.component.activeDotShadows
+import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.Teasers
 import com.aura.feature.home.presentation.format.formatGrouped
@@ -78,6 +80,7 @@ fun TeaserCards(
                 highlight("${teasers.vpnCode.contributionPercent}%", colors.progressValue)
             },
             enabled = teasers.vpnCode.isEnabled,
+            iconTint = colors.accentBlue,
             leadingDotColor = if (teasers.vpnCode.isEnabled) colors.green else null,
             progress = teasers.vpnCode.contributionPercent / 100f,
             onClick = onVpnCodeClick,
@@ -93,6 +96,7 @@ private fun TeaserCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    iconTint: Color? = null,
     leadingDotColor: Color? = null,
     progress: Float? = null,
 ) {
@@ -103,6 +107,7 @@ private fun TeaserCard(
         modifier = modifier.fillMaxWidth(),
         onClick = onClick,
         enabled = enabled,
+        flat = true,
     ) {
         Column {
             Row(
@@ -114,7 +119,7 @@ private fun TeaserCard(
                 Icon(
                     painter = painterResource(iconRes),
                     contentDescription = null,
-                    tint = colors.textPrimary.copy(alpha = contentAlpha),
+                    tint = (iconTint ?: colors.textBright).copy(alpha = contentAlpha),
                     modifier = Modifier.size(22.dp),
                 )
 
@@ -124,14 +129,15 @@ private fun TeaserCard(
                     Text(
                         text = title,
                         style = AuraTheme.typography.title,
-                        color = colors.textPrimary.copy(alpha = contentAlpha),
+                        color = colors.textBright.copy(alpha = contentAlpha),
                     )
                     Spacer(Modifier.height(3.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (leadingDotColor != null) {
                             Box(
                                 Modifier
-                                    .size(5.dp)
+                                    .size(6.dp)
+                                    .auraGlowLayers(colors.activeDotShadows)
                                     .clip(CircleShape)
                                     .background(leadingDotColor)
                             )
@@ -182,7 +188,7 @@ private fun TeaserProgressBar(
                 .height(2.dp)
                 .clip(RoundedCornerShape(1.dp))
                 .background(
-                    if (enabled) colors.textPrimary else colors.textTertiary
+                    if (enabled) colors.textBright else colors.textTertiary
                 )
         )
     }

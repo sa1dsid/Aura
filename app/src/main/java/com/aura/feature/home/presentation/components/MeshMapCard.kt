@@ -20,10 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
+import com.aura.core.designsystem.component.auraGlowLayers
+import com.aura.core.designsystem.component.signalDotShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.MeshState
 import com.aura.feature.home.domain.model.NodesOnline
@@ -43,13 +44,13 @@ fun MeshMapCard(
             Row(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(
                         Brush.verticalGradient(
-                            listOf(colors.surfaceElevated, colors.surface),
+                            listOf(colors.surfaceTop, colors.surfaceBottom),
                         )
                     )
-                    .border(0.5.dp, Color(0xFF17202A), RoundedCornerShape(8.dp))
+                    .border(0.5.dp, colors.border, RoundedCornerShape(12.dp))
                     .height(25.dp)
                     .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -58,6 +59,7 @@ fun MeshMapCard(
                 Box(
                     Modifier
                         .size(6.dp)
+                        .auraGlowLayers(colors.signalDotShadows)
                         .clip(CircleShape)
                         .background(colors.accentBlue)
                 )
@@ -109,7 +111,7 @@ private fun NodesOnlineCounter(
     ) {
         Text(
             text = count.formatGrouped(),
-            style = AuraTheme.typography.displayNumber,
+            style = AuraTheme.typography.counterNumber,
             color = colors.textSecondary,
         )
         Text(

@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.component.AuraCard
+import com.aura.core.designsystem.component.auraGlowLayers
+import com.aura.core.designsystem.component.signalDotShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.IonBalances
 import com.aura.feature.home.presentation.format.formatGrouped
@@ -69,12 +71,12 @@ private fun BalanceCard(
                 Text(
                     text = amount.formatGrouped(),
                     style = AuraTheme.typography.displayNumber,
-                    color = colors.textPrimary,
+                    color = colors.textBright,
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "ION",
-                    style = AuraTheme.typography.caption,
+                    style = AuraTheme.typography.unitLabel,
                     color = colors.textSecondary,
                     modifier = Modifier.padding(bottom = 3.dp),
                 )
@@ -83,7 +85,8 @@ private fun BalanceCard(
                     Box(
                         Modifier
                             .padding(bottom = 6.dp)
-                            .size(5.dp)
+                            .size(6.dp)
+                            .auraGlowLayers(colors.signalDotShadows)
                             .clip(CircleShape)
                             .background(colors.accentBlue)
                     )

@@ -21,6 +21,21 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="ioaura.app"
+                    android:pathPrefix="/i/"
+                    android:scheme="https" />
+                <data
+                    android:host="invite"
+                    android:scheme="aura" />
+            </intent-filter>
         </activity>
     </application>
 

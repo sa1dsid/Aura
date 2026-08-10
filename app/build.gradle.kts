@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.install.referrer)
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

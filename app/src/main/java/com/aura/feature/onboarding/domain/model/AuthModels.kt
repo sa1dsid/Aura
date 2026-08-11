@@ -8,6 +8,7 @@ data class AuthSession(
 )
 
 enum class AuthFailure {
+    EMAIL_REQUIRED,
     EMAIL_INVALID,
     PASSWORD_TOO_SHORT,
     EMAIL_ALREADY_REGISTERED,

@@ -36,8 +36,11 @@ class SignInUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
-        validateCredentials(email, password)?.let { return Result.failure(it) }
-        return authRepository.signIn(email.trim(), password)
+        val trimmed = email.trim()
+        if (!EMAIL_PATTERN.matches(trimmed)) {
+            return Result.failure(AuthException(AuthFailure.EMAIL_INVALID))
+        }
+        return authRepository.signIn(trimmed, password)
     }
 }
 
@@ -45,8 +48,14 @@ class SignUpUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
-        validateCredentials(email, password)?.let { return Result.failure(it) }
-        return authRepository.signUp(email.trim(), password)
+        val trimmed = email.trim()
+        if (!EMAIL_PATTERN.matches(trimmed)) {
+            return Result.failure(AuthException(AuthFailure.EMAIL_INVALID))
+        }
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            return Result.failure(AuthException(AuthFailure.PASSWORD_TOO_SHORT))
+        }
+        return authRepository.signUp(trimmed, password)
     }
 }
 
@@ -61,8 +70,8 @@ class RequestPasswordResetUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(email: String): Result<Unit> {
         val trimmed = email.trim()
-        if (!EMAIL_PATTERN.matches(trimmed)) {
-            return Result.failure(AuthException(AuthFailure.EMAIL_INVALID))
+        if (trimmed.isEmpty()) {
+            return Result.failure(AuthException(AuthFailure.EMAIL_REQUIRED))
         }
         return authRepository.requestPasswordReset(trimmed)
     }
@@ -86,10 +95,4 @@ class SkipInviteUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(accountId: String): Result<Unit> =
         inviteRepository.skipInvite(accountId)
-}
-
-private fun validateCredentials(email: String, password: String): AuthException? = when {
-    !EMAIL_PATTERN.matches(email.trim()) -> AuthException(AuthFailure.EMAIL_INVALID)
-    password.length < MIN_PASSWORD_LENGTH -> AuthException(AuthFailure.PASSWORD_TOO_SHORT)
-    else -> null
 }

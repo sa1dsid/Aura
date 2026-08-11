@@ -1,5 +1,6 @@
 package com.aura.feature.onboarding.presentation.auth
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -36,11 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aura.R
 import com.aura.core.designsystem.component.AuraPrimaryButton
 import com.aura.core.designsystem.component.AuraSurfaceButton
+import com.aura.core.designsystem.component.AuraToastHost
+import com.aura.core.designsystem.component.AuraToastKind
+import com.aura.core.designsystem.component.AuraToastState
 import com.aura.core.designsystem.component.auraGlow
+import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthMode
-import com.aura.feature.onboarding.domain.model.MIN_PASSWORD_LENGTH
 import com.aura.feature.onboarding.presentation.components.AuthSegmentedControl
 import com.aura.feature.onboarding.presentation.components.AuthTextField
 import com.aura.feature.onboarding.presentation.components.BrandLogoRow
@@ -57,12 +61,18 @@ fun AuthRoute(
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val toastState = rememberAuraToastState()
+    val context = LocalContext.current
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 AuthEvent.OpenHome -> onOpenHome()
                 AuthEvent.OpenInvite -> onOpenInvite()
+                is AuthEvent.ShowToast -> toastState.show(
+                    text = context.getString(event.toast.textRes()),
+                    kind = event.toast.kind(),
+                )
             }
         }
     }
@@ -77,6 +87,7 @@ fun AuthRoute(
             onGoogleClick = viewModel::onGoogleClick,
             onForgotPasswordClick = viewModel::onForgotPasswordClick,
         ),
+        toastState = toastState,
         modifier = modifier,
     )
 }
@@ -95,121 +106,135 @@ fun AuthScreen(
     uiState: AuthUiState,
     actions: AuthActions,
     modifier: Modifier = Modifier,
+    toastState: AuraToastState = rememberAuraToastState(),
 ) {
     val colors = AuraTheme.colors
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colors.authBackground)
-            .statusBarsPadding()
-            .imePadding(),
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 15.5.dp),
+                .fillMaxSize()
+                .background(colors.authBackground)
+                .statusBarsPadding()
+                .imePadding(),
         ) {
-            Spacer(Modifier.height(53.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 15.5.dp),
+            ) {
+                Spacer(Modifier.height(53.dp))
 
-            BrandLogoRow()
+                BrandLogoRow()
 
-            Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(10.dp))
 
-            BrandTagline()
+                BrandTagline()
 
-            Spacer(Modifier.height(44.dp))
+                Spacer(Modifier.height(44.dp))
 
-            AuthSegmentedControl(
-                mode = uiState.mode,
-                onModeChange = actions.onModeChange,
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            AuraSurfaceButton(
-                text = "Continue with Google",
-                onClick = actions.onGoogleClick,
-                enabled = !uiState.submitting,
-                leading = {
-                    Image(
-                        painter = painterResource(R.drawable.ic_google),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                    )
-                },
-            )
-
-            Spacer(Modifier.height(22.dp))
-
-            OrDivider()
-
-            Spacer(Modifier.height(22.dp))
-
-            AuthTextField(
-                label = "EMAIL",
-                value = uiState.email,
-                onValueChange = actions.onEmailChange,
-                placeholder = "you@example.com",
-                imeAction = ImeAction.Next,
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            AuthTextField(
-                label = "PASSWORD",
-                value = uiState.password,
-                onValueChange = actions.onPasswordChange,
-                placeholder = PASSWORD_PLACEHOLDER,
-                isPassword = true,
-                imeAction = ImeAction.Go,
-                onImeAction = actions.onSubmit,
-            )
-
-            MessageRow(
-                uiState = uiState,
-                onForgotPasswordClick = actions.onForgotPasswordClick,
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 17.5.dp)
-                .padding(
-                    bottom = designBottomGap(
-                        if (uiState.mode == AuthMode.SIGN_UP) 28.dp else 49.dp
-                    )
+                AuthSegmentedControl(
+                    mode = uiState.mode,
+                    onModeChange = actions.onModeChange,
                 )
-                .auraGlow(
-                    color = colors.authGlow,
-                    width = 260.dp,
-                    height = 72.dp,
-                    offsetY = if (uiState.mode == AuthMode.SIGN_UP) (-10.5).dp else 0.dp,
-                ),
-        ) {
-            AuraPrimaryButton(
-                text = when (uiState.mode) {
-                    AuthMode.SIGN_IN -> "Sign In"
-                    AuthMode.SIGN_UP -> "Create Account"
-                },
-                onClick = actions.onSubmit,
-                enabled = !uiState.submitting,
-            )
 
-            if (uiState.mode == AuthMode.SIGN_UP) {
-                Spacer(Modifier.height(8.dp))
-                LegalNotice()
+                Spacer(Modifier.height(24.dp))
+
+                AuraSurfaceButton(
+                    text = "Continue with Google",
+                    onClick = actions.onGoogleClick,
+                    enabled = !uiState.submitting,
+                    leading = {
+                        Image(
+                            painter = painterResource(R.drawable.ic_google),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    },
+                )
+
+                Spacer(Modifier.height(22.dp))
+
+                OrDivider()
+
+                Spacer(Modifier.height(22.dp))
+
+                AuthTextField(
+                    label = "EMAIL",
+                    value = uiState.email,
+                    onValueChange = actions.onEmailChange,
+                    placeholder = "you@example.com",
+                    isError = uiState.invalidField == AuthField.EMAIL,
+                    imeAction = ImeAction.Next,
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AuthTextField(
+                    label = "PASSWORD",
+                    value = uiState.password,
+                    onValueChange = actions.onPasswordChange,
+                    placeholder = PASSWORD_PLACEHOLDER,
+                    isPassword = true,
+                    isError = uiState.invalidField == AuthField.PASSWORD,
+                    imeAction = ImeAction.Go,
+                    onImeAction = actions.onSubmit,
+                )
+
+                ForgotPasswordRow(
+                    visible = uiState.mode == AuthMode.SIGN_IN,
+                    onClick = actions.onForgotPasswordClick,
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 17.5.dp)
+                    .padding(
+                        bottom = designBottomGap(
+                            if (uiState.mode == AuthMode.SIGN_UP) 28.dp else 49.dp
+                        )
+                    )
+                    .auraGlow(
+                        color = colors.authGlow,
+                        width = 260.dp,
+                        height = 72.dp,
+                        offsetY = if (uiState.mode == AuthMode.SIGN_UP) (-10.5).dp else 0.dp,
+                    ),
+            ) {
+                AuraPrimaryButton(
+                    text = when (uiState.mode) {
+                        AuthMode.SIGN_IN -> "Sign In"
+                        AuthMode.SIGN_UP -> "Create Account"
+                    },
+                    onClick = actions.onSubmit,
+                    enabled = !uiState.submitting,
+                )
+
+                if (uiState.mode == AuthMode.SIGN_UP) {
+                    Spacer(Modifier.height(8.dp))
+                    LegalNotice()
+                }
             }
         }
+
+        AuraToastHost(
+            state = toastState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(horizontal = 15.5.dp)
+                .padding(top = 12.dp),
+        )
     }
 }
 
 @Composable
-private fun MessageRow(
-    uiState: AuthUiState,
-    onForgotPasswordClick: () -> Unit,
+private fun ForgotPasswordRow(
+    visible: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
@@ -220,16 +245,7 @@ private fun MessageRow(
             .fillMaxWidth()
             .height(39.dp),
     ) {
-        uiState.message?.let { message ->
-            Text(
-                text = message.asText(),
-                style = AuraTheme.typography.linkLabel,
-                color = if (message is AuthMessage.Failure) colors.danger else colors.authTextMuted,
-                modifier = Modifier.align(Alignment.CenterStart),
-            )
-        }
-
-        if (uiState.mode == AuthMode.SIGN_IN && uiState.message == null) {
+        if (visible) {
             Text(
                 text = "Forgot password?",
                 style = AuraTheme.typography.linkLabel,
@@ -240,7 +256,7 @@ private fun MessageRow(
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
-                        onClick = onForgotPasswordClick,
+                        onClick = onClick,
                     ),
             )
         }
@@ -254,13 +270,13 @@ private fun LegalNotice(modifier: Modifier = Modifier) {
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.42f))) {
-                append("By signing up you agree to the ")
+                append("By signing up you agree to the ")
             }
             withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.62f))) {
                 append("Terms of Service")
             }
             withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.42f))) {
-                append(" and ")
+                append(" and ")
             }
             withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.62f))) {
                 append("Privacy Policy")
@@ -272,17 +288,21 @@ private fun LegalNotice(modifier: Modifier = Modifier) {
     )
 }
 
-private fun AuthMessage.asText(): String = when (this) {
-    is AuthMessage.ResetLinkSent -> "Reset link sent to $email"
-    is AuthMessage.Failure -> when (failure) {
-        AuthFailure.EMAIL_INVALID -> "Enter a valid email"
-        AuthFailure.PASSWORD_TOO_SHORT -> "At least $MIN_PASSWORD_LENGTH characters"
-        AuthFailure.EMAIL_ALREADY_REGISTERED -> "This email is already registered"
-        AuthFailure.ACCOUNT_NOT_FOUND -> "No account for this email"
-        AuthFailure.WRONG_PASSWORD -> "Wrong password"
-        AuthFailure.GOOGLE_CANCELLED -> "Google sign-in cancelled"
-        AuthFailure.NETWORK -> "Network is unavailable"
-    }
+@StringRes
+private fun AuthToast.textRes(): Int = when (this) {
+    AuthToast.EMAIL_REQUIRED -> R.string.toast_email_first
+    AuthToast.EMAIL_INVALID -> R.string.toast_email_invalid
+    AuthToast.PASSWORD_TOO_SHORT -> R.string.toast_pass_short
+    AuthToast.WRONG_CREDENTIALS -> R.string.toast_wrong_creds
+    AuthToast.ACCOUNT_EXISTS -> R.string.toast_acc_exists
+    AuthToast.NO_ACCOUNT -> R.string.toast_no_account
+    AuthToast.NO_CONNECTION -> R.string.toast_no_connection
+    AuthToast.RESET_LINK_SENT -> R.string.toast_reset_sent
+}
+
+private fun AuthToast.kind(): AuraToastKind = when (this) {
+    AuthToast.RESET_LINK_SENT -> AuraToastKind.SUCCESS
+    else -> AuraToastKind.ERROR
 }
 
 @Preview(widthDp = 375, heightDp = 813)
@@ -298,5 +318,21 @@ private fun AuthScreenSignInPreview() {
 private fun AuthScreenSignUpPreview() {
     AuraTheme {
         AuthScreen(uiState = AuthUiState(mode = AuthMode.SIGN_UP), actions = AuthActions())
+    }
+}
+
+@Preview(widthDp = 375, heightDp = 813)
+@Composable
+private fun AuthScreenInvalidEmailPreview() {
+    AuraTheme {
+        AuthScreen(
+            uiState = AuthUiState(
+                mode = AuthMode.SIGN_IN,
+                email = "said",
+                password = "12345678",
+                invalidField = AuthField.EMAIL,
+            ),
+            actions = AuthActions(),
+        )
     }
 }

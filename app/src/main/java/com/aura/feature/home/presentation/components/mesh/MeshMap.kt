@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.aura.core.designsystem.theme.AuraTheme
@@ -40,20 +41,34 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 object MeshMapDefaults {
-    val Projection: WorldProjection =
-        WorldProjection.Equirectangular(GeoBounds(north = 84.0, south = -84.0))
+    val AssetBounds: GeoBounds = GeoBounds(
+        north = 83.792,
+        south = -89.958,
+        west = -170.099,
+        east = 190.261,
+    )
 
-    const val DOT_COLUMNS = 60
+    const val ASSET_WIDTH_DP = 313f
+    const val ASSET_HEIGHT_DP = 153f
+
+    val Projection: WorldProjection = WorldProjection(
+        bounds = AssetBounds,
+        aspectRatio = ASSET_WIDTH_DP / ASSET_HEIGHT_DP,
+    )
+
+    const val DOT_COLUMNS = 65
 
     const val MIN_SCALE = 1f
     const val MAX_SCALE = 6f
 
-    const val IDLE_DOT_RATIO = 0.40f
-    const val LIVE_DOT_RATIO = 0.85f
-    const val LIVE_GLOW_RATIO = 4.0f
+    const val IDLE_DOT_RATIO = 0.243f
+    const val LIVE_DOT_RATIO = 0.83f
+    const val LIVE_GLOW_RATIO = 4.33f
 
-    const val USER_DOT_RATIO = 1.60f
-    const val USER_GLOW_RATIO = 4.5f
+    const val USER_DOT_RATIO = 1.66f
+    const val USER_GLOW_RATIO = 4.88f
+
+    const val PRESENCE_FADE_MILLIS = 300
 }
 
 @Composable
@@ -67,11 +82,12 @@ fun MeshMap(
     val colors = AuraTheme.colors
     val scope = rememberCoroutineScope()
 
-    val idleDots = remember(projection) {
-        WorldLandmass.dotGrid(projection, MeshMapDefaults.DOT_COLUMNS)
+    val context = LocalContext.current
+    val dotGrid = remember(projection, context) {
+        WorldLandmass.dotGrid(context, projection, MeshMapDefaults.DOT_COLUMNS)
     }
-    val liveDots = remember(cities, projection) {
-        cities.filter { it.isLive }.map { projection.normalize(it.location) }
+    val liveDots = remember(cities, dotGrid) {
+        cities.filter { it.isLive }.map { dotGrid.snap(projection.normalize(it.location)) }
     }
 
     val pulse = rememberInfiniteTransition(label = "mesh-map").animateFloat(
@@ -85,13 +101,15 @@ fun MeshMap(
     val presenceAlpha = remember { Animatable(0f) }
     LaunchedEffect(userPresence?.location) {
         if (shownPresence != null && shownPresence?.location != userPresence?.location) {
-            presenceAlpha.animateTo(0f, tween(240))
+            presenceAlpha.animateTo(0f, tween(MeshMapDefaults.PRESENCE_FADE_MILLIS))
         }
         shownPresence = userPresence
-        if (userPresence != null) presenceAlpha.animateTo(1f, tween(420))
+        if (userPresence != null) {
+            presenceAlpha.animateTo(1f, tween(MeshMapDefaults.PRESENCE_FADE_MILLIS))
+        }
     }
-    val userDot = remember(shownPresence, projection) {
-        shownPresence?.let { projection.normalize(it.location) }
+    val userDot = remember(shownPresence, dotGrid) {
+        shownPresence?.let { dotGrid.snap(projection.normalize(it.location)) }
     }
 
     Box(
@@ -119,7 +137,7 @@ fun MeshMap(
                     translationY = state.offset.y
                 }
                 .drawWithCache {
-                    val idlePoints = idleDots.scaledTo(size)
+                    val idlePoints = dotGrid.dots.scaledTo(size)
                     val livePoints = liveDots.scaledTo(size)
                     val userPoint = userDot?.scaledTo(size)
 

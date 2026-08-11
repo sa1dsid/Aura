@@ -3,54 +3,46 @@ package com.aura.feature.home.presentation.components.mesh
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import com.aura.feature.home.domain.model.GeoPoint
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.ln
-import kotlin.math.tan
 
 @Immutable
 data class GeoBounds(
-    val north: Double = 84.0,
-    val south: Double = -84.0,
-    val west: Double = -180.0,
-    val east: Double = 180.0,
-)
+    val north: Double,
+    val south: Double,
+    val west: Double,
+    val east: Double,
+) {
+    val latitudeSpan: Double get() = north - south
+
+    val longitudeSpan: Double get() = east - west
+}
 
 @Immutable
-sealed class WorldProjection(val bounds: GeoBounds) {
-
-    protected abstract fun projectLatitude(latitude: Double): Double
+data class WorldProjection(
+    val bounds: GeoBounds,
+    val aspectRatio: Float,
+) {
 
     fun normalize(point: GeoPoint): Offset {
-        val x = (point.longitude - bounds.west) / (bounds.east - bounds.west)
-        val top = projectLatitude(bounds.north)
-        val bottom = projectLatitude(bounds.south)
-        val y = (projectLatitude(point.latitude) - top) / (bottom - top)
-        return Offset(x.toFloat(), y.toFloat())
+        val longitude = alignToBounds(point.longitude)
+        return Offset(
+            x = ((longitude - bounds.west) / bounds.longitudeSpan).toFloat(),
+            y = ((bounds.north - point.latitude) / bounds.latitudeSpan).toFloat(),
+        )
     }
 
-    val aspectRatio: Float
-        get() {
-            val lonSpan = bounds.east - bounds.west
-            val latSpan = abs(projectLatitude(bounds.south) - projectLatitude(bounds.north))
-            return (lonSpan / latSpan).toFloat()
-        }
-
-    @Immutable
-    class Equirectangular(bounds: GeoBounds = GeoBounds()) : WorldProjection(bounds) {
-        override fun projectLatitude(latitude: Double): Double = -latitude
+    fun covers(point: GeoPoint): Boolean {
+        val longitude = alignToBounds(point.longitude)
+        return longitude in bounds.west..bounds.east &&
+            point.latitude in bounds.south..bounds.north
     }
 
-    @Immutable
-    class Mercator(bounds: GeoBounds = GeoBounds()) : WorldProjection(bounds) {
-        override fun projectLatitude(latitude: Double): Double {
-            val clamped = latitude.coerceIn(-MAX_LATITUDE, MAX_LATITUDE)
-            val radians = clamped * PI / 180.0
-            return -ln(tan(PI / 4 + radians / 2)) * 180.0 / PI
-        }
+    private fun alignToBounds(longitude: Double): Double = when {
+        longitude < bounds.west -> longitude + FULL_TURN
+        longitude > bounds.east -> longitude - FULL_TURN
+        else -> longitude
+    }
 
-        private companion object {
-            const val MAX_LATITUDE = 85.05
-        }
+    private companion object {
+        const val FULL_TURN = 360.0
     }
 }

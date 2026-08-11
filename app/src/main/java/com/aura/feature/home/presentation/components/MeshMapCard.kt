@@ -40,10 +40,10 @@ fun MeshMapCard(
     val colors = AuraTheme.colors
 
     AuraCard(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(vertical = 14.dp)) {
+        Column(Modifier.padding(vertical = 12.dp)) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 14.dp)
+                    .padding(horizontal = 15.5.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         Brush.verticalGradient(
@@ -70,24 +70,24 @@ fun MeshMapCard(
                 )
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             MeshMap(
                 cities = mesh.cities,
                 userPresence = mesh.userPresence,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 15.5.dp)
                     .aspectRatio(MeshMapDefaults.Projection.aspectRatio),
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             NodesOnlineCounter(
                 nodesOnline = mesh.nodesOnline,
                 modifier = Modifier
                     .align(Alignment.End)
-                    .padding(end = 14.dp),
+                    .padding(end = 15.5.dp),
             )
         }
     }

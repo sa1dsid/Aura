@@ -1,6 +1,7 @@
 package com.aura.feature.home.data.repository
 
 import com.aura.core.common.IoDispatcher
+import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.mapper.toDomain
 import com.aura.feature.home.data.remote.MeshRemoteDataSource
 import com.aura.feature.home.domain.model.MeshCity
@@ -23,19 +24,29 @@ import kotlin.time.Duration.Companion.hours
 @Singleton
 class MeshRepositoryImpl @Inject constructor(
     private val remote: MeshRemoteDataSource,
+    private val networkMonitor: NetworkMonitor,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : MeshRepository {
 
     private val cities = MutableStateFlow<List<MeshCity>>(emptyList())
     private val nodesOnline = MutableStateFlow<NodesOnline>(NodesOnline.Unknown)
-    private val userPresence = MutableStateFlow<UserPresence?>(null)
+    private val honestPresence = MutableStateFlow<UserPresence?>(null)
 
     private val refreshMutex = Mutex()
     private var lastFetchAtMillis: Long = 0L
 
     override fun observeMesh(): Flow<MeshState> =
-        combine(cities, nodesOnline, userPresence) { cityList, nodes, presence ->
-            MeshState(cities = cityList, nodesOnline = nodes, userPresence = presence)
+        combine(
+            cities,
+            nodesOnline,
+            honestPresence,
+            networkMonitor.status,
+        ) { cityList, nodes, presence, network ->
+            MeshState(
+                cities = cityList,
+                nodesOnline = nodes,
+                userPresence = presence?.copy(isPinnedByVpn = network.isVpnActive),
+            )
         }
 
     override suspend fun refresh(force: Boolean) {
@@ -64,7 +75,9 @@ class MeshRepositoryImpl @Inject constructor(
 
     private suspend fun fetchUserLocation() {
         try {
-            userPresence.value = remote.fetchUserLocation().toDomain()
+            val location = remote.fetchUserLocation()
+            if (location.vpnActive || networkMonitor.current().isVpnActive) return
+            honestPresence.value = location.toDomain()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Throwable) {

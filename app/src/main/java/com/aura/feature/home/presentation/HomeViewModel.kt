@@ -2,6 +2,7 @@ package com.aura.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.session.TestSessionEngine
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
@@ -11,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,6 +23,7 @@ class HomeViewModel @Inject constructor(
     observeMeshState: ObserveMeshStateUseCase,
     private val refreshHome: RefreshHomeUseCase,
     private val sessionEngine: TestSessionEngine,
+    networkMonitor: NetworkMonitor,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> =
@@ -33,6 +36,12 @@ class HomeViewModel @Inject constructor(
         )
 
     init {
+        viewModelScope.launch {
+            networkMonitor.status.drop(1).collect { refreshHome() }
+        }
+    }
+
+    fun onScreenResumed() {
         viewModelScope.launch { refreshHome() }
     }
 

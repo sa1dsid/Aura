@@ -1,12 +1,15 @@
 package com.aura.feature.onboarding.presentation.splash
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.R
 import com.aura.feature.home.presentation.format.formatGrouped
 import com.aura.feature.onboarding.domain.model.BootConfig
 import com.aura.feature.onboarding.domain.usecase.BootstrapUseCase
 import com.aura.feature.onboarding.domain.usecase.ResolveStartDestinationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,20 +22,9 @@ private const val MIN_VISIBLE_MILLIS = 1_500L
 
 private const val CHAR_DELAY_MILLIS = 7L
 
-private const val NODE_COUNT_TOKEN = "{nodes}"
-
-private val LOG_TEMPLATE = listOf(
-    "> in the beginning was the ION",
-    "> then came the mesh ... ok",
-    "> $NODE_COUNT_TOKEN nodes carry the signal",
-    "> your signal has been expected",
-    "> the network sees you",
-    "> synchronizing your aura",
-    "> opening the gate",
-).joinToString("\n")
-
 @HiltViewModel
 class SplashViewModel @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val bootstrap: BootstrapUseCase,
     private val resolveStartDestination: ResolveStartDestinationUseCase,
 ) : ViewModel() {
@@ -73,7 +65,14 @@ class SplashViewModel @Inject constructor(
             }
         }
     }
-}
 
-private fun buildLog(nodeCount: Int): String =
-    LOG_TEMPLATE.replace(NODE_COUNT_TOKEN, nodeCount.formatGrouped())
+    private fun buildLog(nodeCount: Int): String = listOf(
+        context.getString(R.string.splash_line_1),
+        context.getString(R.string.splash_line_2),
+        context.getString(R.string.splash_line_3, nodeCount.formatGrouped()),
+        context.getString(R.string.splash_line_4),
+        context.getString(R.string.splash_line_5),
+        context.getString(R.string.splash_line_6),
+        context.getString(R.string.splash_line_7),
+    ).joinToString("\n")
+}

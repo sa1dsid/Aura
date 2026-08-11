@@ -21,12 +21,13 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraPill
 import com.aura.core.designsystem.component.activeDotShadows
@@ -34,6 +35,8 @@ import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
+import com.aura.feature.home.presentation.format.StyledArg
+import com.aura.feature.home.presentation.format.annotatedFormat
 import com.aura.feature.home.presentation.format.displayName
 import com.aura.feature.home.presentation.format.formatGrouped
 import com.aura.feature.home.presentation.format.formatRate
@@ -56,12 +59,15 @@ fun NodeStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "NODE STATUS",
+                    text = stringResource(R.string.home_node_status),
                     style = AuraTheme.typography.cardLabel,
                     color = colors.textSecondary,
                 )
                 AuraPill(
-                    text = "×${nodeStatus.referralRate.formatRate()} rate",
+                    text = stringResource(
+                        R.string.home_rate_badge,
+                        nodeStatus.referralRate.formatRate(),
+                    ),
                     contentColor = colors.accentBlue,
                     borderColor = colors.iceBlue.copy(alpha = 0.60f),
                     backgroundColor = colors.iceBlue.copy(alpha = 0.22f),
@@ -197,22 +203,20 @@ private fun TierProgressLine(
     val colors = AuraTheme.colors
     val target = nodeStatus.progressTarget
     val nextTier = nodeStatus.nextTier
+    val progress = nodeStatus.progressToNext.formatGrouped()
 
-    val text = buildAnnotatedString {
-        withStyle(SpanStyle(color = colors.progressValue)) {
-            append(nodeStatus.progressToNext.formatGrouped())
-        }
-        if (target != null) {
-            withStyle(SpanStyle(color = colors.progressTarget)) {
-                append(" / ${target.formatGrouped()}")
-            }
-        }
-        if (nextTier != null) {
-            withStyle(SpanStyle(color = colors.textSecondary)) { append(" to ") }
-            withStyle(SpanStyle(color = colors.textBright, fontWeight = FontWeight.Bold)) {
-                append(nextTier.displayName())
-            }
-        }
+    val text = if (target != null && nextTier != null) {
+        annotatedFormat(
+            stringResource(R.string.home_progress_to),
+            StyledArg(progress, SpanStyle(color = colors.progressValue)),
+            StyledArg(target.formatGrouped(), SpanStyle(color = colors.progressTarget)),
+            StyledArg(
+                nextTier.displayName(),
+                SpanStyle(color = colors.textBright, fontWeight = FontWeight.Bold),
+            ),
+        )
+    } else {
+        AnnotatedString(progress, SpanStyle(color = colors.progressValue))
     }
 
     Text(

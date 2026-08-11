@@ -10,7 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.theme.AuraTheme
 
 @Composable
@@ -29,7 +31,7 @@ fun OrDivider(modifier: Modifier = Modifier) {
                 .background(colors.authBorder)
         )
         Text(
-            text = "OR",
+            text = stringResource(R.string.auth_or),
             style = AuraTheme.typography.segmentLabel,
             color = colors.authTextDim,
         )

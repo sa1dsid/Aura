@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.signalDotShadows
@@ -40,10 +42,10 @@ fun MeshMapCard(
     val colors = AuraTheme.colors
 
     AuraCard(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(vertical = 14.dp)) {
+        Column(Modifier.padding(vertical = 12.dp)) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 14.dp)
+                    .padding(horizontal = 15.5.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         Brush.verticalGradient(
@@ -64,30 +66,30 @@ fun MeshMapCard(
                         .background(colors.accentBlue)
                 )
                 Text(
-                    text = "MESH ACTIVE",
+                    text = stringResource(R.string.home_mesh_active),
                     style = AuraTheme.typography.cardLabel,
                     color = colors.textSecondary,
                 )
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             MeshMap(
                 cities = mesh.cities,
                 userPresence = mesh.userPresence,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 15.5.dp)
                     .aspectRatio(MeshMapDefaults.Projection.aspectRatio),
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             NodesOnlineCounter(
                 nodesOnline = mesh.nodesOnline,
                 modifier = Modifier
                     .align(Alignment.End)
-                    .padding(end = 14.dp),
+                    .padding(end = 15.5.dp),
             )
         }
     }
@@ -115,7 +117,7 @@ private fun NodesOnlineCounter(
             color = colors.textSecondary,
         )
         Text(
-            text = "NODES ONLINE",
+            text = stringResource(R.string.home_nodes_online),
             style = AuraTheme.typography.cardLabel,
             color = colors.textSecondary,
             textAlign = TextAlign.End,

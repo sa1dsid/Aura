@@ -21,10 +21,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraShadow
 import com.aura.core.designsystem.component.PRESS_FADE_MILLIS
 import com.aura.core.designsystem.component.auraGlowLayers
@@ -32,6 +34,7 @@ import com.aura.core.designsystem.component.pressScale
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.ConnectionState
+import com.aura.feature.home.presentation.format.label
 
 private val BadgeShape = RoundedCornerShape(16.dp)
 
@@ -84,22 +87,24 @@ fun ConnectionBadge(
                 .background(dotColor)
         )
 
+        val text = stringResource(
+            if (connection.isVpnActive) R.string.badge_conn_paused else R.string.badge_conn_ok,
+            connection.networkType.label(),
+            connection.rewardIon,
+        )
+        val stateColor = if (connection.isVpnActive) colors.danger else colors.accentBlue
+
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = colors.textBright)) {
-                    append(connection.networkType.label)
-                }
-                withStyle(SpanStyle(color = colors.textSecondary)) { append(" · ") }
-                if (connection.isVpnActive) {
-                    withStyle(SpanStyle(color = colors.textBright)) { append("VPN ON") }
-                    withStyle(SpanStyle(color = colors.textSecondary)) { append(" · ") }
-                    withStyle(SpanStyle(color = colors.danger)) { append("paused") }
-                } else {
-                    withStyle(SpanStyle(color = colors.textBright)) { append("VPN OFF") }
-                    withStyle(SpanStyle(color = colors.textSecondary)) { append(" · ") }
-                    withStyle(SpanStyle(color = colors.accentBlue)) {
-                        append("+${connection.rewardIon} ION")
+                val segments = text.split('·')
+                segments.forEachIndexed { index, segment ->
+                    if (index > 0) {
+                        withStyle(SpanStyle(color = colors.textSecondary)) { append(" · ") }
                     }
+                    val color =
+                        if (index == segments.lastIndex && index > 0) stateColor
+                        else colors.textBright
+                    withStyle(SpanStyle(color = color)) { append(segment) }
                 }
             },
             style = AuraTheme.typography.caption,

@@ -14,8 +14,8 @@ data class MeshCityDto(
 )
 
 data class UserLocationDto(
-    val lat: Double,
-    val lon: Double,
-    val city: String,
+    val lat: Double?,
+    val lon: Double?,
+    val city: String?,
     val vpnActive: Boolean,
 )

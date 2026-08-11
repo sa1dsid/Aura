@@ -38,15 +38,25 @@ class AuthViewModel @Inject constructor(
     val events: Flow<AuthEvent> = eventChannel.receiveAsFlow()
 
     fun onModeChange(mode: AuthMode) {
-        _uiState.update { it.copy(mode = mode, message = null) }
+        _uiState.update { it.copy(mode = mode, invalidField = null) }
     }
 
     fun onEmailChange(email: String) {
-        _uiState.update { it.copy(email = email, message = null) }
+        _uiState.update {
+            it.copy(
+                email = email,
+                invalidField = it.invalidField.takeUnless { field -> field == AuthField.EMAIL },
+            )
+        }
     }
 
     fun onPasswordChange(password: String) {
-        _uiState.update { it.copy(password = password, message = null) }
+        _uiState.update {
+            it.copy(
+                password = password,
+                invalidField = it.invalidField.takeUnless { field -> field == AuthField.PASSWORD },
+            )
+        }
     }
 
     fun onSubmit() {
@@ -71,26 +81,21 @@ class AuthViewModel @Inject constructor(
         if (state.submitting) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(submitting = true, message = null) }
-            val email = state.email.trim()
-            val result = requestPasswordReset(email)
-            _uiState.update { current ->
-                current.copy(
-                    submitting = false,
-                    message = result.fold(
-                        onSuccess = { AuthMessage.ResetLinkSent(email) },
-                        onFailure = { AuthMessage.Failure(it.toFailure()) },
-                    ),
-                )
-            }
+            _uiState.update { it.copy(submitting = true, invalidField = null) }
+            requestPasswordReset(state.email).fold(
+                onSuccess = {
+                    _uiState.update { it.copy(submitting = false) }
+                    eventChannel.send(AuthEvent.ShowToast(AuthToast.RESET_LINK_SENT))
+                },
+                onFailure = { error -> reportFailure(error.toFailure()) },
+            )
         }
     }
 
     private fun submit(request: suspend () -> Result<AuthSession>) {
         viewModelScope.launch {
-            _uiState.update { it.copy(submitting = true, message = null) }
-            val result = request()
-            result.fold(
+            _uiState.update { it.copy(submitting = true, invalidField = null) }
+            request().fold(
                 onSuccess = { session ->
                     val invitePending = session.accountCreated &&
                         !flagsRepository.flags(session.account.id).inviteScreenPassed
@@ -99,15 +104,43 @@ class AuthViewModel @Inject constructor(
                         if (invitePending) AuthEvent.OpenInvite else AuthEvent.OpenHome
                     )
                 },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(submitting = false, message = AuthMessage.Failure(error.toFailure()))
-                    }
-                },
+                onFailure = { error -> reportFailure(error.toFailure()) },
             )
         }
+    }
+
+    private suspend fun reportFailure(failure: AuthFailure) {
+        _uiState.update { it.copy(submitting = false, invalidField = failure.toField()) }
+        failure.toToast()?.let { eventChannel.send(AuthEvent.ShowToast(it)) }
     }
 }
 
 private fun Throwable.toFailure(): AuthFailure =
     (this as? AuthException)?.failure ?: AuthFailure.NETWORK
+
+private fun AuthFailure.toToast(): AuthToast? = when (this) {
+    AuthFailure.EMAIL_REQUIRED -> AuthToast.EMAIL_REQUIRED
+    AuthFailure.EMAIL_INVALID -> AuthToast.EMAIL_INVALID
+    AuthFailure.PASSWORD_TOO_SHORT -> AuthToast.PASSWORD_TOO_SHORT
+    AuthFailure.EMAIL_ALREADY_REGISTERED -> AuthToast.ACCOUNT_EXISTS
+    AuthFailure.ACCOUNT_NOT_FOUND -> AuthToast.NO_ACCOUNT
+    AuthFailure.WRONG_PASSWORD -> AuthToast.WRONG_CREDENTIALS
+    AuthFailure.NETWORK -> AuthToast.NO_CONNECTION
+    AuthFailure.GOOGLE_CANCELLED -> null
+}
+
+private fun AuthFailure.toField(): AuthField? = when (this) {
+    AuthFailure.EMAIL_REQUIRED,
+    AuthFailure.EMAIL_INVALID,
+    AuthFailure.EMAIL_ALREADY_REGISTERED,
+    AuthFailure.ACCOUNT_NOT_FOUND,
+    -> AuthField.EMAIL
+
+    AuthFailure.PASSWORD_TOO_SHORT,
+    AuthFailure.WRONG_PASSWORD,
+    -> AuthField.PASSWORD
+
+    AuthFailure.NETWORK,
+    AuthFailure.GOOGLE_CANCELLED,
+    -> null
+}

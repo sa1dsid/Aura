@@ -24,10 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.PRESS_FADE_MILLIS
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
@@ -83,7 +85,7 @@ fun InviteCodeField(
                 decorationBox = { innerTextField ->
                     if (code.isEmpty()) {
                         Text(
-                            text = INVITE_CODE_PLACEHOLDER,
+                            text = stringResource(R.string.invite_code_placeholder),
                             style = AuraTheme.typography.inviteCode,
                             color = colors.authCodePlaceholder,
                         )
@@ -99,7 +101,7 @@ fun InviteCodeField(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Code applied",
+                    text = stringResource(R.string.invite_applied_hint),
                     style = AuraTheme.typography.chipLabel,
                     color = colors.authTextMuted,
                 )
@@ -139,11 +141,9 @@ private fun PasteChip(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "PASTE",
+            text = stringResource(R.string.invite_paste),
             style = AuraTheme.typography.chipLabel,
             color = Color.White,
         )
     }
 }
-
-const val INVITE_CODE_PLACEHOLDER = "SYREX482"

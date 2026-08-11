@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IO Aura · русская локализация (values-ru) · экраны: Home, Network -->
+<!-- Перевод ручной, длины подогнаны под вёрстку. -->
+<!-- НЕ переводятся: IO Aura, ION, Spark, Data Share, SigmaDrop, IONI, имена тиров, единицы (ms, Mbps, GB), IP, коды -->
+<resources>
+
+    <!-- ===== Home: шапка и карта ===== -->
+    <string name="home_mesh_active">СЕТЬ АКТИВНА</string>
+    <string name="home_nodes_online">УЗЛОВ ОНЛАЙН</string>
+
+    <!-- ===== Home: балансы ===== -->
+    <string name="home_accrued">НАКОПЛЕНО</string>
+    <string name="home_available_withdraw">ДОСТУПНО К ВЫВОДУ</string>
+
+    <!-- ===== Home: статус узла ===== -->
+    <string name="home_node_status">СТАТУС УЗЛА</string>
+    <string name="home_rate_badge">×%1$s рейт</string>
+    <!-- имена тиров — бренд-термины, остаются на английском -->
+    <string name="tier_idle">Idle Node</string>
+    <string name="tier_active_signal">Active Signal</string>
+    <string name="tier_stable_link">Stable Link</string>
+    <string name="tier_core_node">Core Node</string>
+    <string name="tier_ionic_prime">IONIC Prime</string>
+    <string name="home_progress_to">%1$s / %2$s до %3$s</string>
+
+    <!-- ===== Home: тизер-карточки ===== -->
+    <string name="teaser_bonus_title">Бонусный вывод</string>
+    <string name="teaser_bonus_steps">%1$d из %2$d шагов готово</string>
+    <string name="teaser_spark_title">Spark · Прогресс купона</string>
+    <string name="teaser_spark_progress">%1$s из %2$s</string>
+    <string name="teaser_vpn_title">Прогресс VPN-кода</string>
+    <string name="teaser_vpn_sub">%1$s · Вклад %2$d%%</string>
+    <string name="teaser_complete">ГОТОВО</string>
+
+    <!-- ===== Home: бейдж подключения ===== -->
+    <string name="badge_conn_ok">%1$s·VPN ВЫКЛ·+%2$d ION</string>
+    <string name="badge_conn_paused">%1$s·VPN ВКЛ·пауза</string>
+
+    <!-- ===== Home: таймер ===== -->
+    <string name="timer_testing">ТЕСТ ИДЁТ</string>
+    <string name="timer_tap_to">НАЖМИ</string>
+    <string name="timer_start">Старт</string>
+    <string name="timer_reward">+%1$d ION</string>
+    <string name="timer_next_in">СЛЕДУЮЩИЙ ЧЕРЕЗ</string>
+    <string name="timer_hhmmss">ЧЧ:ММ:СС</string>
+    <string name="timer_stay_hint">Оставайтесь на экране до конца теста</string>
+
+    <!-- ===== Home: инвайт и навигация ===== -->
+    <string name="invite_progress">%1$d/%2$d друзей +%3$d%% рейт</string>
+    <string name="invite_button">ПОЗВАТЬ</string>
+    <string name="nav_home">ГЛАВНАЯ</string>
+    <string name="nav_nodes">УЗЛЫ</string>
+    <string name="nav_ioni">IONI</string>
+    <string name="nav_terminal">ТЕРМИНАЛ</string>
+    <string name="nav_network">СЕТЬ</string>
+
+    <!-- ===== Тосты ===== -->
+    <string name="toast_vpn_block">ION на паузе · Обнаружен VPN · Выключите VPN, чтобы продолжить</string>
+    <string name="toast_datashare_off">Data Share не активирован · Нужно разрешение · нажмите кнопку ещё раз.</string>
+    <string name="toast_datashare_on">Data Share активирован · Работает в фоне.</string>
+    <string name="toast_cooldown">Тест ещё не готов · возвращайтесь через %1$s</string>
+    <string name="toast_session_done">+%1$d ION начислено · следующий тест через 12ч</string>
+    <string name="toast_session_interrupted">Тест прерван · прогресс потерян · начните заново</string>
+    <string name="toast_vpn_resumed">VPN выключен · отсчёт продолжен</string>
+    <string name="toast_no_connection">Нет соединения · проверьте сеть</string>
+    <string name="toast_test_failed">Тест не удался · попробуйте ещё раз</string>
+
+    <!-- ===== Экран Network ===== -->
+    <string name="net_title">Сеть</string>
+    <string name="net_live">LIVE</string>
+    <string name="net_last_tested">СЕГОДНЯ · ПОСЛЕДНИЙ ТЕСТ В %1$s</string>
+    <string name="net_ping">ПИНГ</string>
+    <string name="net_jitter">ДЖИТТЕР</string>
+    <string name="net_packet_loss">ПОТЕРИ</string>
+    <string name="net_connection">ПОДКЛЮЧЕНИЕ</string>
+    <string name="net_operator">ОПЕРАТОР</string>
+    <string name="net_ip">IP-АДРЕС</string>
+    <string name="net_protocol">ПРОТОКОЛ</string>
+    <string name="net_location">ЛОКАЦИЯ</string>
+    <string name="net_vpn">VPN</string>
+    <string name="net_vpn_on">ВКЛ</string>
+    <string name="net_history">ИСТОРИЯ</string>
+    <string name="net_ping_history">История пинга</string>
+    <string name="net_ping_history_sub">Последние %1$d нажатий · Home и Network</string>
+    <string name="net_latest">СЕЙЧАС</string>
+    <string name="net_axis_first">1-е нажатие</string>
+    <string name="net_axis_mid">25-е</string>
+    <string name="net_axis_last">50-е (последнее)</string>
+    <string name="net_legend_ideal">Идеал &lt;20ms</string>
+    <string name="net_legend_good">Норма &lt;30ms</string>
+    <string name="net_legend_warning">Плохо &gt;45ms</string>
+    <string name="net_legend_vpn">VPN активен</string>
+    <string name="net_log_title">network_log.json · %1$d нажатий</string>
+
+    <!-- ===== Диагностика ===== -->
+    <string name="diag_section">ДИАГНОСТИКА</string>
+    <string name="diag_tap_to_test">НАЖМИ ДЛЯ ТЕСТА</string>
+    <string name="diag_start">Запустить тест</string>
+    <string name="diag_testing">ТЕСТИРУЕМ…</string>
+    <string name="diag_download">Загрузка</string>
+    <string name="diag_upload">Отдача</string>
+    <string name="diag_conn_excellent">Отличное соединение</string>
+    <string name="diag_conn_good">Хорошее соединение</string>
+    <string name="diag_conn_poor">Слабое соединение</string>
+    <string name="diag_test_again">Ещё раз</string>
+
+    <!-- ===== Онбординг: Auth ===== -->
+    <string name="auth_slogan">In the beginning was the ION</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Sign Up</string>
+    <string name="auth_google">Continue with Google</string>
+    <string name="auth_or">ИЛИ</string>
+    <string name="auth_email">ПОЧТА</string>
+    <string name="auth_password">ПАРОЛЬ</string>
+    <string name="auth_forgot">Забыли пароль?</string>
+    <string name="auth_create">Создать аккаунт</string>
+    <string name="auth_terms_line">Регистрируясь, вы принимаете Условия сервиса и Политику конфиденциальности</string>
+    <string name="toast_email_first">Сначала введите почту</string>
+    <string name="toast_reset_sent">Ссылка для сброса отправлена · проверьте почту</string>
+    <string name="toast_email_invalid">Неверный формат почты</string>
+    <string name="toast_pass_short">Пароль слишком короткий — от 8 символов</string>
+    <string name="toast_wrong_creds">Неверная почта или пароль</string>
+    <string name="toast_acc_exists">Аккаунт уже существует — войдите</string>
+    <string name="toast_no_account">Аккаунта с этой почтой нет</string>
+
+    <!-- ===== Онбординг: Инвайт-код ===== -->
+    <string name="invite_title">Есть инвайт-код?</string>
+    <string name="invite_sub">Введите код друга, чтобы связать аккаунты. Можно пропустить — но позже код добавить нельзя.</string>
+    <string name="invite_paste">ВСТАВИТЬ</string>
+    <string name="invite_applied_hint">Код применён</string>
+    <string name="invite_once_note">Один код на аккаунт · применяется один раз</string>
+    <string name="invite_apply">Применить код</string>
+    <string name="invite_skip">Пропустить — у меня нет кода</string>
+    <string name="toast_code_applied">Код применён</string>
+    <string name="toast_code_invalid">Неверный код · проверьте и попробуйте снова</string>
+
+    <!-- ===== Онбординг: Попап бонуса ===== -->
+    <string name="bonus_title">Тебя ждут 3,000 ION</string>
+    <string name="bonus_text">Твой приветственный бонус зарезервирован на аккаунте. Пройди несколько шагов, чтобы открыть вывод — прогресс сохраняется.</string>
+    <string name="bonus_cta">Показать шаги</string>
+    <string name="bonus_later">Позже — он никуда не денется</string>
+
+    <!-- ===== Бургер-меню ===== -->
+    <string name="menu_push">Push-уведомления</string>
+    <string name="menu_terms">Условия сервиса</string>
+    <string name="menu_privacy">Конфиденциальность</string>
+    <string name="menu_logout">Выйти</string>
+    <string name="menu_delete">Удалить аккаунт</string>
+    <string name="menu_delete_title">Удалить аккаунт?</string>
+    <string name="menu_delete_text">Аккаунт и все данные будут удалены навсегда: балансы ION и Spark, коды, реферальная сеть. Отменить это нельзя.</string>
+    <string name="menu_keep">Оставить аккаунт</string>
+    <string name="menu_delete_confirm">Удалить навсегда</string>
+
+    <!-- Строки лога сплэша (splash_line_1..7) в этом файле ОТСУТСТВУЮТ намеренно:
+         голос бренда, остаются английскими во всех локалях — Android возьмёт их из базового values/. -->
+
+    <!-- ===== Terminal: первый визит и карточки источников ===== -->
+    <string name="term_both_toast">Рекомендуем Both — комбинированные источники получают верхний приоритет в очереди</string>
+    <string name="term_welcome_title">Почти готово</string>
+    <string name="term_welcome_text">Всё уже настроено на максимум — источники Both, лимит 20 GB. Отметьте согласие ниже и нажмите Enable Data Share.</string>
+    <string name="term_welcome_ok">Понятно</string>
+    <string name="toast_datashare_off_v2">Data Share нужно это разрешение · нажмите ещё раз</string>
+    <string name="term_src_on">Вкл</string>
+    <string name="term_src_recommended">Рекомендуем</string>
+    <string name="term_src_unlimited">Безлимит</string>
+    <string name="term_src_adjustable">Настраивается</string>
+    <string name="term_max_priority">МАКС ПРИОРИТЕТ</string>
+    <string name="term_priority_badge">×%1$s приоритет</string>
+
+    <!-- ===== Прочие состояния ===== -->
+    <string name="badge_used">USED</string>
+    <string name="nodes_prime_reached">Prime достигнут</string>
+
+</resources>

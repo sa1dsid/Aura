@@ -1,12 +1,12 @@
 package com.aura.feature.home.domain.model
 
-enum class NetworkType(val label: String) {
-    MOBILE_2G("Mobile 2G"),
-    MOBILE_3G("Mobile 3G"),
-    MOBILE_4G("Mobile 4G"),
-    MOBILE_5G("Mobile 5G"),
-    WIFI("Wi-Fi"),
-    NONE("No network"),
+enum class NetworkType {
+    MOBILE_2G,
+    MOBILE_3G,
+    MOBILE_4G,
+    MOBILE_5G,
+    WIFI,
+    NONE,
 }
 
 data class ConnectionState(

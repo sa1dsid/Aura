@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.auraGlow
@@ -60,7 +61,7 @@ fun HomeTopBar(
         BurgerButton(onClick = onMenuClick)
 
         Text(
-            text = "I Ø Aura",
+            text = stringResource(R.string.home_logo),
             style = AuraTheme.typography.logo,
             color = colors.textBright,
         )
@@ -88,7 +89,7 @@ private fun BurgerButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_menu),
-            contentDescription = "Menu",
+            contentDescription = stringResource(R.string.cd_menu),
             tint = color,
             modifier = Modifier.size(24.dp),
         )
@@ -116,11 +117,11 @@ private fun NewsPlanet(
 
     Box(
         modifier = modifier
-            .pressScale(interactionSource, pressedScale = 0.9f)
             .size(48.dp)
             .auraGlow(Color.White.copy(alpha = 0.40f), width = 30.dp, height = 30.dp, blurRadius = 40.dp)
             .auraGlow(Color.White.copy(alpha = 0.52f), width = 24.dp, height = 24.dp, blurRadius = 16.dp)
             .auraGlow(Color.White.copy(alpha = 0.40f), width = 26.dp, height = 26.dp, blurRadius = 8.dp)
+            .pressScale(interactionSource, pressedScale = 0.9f)
             .drawBehind {
                 drawPlanet(
                     bodyColor = colors.surfaceTop,

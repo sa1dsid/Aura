@@ -41,6 +41,7 @@ fun AuthTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
+    isError: Boolean = false,
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
 ) {
@@ -49,7 +50,11 @@ fun AuthTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val borderColor by animateColorAsState(
-        targetValue = if (isFocused) colors.authPasteBorder else colors.authBorder,
+        targetValue = when {
+            isError -> colors.danger
+            isFocused -> colors.authPasteBorder
+            else -> colors.authBorder
+        },
         animationSpec = tween(160),
         label = "field-border",
     )

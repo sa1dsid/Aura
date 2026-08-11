@@ -1,3 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IO Aura · base strings (EN) · screens: Home, Network -->
+<!-- Brand terms NOT to be translated anywhere: IO Aura, ION, Spark, Data Share, SigmaDrop, IONI, tier names -->
+<!-- LOCALIZATION LAYERS:
+     SHORT keys (labels, buttons, badges, nav, section titles) = EN for ALL locales.
+     They exist ONLY here in base values/ and must NOT be copied to language folders.
+     Exception: values-ru translates everything incl. short keys (strings_ru.xml).
+     LONG keys (toasts, hints, explanations) = translated per system language.
+     LONG keys are marked with [LONG] below; language files will contain ONLY these. -->
 <resources>
-    <string name="app_name">Aura</string>
+
+    <!-- ===== Home: header & mesh ===== -->
+    <string name="home_mesh_active">MESH ACTIVE</string>
+    <string name="home_nodes_online">NODES ONLINE</string>
+
+    <!-- ===== Home: balances ===== -->
+    <string name="home_accrued">ACCRUED</string>
+    <string name="home_available_withdraw">AVAILABLE TO WITHDRAW</string>
+
+    <!-- ===== Home: node status ===== -->
+    <string name="home_node_status">NODE STATUS</string>
+    <string name="home_rate_badge">×%1$s rate</string>
+    <!-- tier names = brand terms, single source for both locales -->
+    <string name="tier_idle">Idle Node</string>
+    <string name="tier_active_signal">Active Signal</string>
+    <string name="tier_stable_link">Stable Link</string>
+    <string name="tier_core_node">Core Node</string>
+    <string name="tier_ionic_prime">IONIC Prime</string>
+    <string name="home_progress_to">%1$s / %2$s to %3$s</string>
+
+    <!-- ===== Home: teaser cards ===== -->
+    <string name="teaser_bonus_title">Bonus Withdrawal</string>
+    <string name="teaser_bonus_steps">%1$d of %2$d steps complete</string>
+    <string name="teaser_spark_title">Spark · Coupon Progress</string>
+    <string name="teaser_spark_progress">%1$s of %2$s</string>
+    <string name="teaser_vpn_title">VPN Code Progress</string>
+    <string name="teaser_vpn_sub">%1$s · Contribution %2$d%%</string>
+    <string name="teaser_complete">COMPLETE</string>
+
+    <!-- ===== Home: connection badge ===== -->
+    <string name="badge_conn_ok">%1$s·VPN OFF·+%2$d ION</string>
+    <string name="badge_conn_paused">%1$s·VPN ON·paused</string>
+
+    <!-- ===== Home: timer ===== -->
+    <string name="timer_testing">TESTING</string>
+    <string name="timer_tap_to">TAP TO</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_reward">+%1$d ION</string>
+    <string name="timer_next_in">NEXT TEST IN</string>
+    <string name="timer_hhmmss">HH:MM:SS</string>
+    <!-- [LONG] --> <string name="timer_stay_hint">Stay on this screen to complete the test</string>
+
+    <!-- ===== Home: invite row & nav ===== -->
+    <string name="invite_progress">%1$d/%2$d friends +%3$d%% rate</string>
+    <string name="invite_button">INVITE</string>
+    <string name="nav_home">HOME</string>
+    <string name="nav_nodes">NODES</string>
+    <string name="nav_ioni">IONI</string>
+    <string name="nav_terminal">TERMINAL</string>
+    <string name="nav_network">NETWORK</string>
+
+    <!-- ===== Toasts ===== -->
+    <!-- [LONG] --> <string name="toast_vpn_block">ION paused · VPN detected · Turn off VPN to continue</string>
+    <!-- [LONG] --> <string name="toast_datashare_off">Data Share not activated · Permission needed · tap the button to try again.</string>
+    <!-- [LONG] --> <string name="toast_datashare_on">Data Share activated · Running in the background now.</string>
+    <!-- [LONG] --> <string name="toast_cooldown">Next test not ready · come back in %1$s</string>
+    <!-- [LONG] --> <string name="toast_session_done">+%1$d ION credited · next test in 12h</string>
+    <!-- [LONG] --> <string name="toast_session_interrupted">Test interrupted · progress lost · start again</string>
+    <!-- [LONG] --> <string name="toast_vpn_resumed">VPN off · countdown resumed</string>
+    <!-- [LONG] --> <string name="toast_no_connection">No connection · check your network</string>
+    <!-- [LONG] --> <string name="toast_test_failed">Test failed · try again</string>
+
+    <!-- ===== Network screen ===== -->
+    <string name="net_title">Network</string>
+    <string name="net_live">LIVE</string>
+    <string name="net_last_tested">TODAY · LAST TESTED AT %1$s</string>
+    <string name="net_ping">PING</string>
+    <string name="net_jitter">JITTER</string>
+    <string name="net_packet_loss">PACKET LOSS</string>
+    <string name="net_connection">CONNECTION</string>
+    <string name="net_operator">OPERATOR</string>
+    <string name="net_ip">IP ADDRESS</string>
+    <string name="net_protocol">PROTOCOL</string>
+    <string name="net_location">LOCATION</string>
+    <string name="net_vpn">VPN</string>
+    <string name="net_vpn_on">ON</string>
+    <string name="net_history">HISTORY</string>
+    <string name="net_ping_history">Ping History</string>
+    <!-- [LONG] --> <string name="net_ping_history_sub">Last %1$d presses · from Home &amp; Network</string>
+    <string name="net_latest">LATEST</string>
+    <string name="net_axis_first">1st press</string>
+    <string name="net_axis_mid">25th</string>
+    <string name="net_axis_last">50th (latest)</string>
+    <string name="net_legend_ideal">Ideal &lt;20ms</string>
+    <string name="net_legend_good">Good &lt;30ms</string>
+    <string name="net_legend_warning">Warning &gt;45ms</string>
+    <string name="net_legend_vpn">VPN active</string>
+    <string name="net_log_title">network_log.json · %1$d presses</string>
+
+    <!-- ===== Diagnostics ===== -->
+    <string name="diag_section">DIAGNOSTICS</string>
+    <string name="diag_tap_to_test">TAP TO TEST</string>
+    <string name="diag_start">Start Test</string>
+    <string name="diag_testing">TESTING…</string>
+    <string name="diag_download">Download</string>
+    <string name="diag_upload">Upload</string>
+    <string name="diag_conn_excellent">Excellent connection</string>
+    <string name="diag_conn_good">Good connection</string>
+    <string name="diag_conn_poor">Poor connection</string>
+    <string name="diag_test_again">Test Again</string>
+
+    <!-- ===== Onboarding: Auth ===== -->
+    <string name="auth_slogan">In the beginning was the ION</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Sign Up</string>
+    <string name="auth_google">Continue with Google</string>
+    <string name="auth_or">OR</string>
+    <string name="auth_email">EMAIL</string>
+    <string name="auth_password">PASSWORD</string>
+    <string name="auth_forgot">Forgot password?</string>
+    <string name="auth_create">Create Account</string>
+    <!-- [LONG] --> <string name="auth_terms_line">By signing up you agree to the Terms of Service and Privacy Policy</string>
+    <!-- [LONG] --> <string name="toast_email_first">Enter your email first</string>
+    <!-- [LONG] --> <string name="toast_reset_sent">Reset link sent · check your email</string>
+    <!-- [LONG] --> <string name="toast_email_invalid">Invalid email format</string>
+    <!-- [LONG] --> <string name="toast_pass_short">Password too short — 8+ characters</string>
+    <!-- [LONG] --> <string name="toast_wrong_creds">Wrong email or password</string>
+    <!-- [LONG] --> <string name="toast_acc_exists">Account already exists — sign in instead</string>
+    <!-- [LONG] --> <string name="toast_no_account">No account with this email</string>
+
+    <!-- ===== Onboarding: Invite code ===== -->
+    <string name="invite_title">Got an invite code?</string>
+    <!-- [LONG] --> <string name="invite_sub">Enter a friend\'s code to link your accounts. You can skip this — but the code can\'t be added later.</string>
+    <string name="invite_paste">PASTE</string>
+    <string name="invite_applied_hint">Code applied</string>
+    <!-- [LONG] --> <string name="invite_once_note">One code per account · applied once</string>
+    <string name="invite_apply">Apply Code</string>
+    <string name="invite_skip">Skip — I don\'t have a code</string>
+    <!-- [LONG] --> <string name="toast_code_applied">Code applied</string>
+    <!-- [LONG] --> <string name="toast_code_invalid">Invalid code · check and try again</string>
+
+    <!-- ===== Onboarding: Welcome bonus popup ===== -->
+    <string name="bonus_title">3,000 ION are waiting for you</string>
+    <!-- [LONG] --> <string name="bonus_text">Your welcome bonus is reserved on this account. Complete a few steps to unlock the withdrawal — your progress is saved as you go.</string>
+    <string name="bonus_cta">Show me the steps</string>
+    <!-- [LONG] --> <string name="bonus_later">Later — it\'s not going anywhere</string>
+
+    <!-- ===== Burger menu ===== -->
+    <string name="menu_push">Push notifications</string>
+    <string name="menu_terms">Terms of Service</string>
+    <string name="menu_privacy">Privacy Policy</string>
+    <string name="menu_logout">Log out</string>
+    <string name="menu_delete">Delete account</string>
+    <string name="menu_delete_title">Delete account?</string>
+    <!-- [LONG] --> <string name="menu_delete_text">This permanently deletes your account and all data: ION and Spark balances, codes, referral network. This cannot be undone.</string>
+    <string name="menu_keep">Keep my account</string>
+    <string name="menu_delete_confirm">Delete permanently</string>
+
+    <!-- ===== Splash boot log =====
+         BRAND VOICE: these lines are ENGLISH for ALL locales, incl. Russian.
+         NEVER translate. Do not copy these keys into any values-xx folder.
+         %1$s in line 3 = live nodes-online count (cached/default if unavailable). -->
+    <string name="splash_line_1">&gt; in the beginning was the ION</string>
+    <string name="splash_line_2">&gt; then came the mesh ... ok</string>
+    <string name="splash_line_3">&gt; %1$s nodes carry the signal</string>
+    <string name="splash_line_4">&gt; your signal has been expected</string>
+    <string name="splash_line_5">&gt; the network sees you</string>
+    <string name="splash_line_6">&gt; synchronizing your aura</string>
+    <string name="splash_line_7">&gt; opening the gate</string>
+
+    <!-- ===== Terminal: guided first visit & source cards ===== -->
+    <!-- [LONG] --> <string name="term_both_toast">Both is recommended — combined sources get top queue priority</string>
+    <string name="term_welcome_title">You\'re almost in</string>
+    <!-- [LONG] --> <string name="term_welcome_text">Everything is set to max — Both sources, 20 GB limit. Agree to the terms below and hit Enable Data Share.</string>
+    <string name="term_welcome_ok">Got it</string>
+    <!-- Permission-denied wording: TWO variants, pick per final decision (canonical toast vs persistent red line), remove the loser -->
+    <!-- [LONG] --> <string name="toast_datashare_off_v2">Data Share needs this permission to run · tap to try again</string>
+    <string name="term_src_on">On</string>
+    <string name="term_src_recommended">Recommended</string>
+    <string name="term_src_unlimited">Unlimited</string>
+    <string name="term_src_adjustable">Adjustable</string>
+    <string name="term_max_priority">MAX PRIORITY</string>
+    <string name="term_priority_badge">×%1$s priority</string>
+
+    <!-- ===== Misc states ===== -->
+    <string name="badge_used">USED</string>
+    <string name="nodes_prime_reached">Prime reached</string>
+
 </resources>

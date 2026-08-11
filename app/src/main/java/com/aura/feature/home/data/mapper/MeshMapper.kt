@@ -13,8 +13,12 @@ fun MeshCityDto.toDomain(): MeshCity = MeshCity(
     isLive = live,
 )
 
-fun UserLocationDto.toDomain(): UserPresence = UserPresence(
-    location = GeoPoint(latitude = lat, longitude = lon),
-    cityName = city,
-    isPinnedByVpn = vpnActive,
-)
+fun UserLocationDto.toDomain(): UserPresence? {
+    val latitude = lat ?: return null
+    val longitude = lon ?: return null
+    return UserPresence(
+        location = GeoPoint(latitude = latitude, longitude = longitude),
+        cityName = city.orEmpty(),
+        isPinnedByVpn = vpnActive,
+    )
+}

@@ -22,6 +22,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    androidResources {
+        localeFilters += "en"
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

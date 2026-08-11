@@ -27,8 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.onboarding.domain.model.AuthMode
 
@@ -76,13 +78,13 @@ fun AuthSegmentedControl(
 
         Row(modifier = Modifier.fillMaxWidth()) {
             SegmentLabel(
-                text = "Sign In",
+                text = stringResource(R.string.auth_sign_in),
                 selected = mode == AuthMode.SIGN_IN,
                 onClick = { onModeChange(AuthMode.SIGN_IN) },
                 modifier = Modifier.width(thumbWidth),
             )
             SegmentLabel(
-                text = "Sign Up",
+                text = stringResource(R.string.auth_sign_up),
                 selected = mode == AuthMode.SIGN_UP,
                 onClick = { onModeChange(AuthMode.SIGN_UP) },
                 modifier = Modifier.width(thumbWidth),

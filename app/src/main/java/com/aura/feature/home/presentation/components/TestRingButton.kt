@@ -10,23 +10,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.aura.R
+import com.aura.core.designsystem.component.AuraShadow
+import com.aura.core.designsystem.component.auraArcGlow
+import com.aura.core.designsystem.component.auraGlowLayer
+import com.aura.core.designsystem.component.drawAuraArcGlow
+import com.aura.core.designsystem.component.drawAuraGlow
+import com.aura.core.designsystem.component.planetCoreShadows
+import com.aura.core.designsystem.component.planetRingShadows
 import com.aura.core.designsystem.component.pressScale
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
@@ -34,8 +41,10 @@ import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.presentation.format.formatHoursMinutesSeconds
 import com.aura.feature.home.presentation.format.formatMinutesSeconds
 
-private val RingDiameter = 226.dp
-private val RingStroke = 4.5.dp
+private val RingDiameter = 162.dp
+private val RingStroke = 3.24.dp
+private val CoreDiameter = 122.dp
+private val CoreBorder = 1.dp
 
 @Composable
 fun TestRingButton(
@@ -56,10 +65,9 @@ fun TestRingButton(
         is TestSessionState.Cooldown -> session.remainingFraction()
     }
 
-    val baseGlow = if (isMuted) 0.05f else 0.16f
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isPressed && isReady) baseGlow * 2.2f else baseGlow,
-        animationSpec = tween(180),
+    val glowAlpha = animateFloatAsState(
+        targetValue = if (isMuted) 0.35f else 1f,
+        animationSpec = tween(220),
         label = "ring-glow",
     )
 
@@ -71,30 +79,23 @@ fun TestRingButton(
             Modifier
                 .pressScale(pressed = isPressed, enabled = isReady, pressedScale = 0.965f)
                 .fillMaxSize()
-                .clip(CircleShape)
+                .ringGraphics(
+                    fraction = fraction,
+                    trackColor = colors.border,
+                    arcColor = if (isMuted) colors.accentBlue.copy(alpha = 0.45f) else colors.accentBlue,
+                    ringShadows = colors.planetRingShadows,
+                    coreShadows = colors.planetCoreShadows,
+                    coreColor = colors.planetCore,
+                    coreEdgeColor = colors.surfaceBottom,
+                    coreBorderColor = colors.accentBlueSoft.copy(alpha = 0.22f),
+                    coreInnerGlowColor = colors.accentBlue,
+                    glowAlpha = { glowAlpha.value },
+                )
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     enabled = isReady,
                     onClick = onClick,
-                )
-                .ringGraphics(
-                    fraction = fraction,
-                    trackColor = colors.border,
-                    arcColors = if (isMuted) {
-                        listOf(
-                            colors.accentBlue.copy(alpha = 0.35f),
-                            colors.accentBlue.copy(alpha = 0.15f),
-                        )
-                    } else {
-                        listOf(colors.accentBlue, colors.accentBlue)
-                    },
-                    glowColor = colors.glowSky,
-                    coreColor = colors.planetCore,
-                    coreEdgeColor = colors.surfaceBottom,
-                    coreBorderColor = colors.accentBlueSoft.copy(alpha = 0.22f),
-                    coreInnerGlowColor = colors.accentBlue,
-                    glowAlpha = glowAlpha,
                 )
         )
 
@@ -109,56 +110,60 @@ private fun TestSessionState.Cooldown.remainingFraction(): Float =
 private fun Modifier.ringGraphics(
     fraction: Float,
     trackColor: Color,
-    arcColors: List<Color>,
-    glowColor: Color,
+    arcColor: Color,
+    ringShadows: List<AuraShadow>,
+    coreShadows: List<AuraShadow>,
     coreColor: Color,
     coreEdgeColor: Color,
     coreBorderColor: Color,
     coreInnerGlowColor: Color,
-    glowAlpha: Float,
-): Modifier = drawBehind {
+    glowAlpha: () -> Float,
+): Modifier = drawWithCache {
     val strokePx = RingStroke.toPx()
-    val inset = strokePx * 2.5f
-    val arcTopLeft = Offset(inset, inset)
-    val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
-    val coreRadius = arcSize.minDimension / 2f - strokePx
+    val arcTopLeft = Offset(strokePx / 2f, strokePx / 2f)
+    val arcSize = Size(size.width - strokePx, size.height - strokePx)
+    val sweepAngle = 360f * fraction
 
-    drawHalo(glowAlpha, glowColor)
+    val corePx = CoreDiameter.toPx()
+    val coreCenter = Offset(size.width / 2f, size.height / 2f)
+    val ringGlows = ringShadows.map { auraArcGlow(it, strokePx) }
+    val coreGlows = coreShadows.map { auraGlowLayer(it, corePx, corePx, coreCenter) }
 
-    drawPlanetCore(
-        radius = coreRadius,
-        coreColor = coreColor,
-        edgeColor = coreEdgeColor,
-        borderColor = coreBorderColor,
-        innerGlowColor = coreInnerGlowColor,
-    )
-
-    drawArc(
-        color = trackColor,
-        startAngle = START_ANGLE,
-        sweepAngle = 360f,
-        useCenter = false,
-        topLeft = arcTopLeft,
-        size = arcSize,
-        style = Stroke(width = strokePx, cap = StrokeCap.Round),
-    )
-
-    val brush = Brush.linearGradient(
-        colors = arcColors,
-        start = Offset(0f, 0f),
-        end = Offset(size.width, size.height),
-    )
-
-    GLOW_PASSES.forEach { (widthFactor, alpha) ->
+    onDrawBehind {
         drawArc(
-            brush = brush,
+            color = trackColor,
             startAngle = START_ANGLE,
-            sweepAngle = 360f * fraction,
+            sweepAngle = 360f,
             useCenter = false,
             topLeft = arcTopLeft,
             size = arcSize,
-            style = Stroke(width = strokePx * widthFactor, cap = StrokeCap.Round),
-            alpha = alpha,
+            style = Stroke(width = strokePx),
+        )
+
+        val alpha = glowAlpha()
+        ringGlows.forEach { glow ->
+            drawAuraArcGlow(glow, arcTopLeft, arcSize, START_ANGLE, sweepAngle, alpha)
+        }
+
+        drawArc(
+            color = arcColor,
+            startAngle = START_ANGLE,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            topLeft = arcTopLeft,
+            size = arcSize,
+            style = Stroke(width = strokePx, cap = StrokeCap.Round),
+        )
+
+        coreGlows.forEach { drawAuraGlow(it) }
+
+        drawPlanetCore(
+            radius = corePx / 2f,
+            coreColor = coreColor,
+            edgeColor = coreEdgeColor,
+            borderColor = coreBorderColor,
+            innerGlowColor = coreInnerGlowColor,
+            borderWidth = CoreBorder.toPx(),
         )
     }
 }
@@ -169,16 +174,15 @@ private fun DrawScope.drawPlanetCore(
     edgeColor: Color,
     borderColor: Color,
     innerGlowColor: Color,
+    borderWidth: Float,
 ) {
     if (radius <= 0f) return
-
-    val lightCenter = Offset(center.x, center.y - radius * 0.16f)
 
     drawCircle(
         brush = Brush.radialGradient(
             colors = listOf(coreColor, edgeColor),
-            center = lightCenter,
-            radius = radius,
+            center = Offset(center.x, center.y - radius * CORE_LIGHT_SHIFT),
+            radius = radius * CORE_LIGHT_RADIUS,
         ),
         radius = radius,
         center = center,
@@ -188,10 +192,10 @@ private fun DrawScope.drawPlanetCore(
         brush = Brush.radialGradient(
             colorStops = arrayOf(
                 0.45f to Color.Transparent,
-                0.85f to innerGlowColor.copy(alpha = 0.08f),
-                1f to innerGlowColor.copy(alpha = 0.16f),
+                0.78f to innerGlowColor.copy(alpha = 0.03f),
+                1f to innerGlowColor.copy(alpha = 0.12f),
             ),
-            center = center,
+            center = Offset(center.x, center.y + radius * CORE_INNER_SHIFT),
             radius = radius,
         ),
         radius = radius,
@@ -200,25 +204,9 @@ private fun DrawScope.drawPlanetCore(
 
     drawCircle(
         color = borderColor,
-        radius = radius - 0.5f,
+        radius = radius - borderWidth / 2f,
         center = center,
-        style = Stroke(width = 1f),
-    )
-}
-
-private fun DrawScope.drawHalo(glowAlpha: Float, color: Color) {
-    val radius = size.minDimension / 2f
-    drawCircle(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                color.copy(alpha = glowAlpha),
-                color.copy(alpha = glowAlpha * 0.35f),
-                Color.Transparent,
-            ),
-            center = center,
-            radius = radius,
-        ),
-        radius = radius,
+        style = Stroke(width = borderWidth),
     )
 }
 
@@ -227,16 +215,22 @@ private fun RingLabels(session: TestSessionState) {
     val colors = AuraTheme.colors
 
     val (caption, value, footnote) = when (session) {
-        is TestSessionState.Ready ->
-            Triple("TAP TO", "START", "+${session.rewardIon} ION")
+        is TestSessionState.Ready -> Triple(
+            stringResource(R.string.timer_tap_to),
+            stringResource(R.string.timer_start),
+            stringResource(R.string.timer_reward, session.rewardIon),
+        )
 
-        is TestSessionState.Running ->
-            Triple("TESTING", session.remaining.formatMinutesSeconds(), "+${session.rewardIon} ION")
+        is TestSessionState.Running -> Triple(
+            stringResource(R.string.timer_testing),
+            session.remaining.formatMinutesSeconds(),
+            stringResource(R.string.timer_reward, session.rewardIon),
+        )
 
         is TestSessionState.Cooldown -> Triple(
-            "NEXT TEST IN",
+            stringResource(R.string.timer_next_in),
             session.remaining.formatHoursMinutesSeconds(),
-            if (session.isPausedByVpn) "PAUSED · VPN ON" else "",
+            if (session.isPausedByVpn) stringResource(R.string.timer_paused_vpn) else "",
         )
     }
 
@@ -246,14 +240,13 @@ private fun RingLabels(session: TestSessionState) {
             style = AuraTheme.typography.cardLabel,
             color = colors.textSecondary,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(2.dp))
         Text(
             text = value,
             style = AuraTheme.typography.timer,
             color = colors.textBright,
         )
         if (footnote.isNotEmpty()) {
-            Spacer(Modifier.height(6.dp))
             Text(
                 text = footnote,
                 style = AuraTheme.typography.title,
@@ -265,8 +258,8 @@ private fun RingLabels(session: TestSessionState) {
 
 private const val START_ANGLE = -90f
 
-private val GLOW_PASSES = listOf(
-    5f to 0.07f,
-    2.6f to 0.16f,
-    1f to 1f,
-)
+private const val CORE_LIGHT_SHIFT = 0.164f
+
+private const val CORE_LIGHT_RADIUS = 1.164f
+
+private const val CORE_INNER_SHIFT = 0.05f

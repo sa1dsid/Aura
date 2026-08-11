@@ -26,19 +26,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aura.R
+import com.aura.core.designsystem.component.auraBlurRadius
 import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.component.pressScale
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.HomeTab
 
 private const val TAB_FADE_MILLIS = 200
+
+private const val ICON_GLOW_ALPHA = 0.20f
+
+private val ICON_SIZE = 18.dp
+
+private val ICON_GLOW_SIZE = 19.5.dp
+
+private val ICON_GLOW_BLUR = 6.dp
 
 @Composable
 fun AuraBottomBar(
@@ -114,6 +127,8 @@ private fun TabItem(
 ) {
     val colors = AuraTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
+    val density = LocalDensity.current
+    val iconGlowBlur = remember(density) { with(density) { auraBlurRadius(ICON_GLOW_BLUR) } }
 
     val tint by animateColorAsState(
         targetValue = if (isSelected) colors.textBright else colors.textSecondary,
@@ -152,25 +167,29 @@ private fun TabItem(
                     width = 24.dp,
                     height = 31.dp,
                     blurRadius = 10.dp,
-                )
-                .auraGlow(
-                    color = Color.White.copy(alpha = 0.20f * glowAlpha),
-                    width = 26.dp,
-                    height = 26.dp,
-                    blurRadius = 6.dp,
                 ),
             contentAlignment = Alignment.Center,
         ) {
+            if (glowAlpha > 0f) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = ICON_GLOW_ALPHA * glowAlpha),
+                    modifier = Modifier
+                        .size(ICON_GLOW_SIZE)
+                        .blur(iconGlowBlur, BlurredEdgeTreatment.Unbounded),
+                )
+            }
             Icon(
                 painter = painterResource(iconRes),
-                contentDescription = tab.label,
+                contentDescription = stringResource(tab.labelRes),
                 tint = tint,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(ICON_SIZE),
             )
         }
         Spacer(Modifier.height(5.dp))
         Text(
-            text = tab.label,
+            text = stringResource(tab.labelRes),
             style = AuraTheme.typography.navLabel,
             color = tint,
         )
@@ -215,7 +234,7 @@ private fun IoniTab(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = HomeTab.IONI.label,
+                text = stringResource(HomeTab.IONI.labelRes),
                 style = AuraTheme.typography.badge.copy(
                     fontSize = 14.sp,
                     lineHeight = 19.sp,

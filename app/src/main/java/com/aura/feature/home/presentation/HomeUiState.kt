@@ -1,6 +1,8 @@
 package com.aura.feature.home.presentation
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import com.aura.R
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.MeshState
 
@@ -28,10 +30,10 @@ data class HomeActions(
     val onTabSelected: (HomeTab) -> Unit = {},
 )
 
-enum class HomeTab(val label: String) {
-    HOME("HOME"),
-    NODES("NODES"),
-    IONI("IONI"),
-    TERMINAL("TERMINAL"),
-    NETWORK("NETWORK"),
+enum class HomeTab(@field:StringRes val labelRes: Int) {
+    HOME(R.string.nav_home),
+    NODES(R.string.nav_nodes),
+    IONI(R.string.nav_ioni),
+    TERMINAL(R.string.nav_terminal),
+    NETWORK(R.string.nav_network),
 }

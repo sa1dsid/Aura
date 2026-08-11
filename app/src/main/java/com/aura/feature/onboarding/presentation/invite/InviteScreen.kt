@@ -15,11 +15,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aura.R
 import com.aura.core.designsystem.component.AuraOutlinedButton
 import com.aura.core.designsystem.component.AuraPrimaryButton
 import com.aura.core.designsystem.component.auraGlow
@@ -83,7 +85,7 @@ fun InviteScreen(
 
         Column(modifier = Modifier.padding(horizontal = 25.7.dp)) {
             Text(
-                text = "Got an invite code?",
+                text = stringResource(R.string.invite_title),
                 style = AuraTheme.typography.screenHeading,
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center,
@@ -93,8 +95,7 @@ fun InviteScreen(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = "Enter a friend's code to link your accounts.\n" +
-                    "You can skip this — but the code can't be added later.",
+                text = stringResource(R.string.invite_sub),
                 style = AuraTheme.typography.screenSubheading,
                 color = colors.authTextMuted,
                 textAlign = TextAlign.Center,
@@ -115,7 +116,8 @@ fun InviteScreen(
         Spacer(Modifier.height(12.5.dp))
 
         Text(
-            text = uiState.failure?.asText() ?: "One code per account · applied once",
+            text = uiState.failure?.let { stringResource(it.textRes()) }
+                ?: stringResource(R.string.invite_once_note),
             style = AuraTheme.typography.screenHint,
             color = if (uiState.failure == null) colors.authTextDim else colors.danger,
             textAlign = TextAlign.Center,
@@ -139,7 +141,7 @@ fun InviteScreen(
                 ),
         ) {
             AuraPrimaryButton(
-                text = "Apply Code",
+                text = stringResource(R.string.invite_apply),
                 onClick = actions.onApplyClick,
                 enabled = uiState.code.isNotBlank() && !uiState.submitting,
             )
@@ -147,7 +149,7 @@ fun InviteScreen(
             Spacer(Modifier.height(12.dp))
 
             AuraOutlinedButton(
-                text = "Skip — I don't have a code",
+                text = stringResource(R.string.invite_skip),
                 onClick = actions.onSkipClick,
                 enabled = !uiState.submitting,
             )
@@ -155,12 +157,14 @@ fun InviteScreen(
     }
 }
 
-private fun InviteFailure.asText(): String = when (this) {
-    InviteFailure.UNKNOWN_CODE -> "This code doesn't exist"
-    InviteFailure.OWN_CODE -> "You can't use your own code"
-    InviteFailure.OWNER_DELETED -> "The account behind this code is gone"
-    InviteFailure.ALREADY_APPLIED -> "A code is already applied to this account"
-    InviteFailure.NETWORK -> "Network is unavailable"
+private fun InviteFailure.textRes(): Int = when (this) {
+    InviteFailure.UNKNOWN_CODE,
+    InviteFailure.OWN_CODE,
+    InviteFailure.OWNER_DELETED,
+    InviteFailure.ALREADY_APPLIED,
+    -> R.string.toast_code_invalid
+
+    InviteFailure.NETWORK -> R.string.toast_no_connection
 }
 
 @Preview(widthDp = 375, heightDp = 820)

@@ -22,22 +22,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.activeDotShadows
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraTheme
+import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.Teasers
+import com.aura.feature.home.presentation.format.StyledArg
+import com.aura.feature.home.presentation.format.annotatedFormat
+import com.aura.feature.home.presentation.format.displayName
 import com.aura.feature.home.presentation.format.formatGrouped
 
 @Composable
 fun TeaserCards(
     teasers: Teasers,
+    currentTier: NodeTier,
     onBonusWithdrawalClick: () -> Unit,
     onSparkClick: () -> Unit,
     onVpnCodeClick: () -> Unit,
@@ -51,34 +55,49 @@ fun TeaserCards(
     ) {
         TeaserCard(
             iconRes = R.drawable.ic_send_2,
-            title = "Bonus Withdrawal",
-            subtitle = buildAnnotatedString {
-                highlight(teasers.bonusWithdrawal.completedSteps.toString(), colors.progressValue)
-                plain(" of ")
-                highlight(teasers.bonusWithdrawal.totalSteps.toString(), colors.progressTarget)
-                plain(" steps complete")
-            },
+            title = stringResource(R.string.teaser_bonus_title),
+            subtitle = annotatedFormat(
+                stringResource(R.string.teaser_bonus_steps),
+                StyledArg(
+                    teasers.bonusWithdrawal.completedSteps.toString(),
+                    SpanStyle(color = colors.progressValue),
+                ),
+                StyledArg(
+                    teasers.bonusWithdrawal.totalSteps.toString(),
+                    SpanStyle(color = colors.progressTarget),
+                ),
+            ),
             onClick = onBonusWithdrawalClick,
         )
 
         TeaserCard(
             iconRes = R.drawable.ic_flash,
-            title = "Spark · Coupon Progress",
-            subtitle = buildAnnotatedString {
-                highlight(teasers.spark.collected.formatGrouped(), colors.progressValue)
-                plain(" of ")
-                highlight(teasers.spark.target.formatGrouped(), colors.progressTarget)
-            },
+            title = stringResource(R.string.teaser_spark_title),
+            subtitle = annotatedFormat(
+                stringResource(R.string.teaser_spark_progress),
+                StyledArg(
+                    teasers.spark.collected.formatGrouped(),
+                    SpanStyle(color = colors.progressValue),
+                ),
+                StyledArg(
+                    teasers.spark.target.formatGrouped(),
+                    SpanStyle(color = colors.progressTarget),
+                ),
+            ),
             onClick = onSparkClick,
         )
 
         TeaserCard(
             iconRes = R.drawable.ic_shield,
-            title = "VPN Code Progress",
-            subtitle = buildAnnotatedString {
-                plain("Active Signal · Contribution ")
-                highlight("${teasers.vpnCode.contributionPercent}%", colors.progressValue)
-            },
+            title = stringResource(R.string.teaser_vpn_title),
+            subtitle = annotatedFormat(
+                stringResource(R.string.teaser_vpn_sub),
+                StyledArg(currentTier.displayName()),
+                StyledArg(
+                    teasers.vpnCode.contributionPercent.toString(),
+                    SpanStyle(color = colors.progressValue),
+                ),
+            ),
             enabled = teasers.vpnCode.isEnabled,
             iconTint = colors.accentBlue,
             leadingDotColor = if (teasers.vpnCode.isEnabled) colors.green else null,
@@ -194,13 +213,3 @@ private fun TeaserProgressBar(
     }
 }
 
-private fun androidx.compose.ui.text.AnnotatedString.Builder.plain(text: String) {
-    append(text)
-}
-
-private fun androidx.compose.ui.text.AnnotatedString.Builder.highlight(
-    text: String,
-    color: Color,
-) {
-    withStyle(SpanStyle(color = color)) { append(text) }
-}

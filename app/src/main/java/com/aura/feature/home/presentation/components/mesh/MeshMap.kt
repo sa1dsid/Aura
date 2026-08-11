@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
@@ -33,6 +32,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.aura.core.designsystem.component.AuraGlowLayer
+import com.aura.core.designsystem.component.auraGlowLayer
+import com.aura.core.designsystem.component.brightDotShadows
+import com.aura.core.designsystem.component.drawAuraGlow
+import com.aura.core.designsystem.component.signalDotShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.UserPresence
@@ -63,13 +67,15 @@ object MeshMapDefaults {
 
     const val IDLE_DOT_RATIO = 0.243f
     const val LIVE_DOT_RATIO = 0.83f
-    const val LIVE_GLOW_RATIO = 4.33f
 
     const val USER_DOT_RATIO = 1.66f
-    const val USER_GLOW_RATIO = 4.88f
 
     const val PRESENCE_FADE_MILLIS = 300
 }
+
+private const val GLOW_FLOOR = 0.55f
+
+private const val GLOW_SWING = 0.45f
 
 @Composable
 fun MeshMap(
@@ -81,6 +87,9 @@ fun MeshMap(
 ) {
     val colors = AuraTheme.colors
     val scope = rememberCoroutineScope()
+
+    val liveShadows = remember(colors) { colors.brightDotShadows }
+    val userShadows = remember(colors) { colors.signalDotShadows }
 
     val context = LocalContext.current
     val dotGrid = remember(projection, context) {
@@ -144,9 +153,14 @@ fun MeshMap(
                     val spacing = size.width / MeshMapDefaults.DOT_COLUMNS
                     val idleDotPx = spacing * MeshMapDefaults.IDLE_DOT_RATIO
                     val liveDotPx = spacing * MeshMapDefaults.LIVE_DOT_RATIO
-                    val liveGlowPx = spacing * MeshMapDefaults.LIVE_GLOW_RATIO
                     val userDotPx = spacing * MeshMapDefaults.USER_DOT_RATIO
-                    val userGlowPx = spacing * MeshMapDefaults.USER_GLOW_RATIO
+
+                    val liveGlow = liveShadows.map {
+                        auraGlowLayer(it, liveDotPx, liveDotPx, Offset.Zero)
+                    }
+                    val userGlow = userShadows.map {
+                        auraGlowLayer(it, userDotPx, userDotPx, Offset.Zero)
+                    }
 
                     onDrawBehind {
                         drawPoints(
@@ -159,20 +173,20 @@ fun MeshMap(
 
                         livePoints.forEachIndexed { index, point ->
                             drawGlowingDot(
+                                glow = liveGlow,
                                 center = point,
                                 color = colors.mapDotLive,
                                 coreRadius = liveDotPx / 2f,
-                                glowRadius = liveGlowPx,
                                 phase = pulse.value + index * 0.37f,
                             )
                         }
 
                         if (userPoint != null) {
-                            drawUserDot(
+                            drawGlowingDot(
+                                glow = userGlow,
                                 center = userPoint,
                                 color = colors.mapDotUser,
                                 coreRadius = userDotPx / 2f,
-                                glowRadius = userGlowPx,
                                 phase = pulse.value,
                                 alpha = presenceAlpha.value,
                             )
@@ -191,45 +205,16 @@ private fun Offset.scaledTo(size: Size): Offset = Offset(x * size.width, y * siz
 private fun breathe(phase: Float): Float = (sin(phase * 2f * PI.toFloat()) + 1f) / 2f
 
 private fun DrawScope.drawGlowingDot(
+    glow: List<AuraGlowLayer>,
     center: Offset,
     color: Color,
     coreRadius: Float,
-    glowRadius: Float,
     phase: Float,
     alpha: Float = 1f,
 ) {
-    val amplitude = (0.55f + 0.45f * breathe(phase)) * alpha
-    drawCircle(
-        brush = Brush.radialGradient(
-            colors = listOf(
-                color.copy(alpha = 0.42f * amplitude),
-                color.copy(alpha = 0.11f * amplitude),
-                Color.Transparent,
-            ),
-            center = center,
-            radius = glowRadius,
-        ),
-        radius = glowRadius,
-        center = center,
-    )
-    drawCircle(color = color.copy(alpha = alpha), radius = coreRadius, center = center)
-}
-
-private fun DrawScope.drawUserDot(
-    center: Offset,
-    color: Color,
-    coreRadius: Float,
-    glowRadius: Float,
-    phase: Float,
-    alpha: Float,
-) {
     if (alpha <= 0f) return
-    drawGlowingDot(
-        center = center,
-        color = color,
-        coreRadius = coreRadius,
-        glowRadius = glowRadius,
-        phase = phase,
-        alpha = alpha,
-    )
+
+    val amplitude = (GLOW_FLOOR + GLOW_SWING * breathe(phase)) * alpha
+    glow.forEach { drawAuraGlow(it, center, amplitude) }
+    drawCircle(color = color.copy(alpha = alpha), radius = coreRadius, center = center)
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -132,7 +133,7 @@ fun WelcomeBonusSheet(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "${bonusIon.formatGrouped()} ION are waiting for you",
+                text = stringResource(R.string.bonus_title),
                 style = AuraTheme.typography.sheetHeading,
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center,
@@ -142,8 +143,7 @@ fun WelcomeBonusSheet(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = "Your welcome bonus is reserved on this\naccount. Complete a few steps to unlock " +
-                    "the withdrawal — your progress is saved as you go.",
+                text = stringResource(R.string.bonus_text),
                 style = AuraTheme.typography.sheetBody,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
@@ -155,14 +155,14 @@ fun WelcomeBonusSheet(
             Spacer(Modifier.height(37.dp))
 
             PrimaryAction(
-                text = "Show me the steps",
+                text = stringResource(R.string.bonus_cta),
                 onClick = onDismiss,
             )
 
             Spacer(Modifier.height(12.dp))
 
             SecondaryAction(
-                text = "Later — it's not going anywhere",
+                text = stringResource(R.string.bonus_later),
                 onClick = onDismiss,
             )
         }
@@ -235,7 +235,7 @@ private fun BonusBadge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = bonusIon.toString(),
+            text = bonusIon.formatGrouped(),
             style = AuraTheme.typography.bonusValue,
             color = colors.authSegmentActiveText,
             textAlign = TextAlign.Center,
@@ -244,7 +244,7 @@ private fun BonusBadge(
         Spacer(Modifier.height(2.dp))
 
         Text(
-            text = "ION",
+            text = stringResource(R.string.unit_ion),
             style = AuraTheme.typography.bonusUnit,
             color = colors.accentBlue,
             textAlign = TextAlign.Center,

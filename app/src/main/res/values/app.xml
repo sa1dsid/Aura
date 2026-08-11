@@ -1,4 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Собственные ключи приложения. Поставляемый strings.xml заменяется целиком,
+     поэтому всё, чего нет в поставке, живёт здесь. Список отдаётся команде
+     локализации на включение в следующую поставку. -->
 <resources>
     <string name="app_name">Aura</string>
+
+    <string name="home_logo">I Ø Aura</string>
+    <string name="home_connecting">CONNECTING TO MESH</string>
+    <string name="cd_menu">Menu</string>
+    <string name="unit_ion">ION</string>
+    <string name="timer_paused_vpn">PAUSED · VPN ON</string>
+
+    <string name="network_mobile_2g">Mobile 2G</string>
+    <string name="network_mobile_3g">Mobile 3G</string>
+    <string name="network_mobile_4g">Mobile 4G</string>
+    <string name="network_mobile_5g">Mobile 5G</string>
+    <string name="network_wifi">Wi-Fi</string>
+    <string name="network_none">No network</string>
+
+    <string name="brand_i">I</string>
+    <string name="brand_aura">Aura</string>
+    <string name="auth_email_placeholder">you@example.com</string>
+    <string name="invite_code_placeholder">SYREX482</string>
+
+    <!-- Кликабельные куски auth_terms_line. Отдельные ключи нужны потому, что
+         в переводе форма слова отличается от пункта меню: menu_privacy — это
+         «Конфиденциальность», а в строке согласия стоит «Политику
+         конфиденциальности», и поиском по menu_privacy ссылка не находится. -->
+    <string name="auth_terms_link">Terms of Service</string>
+    <string name="auth_privacy_link">Privacy Policy</string>
 </resources>

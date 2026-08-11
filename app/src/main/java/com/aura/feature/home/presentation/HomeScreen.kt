@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aura.R
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.components.AuraBottomBar
 import com.aura.feature.home.presentation.components.BalanceCardsRow
@@ -129,6 +131,7 @@ private fun HomeContent(
 
         TeaserCards(
             teasers = home.teasers,
+            currentTier = home.nodeStatus.currentTier,
             onBonusWithdrawalClick = actions.onBonusWithdrawalClick,
             onSparkClick = actions.onSparkClick,
             onVpnCodeClick = actions.onVpnCodeClick,
@@ -163,17 +166,17 @@ private fun HomeContent(
                 onClick = actions.onConnectionBadgeClick,
             )
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(21.dp))
 
             TestRingButton(
                 session = home.session,
                 onClick = actions.onMainButtonClick,
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
 
             Text(
-                text = "Stay on this screen to complete the test",
+                text = stringResource(R.string.timer_stay_hint),
                 style = AuraTheme.typography.caption,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
@@ -201,7 +204,7 @@ private fun LoadingState(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "CONNECTING TO MESH",
+            text = stringResource(R.string.home_connecting),
             style = AuraTheme.typography.cardLabel,
             color = colors.textSecondary,
         )

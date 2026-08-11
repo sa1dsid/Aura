@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.signalDotShadows
@@ -35,13 +37,13 @@ fun BalanceCardsRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         BalanceCard(
-            label = "ACCRUED",
+            label = stringResource(R.string.home_accrued),
             amount = balances.accrued,
             showLiveDot = true,
             modifier = Modifier.weight(1f),
         )
         BalanceCard(
-            label = "AVAILABLE TO WITHDRAW",
+            label = stringResource(R.string.home_available_withdraw),
             amount = balances.availableToWithdraw,
             showLiveDot = false,
             modifier = Modifier.weight(1f),
@@ -75,7 +77,7 @@ private fun BalanceCard(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "ION",
+                    text = stringResource(R.string.unit_ion),
                     style = AuraTheme.typography.unitLabel,
                     color = colors.textSecondary,
                     modifier = Modifier.padding(bottom = 3.dp),

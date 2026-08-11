@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.signalDotShadows
@@ -64,7 +66,7 @@ fun MeshMapCard(
                         .background(colors.accentBlue)
                 )
                 Text(
-                    text = "MESH ACTIVE",
+                    text = stringResource(R.string.home_mesh_active),
                     style = AuraTheme.typography.cardLabel,
                     color = colors.textSecondary,
                 )
@@ -115,7 +117,7 @@ private fun NodesOnlineCounter(
             color = colors.textSecondary,
         )
         Text(
-            text = "NODES ONLINE",
+            text = stringResource(R.string.home_nodes_online),
             style = AuraTheme.typography.cardLabel,
             color = colors.textSecondary,
             textAlign = TextAlign.End,

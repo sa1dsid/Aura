@@ -14,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraPill
 import com.aura.core.designsystem.component.auraGlowLayers
@@ -44,15 +46,19 @@ fun InviteRow(
             Spacer(Modifier.width(12.dp))
 
             Text(
-                text = "${invite.friendsJoined}/${invite.friendsTarget} friends " +
-                    "+${invite.referralRatePercent}% rate",
+                text = stringResource(
+                    R.string.invite_progress,
+                    invite.friendsJoined,
+                    invite.friendsTarget,
+                    invite.referralRatePercent,
+                ),
                 style = AuraTheme.typography.title,
                 color = colors.textBright,
                 modifier = Modifier.weight(1f),
             )
 
             AuraPill(
-                text = "INVITE",
+                text = stringResource(R.string.invite_button),
                 textStyle = AuraTheme.typography.caption,
                 contentColor = colors.accentBlue,
                 borderColor = colors.iceBlue.copy(alpha = 0.55f),

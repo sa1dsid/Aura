@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -142,7 +143,7 @@ fun AuthScreen(
                 Spacer(Modifier.height(24.dp))
 
                 AuraSurfaceButton(
-                    text = "Continue with Google",
+                    text = stringResource(R.string.auth_google),
                     onClick = actions.onGoogleClick,
                     enabled = !uiState.submitting,
                     leading = {
@@ -161,10 +162,10 @@ fun AuthScreen(
                 Spacer(Modifier.height(22.dp))
 
                 AuthTextField(
-                    label = "EMAIL",
+                    label = stringResource(R.string.auth_email),
                     value = uiState.email,
                     onValueChange = actions.onEmailChange,
-                    placeholder = "you@example.com",
+                    placeholder = stringResource(R.string.auth_email_placeholder),
                     isError = uiState.invalidField == AuthField.EMAIL,
                     imeAction = ImeAction.Next,
                 )
@@ -172,7 +173,7 @@ fun AuthScreen(
                 Spacer(Modifier.height(12.dp))
 
                 AuthTextField(
-                    label = "PASSWORD",
+                    label = stringResource(R.string.auth_password),
                     value = uiState.password,
                     onValueChange = actions.onPasswordChange,
                     placeholder = PASSWORD_PLACEHOLDER,
@@ -205,10 +206,12 @@ fun AuthScreen(
                     ),
             ) {
                 AuraPrimaryButton(
-                    text = when (uiState.mode) {
-                        AuthMode.SIGN_IN -> "Sign In"
-                        AuthMode.SIGN_UP -> "Create Account"
-                    },
+                    text = stringResource(
+                        when (uiState.mode) {
+                            AuthMode.SIGN_IN -> R.string.auth_sign_in
+                            AuthMode.SIGN_UP -> R.string.auth_create
+                        }
+                    ),
                     onClick = actions.onSubmit,
                     enabled = !uiState.submitting,
                 )
@@ -247,7 +250,7 @@ private fun ForgotPasswordRow(
     ) {
         if (visible) {
             Text(
-                text = "Forgot password?",
+                text = stringResource(R.string.auth_forgot),
                 style = AuraTheme.typography.linkLabel,
                 color = colors.authTextMuted,
                 textAlign = TextAlign.End,
@@ -266,20 +269,21 @@ private fun ForgotPasswordRow(
 @Composable
 private fun LegalNotice(modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
+    val line = stringResource(R.string.auth_terms_line)
+    val links = listOf(
+        stringResource(R.string.auth_terms_link),
+        stringResource(R.string.auth_privacy_link),
+    )
 
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.42f))) {
-                append("By signing up you agree to the ")
+                append(line)
             }
-            withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.62f))) {
-                append("Terms of Service")
-            }
-            withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.42f))) {
-                append(" and ")
-            }
-            withStyle(SpanStyle(color = colors.textPrimary.copy(alpha = 0.62f))) {
-                append("Privacy Policy")
+            val linkStyle = SpanStyle(color = colors.textPrimary.copy(alpha = 0.62f))
+            links.forEach { link ->
+                val start = line.indexOf(link)
+                if (start >= 0) addStyle(linkStyle, start, start + link.length)
             }
         },
         style = AuraTheme.typography.legalLabel,

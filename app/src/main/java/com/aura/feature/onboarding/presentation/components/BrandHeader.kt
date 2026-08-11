@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aura.R
@@ -28,7 +29,7 @@ fun BrandLogoRow(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "I",
+            text = stringResource(R.string.brand_i),
             style = AuraTheme.typography.brandTitle,
             color = colors.textPrimary,
         )
@@ -38,7 +39,7 @@ fun BrandLogoRow(modifier: Modifier = Modifier) {
             modifier = Modifier.size(38.dp),
         )
         Text(
-            text = "Aura",
+            text = stringResource(R.string.brand_aura),
             style = AuraTheme.typography.brandTitle,
             color = colors.textPrimary,
         )
@@ -48,7 +49,7 @@ fun BrandLogoRow(modifier: Modifier = Modifier) {
 @Composable
 fun BrandTagline(modifier: Modifier = Modifier) {
     Text(
-        text = "In the beginning was the ION",
+        text = stringResource(R.string.auth_slogan),
         style = AuraTheme.typography.brandTagline,
         color = AuraTheme.colors.authTextMuted,
         textAlign = TextAlign.Center,

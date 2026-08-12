@@ -62,6 +62,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.install.referrer)
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

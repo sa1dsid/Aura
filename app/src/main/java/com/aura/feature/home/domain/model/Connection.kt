@@ -1,13 +1,6 @@
 package com.aura.feature.home.domain.model
 
-enum class NetworkType {
-    MOBILE_2G,
-    MOBILE_3G,
-    MOBILE_4G,
-    MOBILE_5G,
-    WIFI,
-    NONE,
-}
+import com.aura.core.network.NetworkType
 
 data class ConnectionState(
     val networkType: NetworkType,

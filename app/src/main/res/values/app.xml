@@ -18,6 +18,33 @@
     <string name="network_wifi">Wi-Fi</string>
     <string name="network_none">No network</string>
 
+    <!-- Network: единицы и заглушки. Числа и единицы не переводятся никогда. -->
+    <string name="unit_ms">ms</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_mbps">Mbps</string>
+    <string name="net_value_empty">--</string>
+    <string name="net_ping_value">%1$dms</string>
+    <string name="net_vpn_off">OFF</string>
+    <string name="net_protocol_ipv4">IPv4</string>
+    <string name="net_protocol_ipv6">IPv6</string>
+
+    <!-- Строка под заголовком, когда последний замер был не сегодня: «JUL 09 · 21:47». -->
+    <string name="net_last_tested_earlier">%1$s · %2$s</string>
+
+    <!-- network_log.json: строки лога и комментарий-группировка по датам. -->
+    <string name="net_log_day">// %1$s (%2$d presses)</string>
+    <string name="net_log_line">%1$s ip:%2$s isp:%3$s ping:%4$s / location:%5$s vpn:%6$s</string>
+    <string name="net_log_vpn_on">on</string>
+    <string name="net_log_vpn_off">off</string>
+
+    <!-- ДЛИННАЯ: пустой журнал, состояние в макете не рисовалось. -->
+    <string name="net_history_empty">No measurements yet · run a test to start the log</string>
+    <!-- ДЛИННАЯ: текст системного шэра результата диагностики. -->
+    <string name="diag_share_text">Download %1$s Mbps · Upload %2$s Mbps · Ping %3$s ms · measured with IO Aura</string>
+
+    <string name="cd_back">Back</string>
+    <string name="cd_share">Share result</string>
+
     <string name="brand_i">I</string>
     <string name="brand_aura">Aura</string>
     <string name="auth_email_placeholder">you@example.com</string>

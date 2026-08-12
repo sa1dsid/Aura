@@ -57,6 +57,7 @@ fun TestRingButton(
     val isPressed by rememberPressedState(interactionSource)
 
     val isReady = session is TestSessionState.Ready
+    val isRunning = session is TestSessionState.Running
     val isMuted = session is TestSessionState.Cooldown
 
     val fraction = when (session) {
@@ -94,7 +95,7 @@ fun TestRingButton(
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    enabled = isReady,
+                    enabled = !isRunning,
                     onClick = onClick,
                 )
         )

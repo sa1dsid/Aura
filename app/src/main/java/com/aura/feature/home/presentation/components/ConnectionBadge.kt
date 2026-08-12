@@ -34,7 +34,7 @@ import com.aura.core.designsystem.component.pressScale
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.ConnectionState
-import com.aura.feature.home.presentation.format.label
+import com.aura.core.network.label
 
 private val BadgeShape = RoundedCornerShape(16.dp)
 

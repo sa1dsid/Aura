@@ -17,3 +17,7 @@ fun Duration.formatMinutesSeconds(): String = toComponents { minutes, seconds, _
 fun Duration.formatHoursMinutesSeconds(): String = toComponents { hours, minutes, seconds, _ ->
     String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
 }
+
+fun Duration.formatHoursMinutes(): String = toComponents { hours, minutes, _, _ ->
+    String.format(Locale.US, "%02d:%02d", hours, minutes)
+}

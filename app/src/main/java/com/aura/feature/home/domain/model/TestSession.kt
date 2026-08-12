@@ -28,3 +28,12 @@ sealed interface TestStartRejection {
     data object VpnDetected : TestStartRejection
     data class CooldownNotFinished(val remaining: Duration) : TestStartRejection
 }
+
+fun testStartRejection(
+    session: TestSessionState,
+    isVpnActive: Boolean,
+): TestStartRejection? = when {
+    isVpnActive -> TestStartRejection.VpnDetected
+    session is TestSessionState.Cooldown -> TestStartRejection.CooldownNotFinished(session.remaining)
+    else -> null
+}

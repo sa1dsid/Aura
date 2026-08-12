@@ -2,6 +2,7 @@ package com.aura.feature.home.data.session
 
 import com.aura.core.common.ApplicationScope
 import com.aura.feature.home.domain.model.TestSessionState
+import com.aura.feature.network.domain.repository.PingHistoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class TestSessionEngine @Inject constructor(
-    @ApplicationScope private val scope: CoroutineScope,
+    @param:ApplicationScope private val scope: CoroutineScope,
+    private val pingHistory: PingHistoryRepository,
 ) {
 
     private val _state = MutableStateFlow<TestSessionState>(INITIAL_STATE)
@@ -37,13 +39,21 @@ class TestSessionEngine @Inject constructor(
                     if (!hasSubscribers) return@collectLatest
                     while (isActive) {
                         delay(1.seconds)
+                        val before = _state.value
                         _state.update { it.tickOneSecond() }
+                        if (before is TestSessionState.Running &&
+                            _state.value is TestSessionState.Cooldown
+                        ) {
+                            scope.launch { pingHistory.recordProbe() }
+                        }
                     }
                 }
         }
     }
 
     fun startTest(rewardIon: Int) {
+        if (_state.value !is TestSessionState.Ready) return
+
         _state.value = TestSessionState.Running(
             remaining = TEST_DURATION,
             total = TEST_DURATION,
@@ -92,10 +102,6 @@ class TestSessionEngine @Inject constructor(
         val COOLDOWN = 12.hours
         const val DEFAULT_REWARD_ION = 20
 
-        val INITIAL_STATE = TestSessionState.Running(
-            remaining = 2.minutes + 47.seconds,
-            total = TEST_DURATION,
-            rewardIon = DEFAULT_REWARD_ION,
-        )
+        val INITIAL_STATE = TestSessionState.Ready(DEFAULT_REWARD_ION)
     }
 }

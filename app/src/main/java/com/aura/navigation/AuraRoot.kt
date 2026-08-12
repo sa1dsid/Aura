@@ -9,6 +9,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.aura.feature.home.presentation.HomeRoute
+import com.aura.feature.home.presentation.HomeTab
+import com.aura.feature.network.presentation.NetworkRoute
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.presentation.auth.AuthRoute
 import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusRoute
@@ -51,6 +53,22 @@ fun AuraRoot(modifier: Modifier = Modifier) {
             WelcomeBonusRoute(onFinished = { stage = AuraStage.HOME })
         }
 
-        AuraStage.HOME -> HomeRoute(modifier = modifier)
+        AuraStage.HOME -> MainTabs(modifier = modifier)
     }
 }
+
+@Composable
+private fun MainTabs(modifier: Modifier = Modifier) {
+    var tab by rememberSaveable { mutableStateOf(HomeTab.HOME) }
+
+    val selectTab: (HomeTab) -> Unit = { selected ->
+        if (selected in IMPLEMENTED_TABS) tab = selected
+    }
+
+    when (tab) {
+        HomeTab.NETWORK -> NetworkRoute(onTabSelected = selectTab, modifier = modifier)
+        else -> HomeRoute(onTabSelected = selectTab, modifier = modifier)
+    }
+}
+
+private val IMPLEMENTED_TABS = setOf(HomeTab.HOME, HomeTab.NETWORK)

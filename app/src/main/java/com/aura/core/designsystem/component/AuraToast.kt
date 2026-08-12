@@ -37,6 +37,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.aura.core.designsystem.theme.AuraTheme
 import kotlinx.coroutines.delay
 
@@ -85,11 +88,14 @@ fun AuraToastHost(
     modifier: Modifier = Modifier,
 ) {
     val message = state.message
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(message?.id) {
+    LaunchedEffect(message?.id, lifecycleOwner) {
         if (message == null) return@LaunchedEffect
-        delay(TOAST_HOLD_MILLIS)
-        state.dismiss()
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            delay(TOAST_HOLD_MILLIS)
+            state.dismiss()
+        }
     }
 
     AnimatedVisibility(

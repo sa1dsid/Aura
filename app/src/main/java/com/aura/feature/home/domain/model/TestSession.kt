@@ -23,6 +23,12 @@ sealed interface TestSessionState {
     ) : TestSessionState
 }
 
+sealed interface TestSessionEvent {
+    data class Completed(val rewardIon: Int) : TestSessionEvent
+    data object Interrupted : TestSessionEvent
+    data object CooldownResumed : TestSessionEvent
+}
+
 sealed interface TestStartRejection {
     data object DataShareDisabled : TestStartRejection
     data object VpnDetected : TestStartRejection

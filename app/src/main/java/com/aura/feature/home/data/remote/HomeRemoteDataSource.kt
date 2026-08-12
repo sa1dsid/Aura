@@ -2,20 +2,29 @@ package com.aura.feature.home.data.remote
 
 import com.aura.feature.home.data.remote.dto.HomeSnapshotDto
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface HomeRemoteDataSource {
     suspend fun fetchHome(): HomeSnapshotDto
+
+    suspend fun creditTestReward(amount: Int)
 }
 
 @Singleton
 class MockHomeRemoteDataSource @Inject constructor() : HomeRemoteDataSource {
 
+    private val creditedIon = AtomicLong(0)
+
+    override suspend fun creditTestReward(amount: Int) {
+        creditedIon.addAndGet(amount.toLong())
+    }
+
     override suspend fun fetchHome(): HomeSnapshotDto {
         delay(NETWORK_DELAY_MILLIS)
         return HomeSnapshotDto(
-            accruedIon = 4_210,
+            accruedIon = 4_210 + creditedIon.get(),
             availableToWithdrawIon = 3_000,
             tier = "CORE_NODE",
             referralRate = 2.5,

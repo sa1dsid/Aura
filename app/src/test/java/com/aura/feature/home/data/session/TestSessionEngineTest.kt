@@ -1,5 +1,6 @@
 package com.aura.feature.home.data.session
 
+import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.network.domain.model.PingRecord
 import com.aura.feature.network.domain.model.SpeedTestResult
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -99,6 +101,80 @@ class TestSessionEngineTest {
         advanceTimeBy(3.minutes + 12.hours + PAST_TICK)
 
         assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+    }
+
+    @Test
+    fun `burns the running session and reports it`() = runTest {
+        val engine = watchedEngine()
+        val events = collectedEvents(engine)
+        engine.startTest(REWARD_ION)
+        advanceTimeBy(20.seconds + PAST_TICK)
+
+        engine.interrupt()
+
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+        assertEquals(listOf(TestSessionEvent.Interrupted), events)
+    }
+
+    @Test
+    fun `keeps quiet when nothing is running`() = runTest {
+        val engine = watchedEngine()
+        val events = collectedEvents(engine)
+
+        engine.interrupt()
+
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `reports the finished session with its reward`() = runTest {
+        val engine = watchedEngine()
+        val events = collectedEvents(engine)
+        engine.startTest(REWARD_ION)
+
+        advanceTimeBy(3.minutes + PAST_TICK)
+
+        assertEquals(listOf(TestSessionEvent.Completed(REWARD_ION)), events)
+    }
+
+    @Test
+    fun `freezes the cooldown while a vpn is on`() = runTest {
+        val engine = watchedEngine()
+        engine.startTest(REWARD_ION)
+        advanceTimeBy(3.minutes + PAST_TICK)
+
+        engine.onVpnChanged(true)
+        advanceTimeBy(1.minutes)
+
+        val cooldown = engine.state.value as TestSessionState.Cooldown
+        assertTrue(cooldown.isPausedByVpn)
+        assertEquals(12.hours, cooldown.remaining)
+    }
+
+    @Test
+    fun `resumes the cooldown once the vpn goes off`() = runTest {
+        val engine = watchedEngine()
+        val events = collectedEvents(engine)
+        engine.startTest(REWARD_ION)
+        advanceTimeBy(3.minutes + PAST_TICK)
+        engine.onVpnChanged(true)
+        advanceTimeBy(1.minutes)
+
+        engine.onVpnChanged(false)
+        advanceTimeBy(10.seconds + PAST_TICK)
+
+        val cooldown = engine.state.value as TestSessionState.Cooldown
+        assertEquals(12.hours - 10.seconds, cooldown.remaining)
+        assertTrue(TestSessionEvent.CooldownResumed in events)
+    }
+
+    private fun TestScope.collectedEvents(engine: TestSessionEngine): List<TestSessionEvent> {
+        val events = mutableListOf<TestSessionEvent>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            engine.events.collect { events += it }
+        }
+        return events
     }
 
     private fun TestScope.watchedEngine(): TestSessionEngine {

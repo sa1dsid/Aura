@@ -1,15 +1,20 @@
 package com.aura.feature.home.data.session
 
 import com.aura.core.common.ApplicationScope
+import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.network.domain.repository.PingHistoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -30,6 +35,9 @@ class TestSessionEngine @Inject constructor(
     private val _state = MutableStateFlow<TestSessionState>(INITIAL_STATE)
     val state: StateFlow<TestSessionState> = _state.asStateFlow()
 
+    private val _events = MutableSharedFlow<TestSessionEvent>(extraBufferCapacity = EVENT_BUFFER)
+    val events: SharedFlow<TestSessionEvent> = _events.asSharedFlow()
+
     init {
         scope.launch {
             _state.subscriptionCount
@@ -44,6 +52,7 @@ class TestSessionEngine @Inject constructor(
                         if (before is TestSessionState.Running &&
                             _state.value is TestSessionState.Cooldown
                         ) {
+                            _events.tryEmit(TestSessionEvent.Completed(before.rewardIon))
                             scope.launch { pingHistory.recordProbe() }
                         }
                     }
@@ -61,16 +70,21 @@ class TestSessionEngine @Inject constructor(
         )
     }
 
-    fun interrupt(rewardIon: Int) {
-        if (_state.value is TestSessionState.Running) {
-            _state.value = TestSessionState.Ready(rewardIon)
-        }
+    fun interrupt() {
+        val running = _state.value as? TestSessionState.Running ?: return
+
+        _state.value = TestSessionState.Ready(running.rewardIon)
+        _events.tryEmit(TestSessionEvent.Interrupted)
     }
 
     fun onVpnChanged(active: Boolean) {
-        _state.update { current ->
+        val previous = _state.getAndUpdate { current ->
             if (current is TestSessionState.Cooldown) current.copy(isPausedByVpn = active)
             else current
+        }
+
+        if (previous is TestSessionState.Cooldown && previous.isPausedByVpn && !active) {
+            _events.tryEmit(TestSessionEvent.CooldownResumed)
         }
     }
 
@@ -101,6 +115,7 @@ class TestSessionEngine @Inject constructor(
         val TEST_DURATION = 3.minutes
         val COOLDOWN = 12.hours
         const val DEFAULT_REWARD_ION = 20
+        const val EVENT_BUFFER = 8
 
         val INITIAL_STATE = TestSessionState.Ready(DEFAULT_REWARD_ION)
     }

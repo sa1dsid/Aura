@@ -21,6 +21,12 @@ sealed interface HomeUiState {
 sealed interface HomeEvent {
 
     data class TestRejected(val rejection: TestStartRejection) : HomeEvent
+
+    data class TestCompleted(val rewardIon: Int) : HomeEvent
+
+    data object TestInterrupted : HomeEvent
+
+    data object CooldownResumed : HomeEvent
 }
 
 @Immutable

@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -66,14 +67,20 @@ fun HomeRoute(
         viewModel.onScreenResumed()
     }
 
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.onScreenLeft()
+    }
+
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.onScreenLeft() }
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            when (event) {
-                is HomeEvent.TestRejected -> toastState.show(
-                    text = context.rejectionText(event.rejection),
-                    kind = AuraToastKind.ERROR,
-                )
-            }
+            toastState.show(
+                text = context.toastText(event),
+                kind = event.toastKind(),
+            )
         }
     }
 
@@ -245,6 +252,18 @@ private fun LoadingState(modifier: Modifier = Modifier) {
             color = colors.textSecondary,
         )
     }
+}
+
+private fun Context.toastText(event: HomeEvent): String = when (event) {
+    is HomeEvent.TestRejected -> rejectionText(event.rejection)
+    is HomeEvent.TestCompleted -> getString(R.string.toast_session_done, event.rewardIon)
+    HomeEvent.TestInterrupted -> getString(R.string.toast_session_interrupted)
+    HomeEvent.CooldownResumed -> getString(R.string.toast_vpn_resumed)
+}
+
+private fun HomeEvent.toastKind(): AuraToastKind = when (this) {
+    is HomeEvent.TestCompleted, HomeEvent.CooldownResumed -> AuraToastKind.SUCCESS
+    else -> AuraToastKind.ERROR
 }
 
 private fun Context.rejectionText(rejection: TestStartRejection): String = when (rejection) {

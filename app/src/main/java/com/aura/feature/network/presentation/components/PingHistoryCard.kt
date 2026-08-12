@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,7 +27,11 @@ import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.network.domain.model.PING_HISTORY_LIMIT
 import com.aura.feature.network.domain.model.PingRecord
 
-private val ChartHeight = 132.dp
+private val LegendLineWidth = 10.dp
+
+private val LegendLineHeight = 2.dp
+
+private val PlotInset = 11.5.dp
 
 @Composable
 fun PingHistoryCard(
@@ -38,85 +41,39 @@ fun PingHistoryCard(
     val colors = AuraTheme.colors
 
     AuraCard(modifier = modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.net_ping_history),
-                        style = AuraTheme.typography.title,
-                        color = colors.textBright,
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        text = stringResource(R.string.net_ping_history_sub, PING_HISTORY_LIMIT),
-                        style = AuraTheme.typography.caption,
-                        color = colors.textSecondary,
-                        maxLines = 1,
-                    )
-                }
+        Column(Modifier.padding(vertical = 12.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = stringResource(R.string.net_ping_history),
+                    style = AuraTheme.typography.cardTitle,
+                    color = colors.textBright,
+                )
 
-                history.lastOrNull()?.let { latest -> LatestBadge(record = latest) }
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = stringResource(R.string.net_ping_history_sub, PING_HISTORY_LIMIT),
+                    style = AuraTheme.typography.caption,
+                    color = colors.textSecondary,
+                    maxLines = 1,
+                )
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             if (history.isEmpty()) {
-                EmptyChart()
+                EmptyChart(Modifier.padding(horizontal = 16.dp))
             } else {
                 PingChart(
                     history = history,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(ChartHeight),
+                    modifier = Modifier.padding(horizontal = PlotInset),
                 )
-
-                Spacer(Modifier.height(8.dp))
-
-                AxisLabels()
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(colors.border)
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Legend()
+            Legend(Modifier.padding(horizontal = 16.dp))
         }
-    }
-}
-
-@Composable
-private fun LatestBadge(record: PingRecord, modifier: Modifier = Modifier) {
-    val colors = AuraTheme.colors
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(colors.accentBlue.copy(alpha = 0.10f))
-            .border(0.5.dp, colors.accentBlue.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.End,
-    ) {
-        Text(
-            text = stringResource(R.string.net_latest),
-            style = AuraTheme.typography.cardLabel,
-            color = colors.textSecondary,
-        )
-        Text(
-            text = stringResource(R.string.net_ping_value, record.pingMs),
-            style = AuraTheme.typography.counterNumber,
-            color = if (record.vpnActive) colors.danger else colors.textBright,
-        )
     }
 }
 
@@ -127,40 +84,14 @@ private fun EmptyChart(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(ChartHeight),
+            .height(239.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.net_history_empty),
             style = AuraTheme.typography.caption,
-            color = colors.textTertiary,
+            color = colors.textDisabled,
             textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun AxisLabels(modifier: Modifier = Modifier) {
-    val colors = AuraTheme.colors
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = stringResource(R.string.net_axis_first),
-            style = AuraTheme.typography.stepLabel,
-            color = colors.textTertiary,
-        )
-        Text(
-            text = stringResource(R.string.net_axis_mid),
-            style = AuraTheme.typography.stepLabel,
-            color = colors.textTertiary,
-        )
-        Text(
-            text = stringResource(R.string.net_axis_last),
-            style = AuraTheme.typography.stepLabel,
-            color = colors.textTertiary,
         )
     }
 }
@@ -169,15 +100,21 @@ private fun AxisLabels(modifier: Modifier = Modifier) {
 private fun Legend(modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
 
-    Row(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        LegendItem(stringResource(R.string.net_legend_ideal), colors.mint, filled = true)
-        LegendItem(stringResource(R.string.net_legend_good), colors.accentBlue, filled = true)
-        LegendItem(stringResource(R.string.net_legend_warning), colors.danger, filled = true)
-        LegendItem(stringResource(R.string.net_legend_vpn), colors.danger, filled = false)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            LegendItem(stringResource(R.string.net_legend_ideal), colors.green)
+            LegendItem(stringResource(R.string.net_legend_good), colors.accentBlue)
+            LegendItem(stringResource(R.string.net_legend_warning), colors.warning)
+        }
+
+        LegendItem(
+            text = stringResource(R.string.net_legend_vpn),
+            color = colors.warning,
+            isRing = true,
+        )
     }
 }
 
@@ -185,29 +122,33 @@ private fun Legend(modifier: Modifier = Modifier) {
 private fun LegendItem(
     text: String,
     color: Color,
-    filled: Boolean,
     modifier: Modifier = Modifier,
+    isRing: Boolean = false,
 ) {
     val colors = AuraTheme.colors
 
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(
-            Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .then(
-                    if (filled) Modifier.background(color)
-                    else Modifier.border(1.dp, color, CircleShape)
-                )
-        )
+        if (isRing) {
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .border(1.dp, color, CircleShape)
+            )
+        } else {
+            Box(
+                Modifier
+                    .size(width = LegendLineWidth, height = LegendLineHeight)
+                    .background(color)
+            )
+        }
         Text(
             text = text,
-            style = AuraTheme.typography.stepLabel,
-            color = colors.textTertiary,
+            style = AuraTheme.typography.caption,
+            color = colors.textSecondary,
             maxLines = 1,
         )
     }

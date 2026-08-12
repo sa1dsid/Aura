@@ -31,18 +31,34 @@
     <!-- Строка под заголовком, когда последний замер был не сегодня: «JUL 09 · 21:47». -->
     <string name="net_last_tested_earlier">%1$s · %2$s</string>
 
-    <!-- network_log.json: строки лога и комментарий-группировка по датам. -->
+    <!-- Ping History: подписи оси Y. -->
+    <string name="net_axis_top">70ms</string>
+    <string name="net_axis_bottom">0ms</string>
+
+    <!-- network_log.json: запись занимает две строки, комментарии группируют по датам.
+         Ключи и разделители — часть JSON-подобного лога, не переводятся. -->
     <string name="net_log_day">// %1$s (%2$d presses)</string>
-    <string name="net_log_line">%1$s ip:%2$s isp:%3$s ping:%4$s / location:%5$s vpn:%6$s</string>
+    <string name="net_log_line_head">%1$s:ip:%2$s,isp:%3$s,ping:%4$s</string>
+    <string name="net_log_line_tail">location:%1$s,vpn:%2$s</string>
+    <string name="net_log_number">%1$02d</string>
     <string name="net_log_vpn_on">on</string>
     <string name="net_log_vpn_off">off</string>
+
+    <!-- Диагностика: подписи шкалы и центрального блока. -->
+    <string name="diag_scale_min">0</string>
+    <string name="diag_scale_mark">100</string>
+    <string name="diag_scale_max">1000</string>
+    <string name="diag_ping">Ping</string>
+    <string name="diag_arrow_down">↓</string>
+    <string name="diag_arrow_up">↑</string>
 
     <!-- ДЛИННАЯ: пустой журнал, состояние в макете не рисовалось. -->
     <string name="net_history_empty">No measurements yet · run a test to start the log</string>
     <!-- ДЛИННАЯ: текст системного шэра результата диагностики. -->
     <string name="diag_share_text">Download %1$s Mbps · Upload %2$s Mbps · Ping %3$s ms · measured with IO Aura</string>
 
-    <string name="cd_back">Back</string>
+    <string name="net_handle">@%1$s</string>
+
     <string name="cd_share">Share result</string>
 
     <string name="brand_i">I</string>

@@ -57,6 +57,13 @@ data class AuraTypography(
     val sheetHeading: TextStyle,
     val sheetBody: TextStyle,
     val sheetActionLabel: TextStyle,
+    val cardTitle: TextStyle,
+    val metricNumber: TextStyle,
+    val dataValue: TextStyle,
+    val speedValue: TextStyle,
+    val gaugeLabel: TextStyle,
+    val latestValue: TextStyle,
+    val logNumber: TextStyle,
 )
 
 val AuraDefaultTypography = AuraTypography(
@@ -290,5 +297,54 @@ val AuraDefaultTypography = AuraTypography(
         fontSize = 16.sp,
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
+    ),
+    cardTitle = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 20.4.sp,
+        letterSpacing = 0.sp,
+    ),
+    metricNumber = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 24.sp,
+        lineHeight = 31.7.sp,
+        letterSpacing = 0.sp,
+    ),
+    dataValue = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 21.1.sp,
+        letterSpacing = 0.16.sp,
+    ),
+    speedValue = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 32.sp,
+        lineHeight = 42.2.sp,
+        letterSpacing = 0.sp,
+    ),
+    gaugeLabel = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        lineHeight = 15.8.sp,
+        letterSpacing = 0.096.sp,
+    ),
+    latestValue = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 15.8.sp,
+        letterSpacing = 0.sp,
+    ),
+    logNumber = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 13.2.sp,
+        letterSpacing = 0.08.sp,
     ),
 )

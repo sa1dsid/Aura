@@ -36,7 +36,7 @@ sealed interface NetworkEvent {
 
 @Immutable
 data class NetworkActions(
-    val onBackClick: () -> Unit = {},
+    val onMenuClick: () -> Unit = {},
     val onNewsClick: () -> Unit = {},
     val onVpnCardClick: () -> Unit = {},
     val onStartTestClick: () -> Unit = {},

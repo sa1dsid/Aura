@@ -48,6 +48,8 @@ import com.aura.feature.network.presentation.components.PingHistoryCard
 import com.aura.feature.network.presentation.format.formatSpeed
 import com.aura.feature.network.presentation.preview.NetworkPreviewData
 
+private val ScreenPadding = 15.dp
+
 @Composable
 fun NetworkRoute(
     modifier: Modifier = Modifier,
@@ -80,7 +82,6 @@ fun NetworkRoute(
     NetworkScreen(
         uiState = uiState,
         actions = NetworkActions(
-            onBackClick = { onTabSelected(HomeTab.HOME) },
             onVpnCardClick = viewModel::onVpnCardClick,
             onStartTestClick = viewModel::onStartTestClick,
             onShareResultClick = viewModel::onShareResultClick,
@@ -126,7 +127,7 @@ fun NetworkScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = ScreenPadding, vertical = 12.dp),
             )
         }
     }
@@ -139,50 +140,48 @@ private fun NetworkContent(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    val colors = AuraTheme.colors
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = ScreenPadding),
     ) {
         NetworkTopBar(
             handle = state.handle,
             hasUnreadNews = state.hasUnreadNews,
-            onBackClick = actions.onBackClick,
+            onMenuClick = actions.onMenuClick,
             onNewsClick = actions.onNewsClick,
         )
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(20.dp))
 
         NetworkHeader(lastTestedAt = state.lastTestedAt)
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
         MetricCardsRow(metrics = state.metrics)
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(16.dp))
 
         DataCardsGrid(
             connection = state.connection,
             onVpnCardClick = actions.onVpnCardClick,
         )
 
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(16.dp))
 
         SectionLabel(text = stringResource(R.string.net_history))
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
 
         PingHistoryCard(history = state.history)
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(16.dp))
 
         NetworkLogCard(history = state.history)
 
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(16.dp))
 
         SectionLabel(text = stringResource(R.string.diag_section))
 
@@ -237,7 +236,7 @@ private fun SpeedTestResult.shareText(context: Context): String = context.getStr
     pingMs.toString(),
 )
 
-@Preview(widthDp = 375, heightDp = 1400, showBackground = true, backgroundColor = 0xFF05070A)
+@Preview(widthDp = 375, heightDp = 1810, showBackground = true, backgroundColor = 0xFF030507)
 @Composable
 private fun NetworkScreenPreview() {
     AuraTheme {
@@ -248,9 +247,9 @@ private fun NetworkScreenPreview() {
     }
 }
 
-@Preview(widthDp = 375, heightDp = 1400, showBackground = true, backgroundColor = 0xFF05070A)
+@Preview(widthDp = 375, heightDp = 1900, showBackground = true, backgroundColor = 0xFF030507)
 @Composable
-private fun NetworkScreenVpnPreview() {
+private fun NetworkScreenResultPreview() {
     AuraTheme {
         NetworkScreen(
             uiState = NetworkPreviewData.vpnOnWithResult,

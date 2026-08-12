@@ -1,6 +1,7 @@
 package com.aura.feature.home.data.repository
 
 import com.aura.core.common.IoDispatcher
+import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.mapper.toDomain
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
 import com.aura.feature.home.data.remote.dto.HomeSnapshotDto
@@ -21,15 +22,28 @@ import javax.inject.Singleton
 class HomeRepositoryImpl @Inject constructor(
     private val remote: HomeRemoteDataSource,
     private val sessionEngine: TestSessionEngine,
+    private val networkMonitor: NetworkMonitor,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : HomeRepository {
 
     private val snapshot = MutableStateFlow<HomeSnapshotDto?>(null)
 
     override fun observeHome(): Flow<HomeState> =
-        combine(snapshot.filterNotNull(), sessionEngine.state) { dto, session ->
-            dto.toDomain(session)
+        combine(
+            snapshot.filterNotNull(),
+            sessionEngine.state,
+            networkMonitor.status,
+        ) { dto, session, network ->
+            dto.toDomain(
+                session = session,
+                isVpnActive = dto.vpnActive || network.isVpnActive,
+            )
         }
+
+    override suspend fun creditTestReward(amount: Int) {
+        withContext(ioDispatcher) { remote.creditTestReward(amount) }
+        refresh()
+    }
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {

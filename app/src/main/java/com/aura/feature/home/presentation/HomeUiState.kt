@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import com.aura.R
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.MeshState
+import com.aura.feature.home.domain.model.TestStartRejection
 
 @Immutable
 sealed interface HomeUiState {
@@ -15,6 +16,17 @@ sealed interface HomeUiState {
         val home: HomeState,
         val mesh: MeshState,
     ) : HomeUiState
+}
+
+sealed interface HomeEvent {
+
+    data class TestRejected(val rejection: TestStartRejection) : HomeEvent
+
+    data class TestCompleted(val rewardIon: Int) : HomeEvent
+
+    data object TestInterrupted : HomeEvent
+
+    data object CooldownResumed : HomeEvent
 }
 
 @Immutable

@@ -19,6 +19,12 @@ class ObserveMeshStateUseCase @Inject constructor(
     operator fun invoke(): Flow<MeshState> = repository.observeMesh()
 }
 
+class CreditTestRewardUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke(amount: Int) = repository.creditTestReward(amount)
+}
+
 class RefreshHomeUseCase @Inject constructor(
     private val homeRepository: HomeRepository,
     private val meshRepository: MeshRepository,

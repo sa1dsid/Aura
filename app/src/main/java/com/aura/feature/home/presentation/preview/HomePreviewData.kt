@@ -8,7 +8,7 @@ import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.MeshState
-import com.aura.feature.home.domain.model.NetworkType
+import com.aura.core.network.NetworkType
 import com.aura.feature.home.domain.model.NewsState
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier

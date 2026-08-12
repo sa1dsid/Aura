@@ -1,5 +1,7 @@
 package com.aura.feature.home.data.remote
 
+import com.aura.core.geo.IpInfoSource
+import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.remote.dto.MeshCityDto
 import com.aura.feature.home.data.remote.dto.MeshSnapshotDto
 import com.aura.feature.home.data.remote.dto.UserLocationDto
@@ -14,7 +16,10 @@ interface MeshRemoteDataSource {
 }
 
 @Singleton
-class MockMeshRemoteDataSource @Inject constructor() : MeshRemoteDataSource {
+class MockMeshRemoteDataSource @Inject constructor(
+    private val ipInfoSource: IpInfoSource,
+    private val networkMonitor: NetworkMonitor,
+) : MeshRemoteDataSource {
 
     override suspend fun fetchMeshSnapshot(): MeshSnapshotDto {
         delay(NETWORK_DELAY_MILLIS)
@@ -25,12 +30,12 @@ class MockMeshRemoteDataSource @Inject constructor() : MeshRemoteDataSource {
     }
 
     override suspend fun fetchUserLocation(): UserLocationDto {
-        delay(NETWORK_DELAY_MILLIS)
+        val info = ipInfoSource.fetch()
         return UserLocationDto(
-            lat = 51.51,
-            lon = -0.13,
-            city = "London",
-            vpnActive = false,
+            lat = info.latitude,
+            lon = info.longitude,
+            city = info.city,
+            vpnActive = networkMonitor.current().isVpnActive,
         )
     }
 

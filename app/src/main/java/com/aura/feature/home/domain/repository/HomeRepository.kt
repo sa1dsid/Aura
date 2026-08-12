@@ -6,7 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface HomeRepository {
     fun observeHome(): Flow<HomeState>
+
     suspend fun refresh()
+
+    suspend fun creditTestReward(amount: Int)
 }
 
 interface MeshRepository {

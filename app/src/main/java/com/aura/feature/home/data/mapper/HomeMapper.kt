@@ -6,7 +6,7 @@ import com.aura.feature.home.domain.model.ConnectionState
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
-import com.aura.feature.home.domain.model.NetworkType
+import com.aura.core.network.NetworkType
 import com.aura.feature.home.domain.model.NewsState
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
@@ -15,7 +15,10 @@ import com.aura.feature.home.domain.model.Teasers
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.model.VpnCodeTeaser
 
-fun HomeSnapshotDto.toDomain(session: TestSessionState): HomeState = HomeState(
+fun HomeSnapshotDto.toDomain(
+    session: TestSessionState,
+    isVpnActive: Boolean,
+): HomeState = HomeState(
     balances = IonBalances(
         accrued = accruedIon,
         availableToWithdraw = availableToWithdrawIon,
@@ -44,7 +47,7 @@ fun HomeSnapshotDto.toDomain(session: TestSessionState): HomeState = HomeState(
     ),
     connection = ConnectionState(
         networkType = networkType.toNetworkType(),
-        isVpnActive = vpnActive,
+        isVpnActive = isVpnActive,
         rewardIon = testRewardIon,
     ),
     session = session,

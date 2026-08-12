@@ -1,5 +1,6 @@
 package com.aura.feature.home.presentation
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +25,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +35,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aura.R
+import com.aura.core.designsystem.component.AuraToastHost
+import com.aura.core.designsystem.component.AuraToastKind
+import com.aura.core.designsystem.component.AuraToastState
+import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
+import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
 import com.aura.feature.home.presentation.components.BalanceCardsRow
 import com.aura.feature.home.presentation.components.ConnectionBadge
@@ -41,24 +50,47 @@ import com.aura.feature.home.presentation.components.MeshMapCard
 import com.aura.feature.home.presentation.components.NodeStatusCard
 import com.aura.feature.home.presentation.components.TeaserCards
 import com.aura.feature.home.presentation.components.TestRingButton
+import com.aura.feature.home.presentation.format.formatHoursMinutes
 import com.aura.feature.home.presentation.preview.HomePreviewData
 
 @Composable
 fun HomeRoute(
     modifier: Modifier = Modifier,
+    onTabSelected: (HomeTab) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val toastState = rememberAuraToastState()
+    val context = LocalContext.current
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.onScreenResumed()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        viewModel.onScreenLeft()
+    }
+
+    DisposableEffect(viewModel) {
+        onDispose { viewModel.onScreenLeft() }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            toastState.show(
+                text = context.toastText(event),
+                kind = event.toastKind(),
+            )
+        }
     }
 
     HomeScreen(
         uiState = uiState,
         actions = HomeActions(
             onMainButtonClick = viewModel::onMainButtonClick,
+            onTabSelected = onTabSelected,
         ),
+        toastState = toastState,
         modifier = modifier,
     )
 }
@@ -68,6 +100,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     actions: HomeActions,
     modifier: Modifier = Modifier,
+    toastState: AuraToastState = rememberAuraToastState(),
 ) {
     val colors = AuraTheme.colors
 
@@ -81,12 +114,22 @@ fun HomeScreen(
             )
         },
     ) { innerPadding ->
-        when (uiState) {
-            HomeUiState.Loading -> LoadingState(Modifier.padding(innerPadding))
-            is HomeUiState.Content -> HomeContent(
-                state = uiState,
-                actions = actions,
-                contentPadding = innerPadding,
+        Box(Modifier.fillMaxSize()) {
+            when (uiState) {
+                HomeUiState.Loading -> LoadingState(Modifier.padding(innerPadding))
+                is HomeUiState.Content -> HomeContent(
+                    state = uiState,
+                    actions = actions,
+                    contentPadding = innerPadding,
+                )
+            }
+
+            AuraToastHost(
+                state = toastState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             )
         }
     }
@@ -209,6 +252,25 @@ private fun LoadingState(modifier: Modifier = Modifier) {
             color = colors.textSecondary,
         )
     }
+}
+
+private fun Context.toastText(event: HomeEvent): String = when (event) {
+    is HomeEvent.TestRejected -> rejectionText(event.rejection)
+    is HomeEvent.TestCompleted -> getString(R.string.toast_session_done, event.rewardIon)
+    HomeEvent.TestInterrupted -> getString(R.string.toast_session_interrupted)
+    HomeEvent.CooldownResumed -> getString(R.string.toast_vpn_resumed)
+}
+
+private fun HomeEvent.toastKind(): AuraToastKind = when (this) {
+    is HomeEvent.TestCompleted, HomeEvent.CooldownResumed -> AuraToastKind.SUCCESS
+    else -> AuraToastKind.ERROR
+}
+
+private fun Context.rejectionText(rejection: TestStartRejection): String = when (rejection) {
+    TestStartRejection.DataShareDisabled -> getString(R.string.toast_datashare_off)
+    TestStartRejection.VpnDetected -> getString(R.string.toast_vpn_block)
+    is TestStartRejection.CooldownNotFinished ->
+        getString(R.string.toast_cooldown, rejection.remaining.formatHoursMinutes())
 }
 
 @Preview(widthDp = 375, heightDp = 1250, showBackground = true, backgroundColor = 0xFF05070A)

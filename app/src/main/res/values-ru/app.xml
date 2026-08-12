@@ -2,4 +2,8 @@
 <resources>
     <string name="auth_terms_link">Условия сервиса</string>
     <string name="auth_privacy_link">Политику конфиденциальности</string>
+    <string name="net_vpn_off">ВЫКЛ</string>
+    <string name="net_history_empty">Замеров ещё нет · запустите тест, чтобы начать журнал</string>
+    <string name="diag_share_text">Загрузка %1$s Mbps · Отдача %2$s Mbps · Пинг %3$s ms · измерено в IO Aura</string>
+    <string name="cd_share">Поделиться результатом</string>
 </resources>

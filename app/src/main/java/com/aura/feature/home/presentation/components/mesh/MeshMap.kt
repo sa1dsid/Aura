@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -44,7 +45,9 @@ import com.aura.core.designsystem.component.signalDotShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.UserPresence
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -96,11 +99,20 @@ fun MeshMap(
     val userShadows = remember(colors) { colors.signalDotShadows }
 
     val context = LocalContext.current
-    val dotGrid = remember(projection, context) {
-        WorldLandmass.dotGrid(context, projection, MeshMapDefaults.DOT_COLUMNS)
+    val dotGrid by produceState(
+        initialValue = WorldLandmass.cached(projection, MeshMapDefaults.DOT_COLUMNS),
+        projection,
+        context,
+    ) {
+        if (value == null) {
+            value = withContext(Dispatchers.Default) {
+                WorldLandmass.dotGrid(context, projection, MeshMapDefaults.DOT_COLUMNS)
+            }
+        }
     }
     val liveDots = remember(cities, dotGrid) {
-        cities.filter { it.isLive }.map { dotGrid.snap(projection.normalize(it.location)) }
+        val grid = dotGrid ?: return@remember emptyList()
+        cities.filter { it.isLive }.map { grid.snap(projection.normalize(it.location)) }
     }
 
     val pulse = rememberInfiniteTransition(label = "mesh-map").animateFloat(
@@ -122,7 +134,8 @@ fun MeshMap(
         }
     }
     val userDot = remember(shownPresence, dotGrid) {
-        shownPresence?.let { dotGrid.snap(projection.normalize(it.location)) }
+        val grid = dotGrid ?: return@remember null
+        shownPresence?.let { grid.snap(projection.normalize(it.location)) }
     }
 
     Box(
@@ -154,8 +167,10 @@ fun MeshMap(
                 modifier = Modifier
                     .matchParentSize()
                     .drawWithCache {
+                        val grid = dotGrid ?: return@drawWithCache onDrawBehind {}
+
                         val spacing = size.width / MeshMapDefaults.DOT_COLUMNS
-                        val coordinates = dotGrid.dots.toPointArray(size)
+                        val coordinates = grid.dots.toPointArray(size)
                         val paint = pointPaint(
                             colors.mapDotIdle,
                             spacing * MeshMapDefaults.IDLE_DOT_RATIO,

@@ -66,6 +66,14 @@
     <string name="auth_email_placeholder">you@example.com</string>
     <string name="invite_code_placeholder">SYREX482</string>
 
+    <!-- Бургер-меню. В поставке заказчика есть только пункты меню; шапка аккаунта,
+         способ входа и строка версии в списке ключей не пришли. -->
+    <string name="account_handle">@%1$s</string>
+    <string name="menu_account_meta">%1$s · %2$s</string>
+    <string name="menu_provider_google">Google</string>
+    <string name="menu_provider_email">Email</string>
+    <string name="menu_version">IO Aura · v%1$s</string>
+
     <!-- Кликабельные куски auth_terms_line. Отдельные ключи нужны потому, что
          в переводе форма слова отличается от пункта меню: menu_privacy — это
          «Конфиденциальность», а в строке согласия стоит «Политику

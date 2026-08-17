@@ -6,6 +6,7 @@ data class AccountDto(
     val handle: String,
     val inviteCode: String,
     val inviteLink: String,
+    val authProvider: String,
 )
 
 data class AuthSessionDto(

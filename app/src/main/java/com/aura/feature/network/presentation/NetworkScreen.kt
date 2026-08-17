@@ -53,6 +53,7 @@ private val ScreenPadding = 15.dp
 @Composable
 fun NetworkRoute(
     modifier: Modifier = Modifier,
+    onMenuClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: NetworkViewModel = hiltViewModel(),
 ) {
@@ -82,6 +83,7 @@ fun NetworkRoute(
     NetworkScreen(
         uiState = uiState,
         actions = NetworkActions(
+            onMenuClick = onMenuClick,
             onVpnCardClick = viewModel::onVpnCardClick,
             onStartTestClick = viewModel::onStartTestClick,
             onShareResultClick = viewModel::onShareResultClick,

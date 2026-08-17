@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.aura.feature.account.presentation.menu.AccountMenuRoute
 import com.aura.feature.home.presentation.HomeRoute
 import com.aura.feature.home.presentation.HomeTab
 import com.aura.feature.network.presentation.NetworkRoute
@@ -53,21 +54,46 @@ fun AuraRoot(modifier: Modifier = Modifier) {
             WelcomeBonusRoute(onFinished = { stage = AuraStage.HOME })
         }
 
-        AuraStage.HOME -> MainTabs(modifier = modifier)
+        AuraStage.HOME -> MainTabs(
+            onSessionClosed = { stage = AuraStage.AUTH },
+            modifier = modifier,
+        )
     }
 }
 
 @Composable
-private fun MainTabs(modifier: Modifier = Modifier) {
+private fun MainTabs(
+    onSessionClosed: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.HOME) }
+    var isMenuOpen by rememberSaveable { mutableStateOf(false) }
 
     val selectTab: (HomeTab) -> Unit = { selected ->
         if (selected in IMPLEMENTED_TABS) tab = selected
     }
+    val openMenu: () -> Unit = { isMenuOpen = true }
 
-    when (tab) {
-        HomeTab.NETWORK -> NetworkRoute(onTabSelected = selectTab, modifier = modifier)
-        else -> HomeRoute(onTabSelected = selectTab, modifier = modifier)
+    Box(modifier) {
+        when (tab) {
+            HomeTab.NETWORK -> NetworkRoute(
+                onMenuClick = openMenu,
+                onTabSelected = selectTab,
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            else -> HomeRoute(
+                onMenuClick = openMenu,
+                onTabSelected = selectTab,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        AccountMenuRoute(
+            visible = isMenuOpen,
+            onDismissRequest = { isMenuOpen = false },
+            onSessionClosed = onSessionClosed,
+        )
     }
 }
 

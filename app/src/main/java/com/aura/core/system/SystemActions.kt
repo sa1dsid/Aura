@@ -3,7 +3,13 @@ package com.aura.core.system
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
+
+fun Context.openUrl(url: String): Boolean {
+    if (url.isBlank()) return false
+    return startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+}
 
 fun Context.openVpnSettings() {
     val opened = startSafely(Intent(Settings.ACTION_VPN_SETTINGS))

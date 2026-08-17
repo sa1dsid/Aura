@@ -4,6 +4,7 @@ import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.OnboardingFlagsDto
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
+import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
@@ -30,12 +31,14 @@ class OnboardingBackend @Inject constructor() {
         val handle: String,
         val inviteCode: String,
         val passwordHash: Int?,
+        val authProvider: AuthProvider,
         var deleted: Boolean = false,
         var invitedByCode: String? = null,
         var inviteSkipped: Boolean = false,
         var inviteScreenPassed: Boolean = false,
         var bonusPopupShown: Boolean = false,
         var reservedBonusIon: Int = 0,
+        var pushNotifications: Boolean = true,
     )
 
     private val mutex = Mutex()
@@ -48,6 +51,7 @@ class OnboardingBackend @Inject constructor() {
             handle = "syrex",
             inviteCode = SEED_INVITE_CODE,
             passwordHash = null,
+            authProvider = AuthProvider.GOOGLE,
             inviteSkipped = true,
             inviteScreenPassed = true,
             bonusPopupShown = true,
@@ -71,14 +75,29 @@ class OnboardingBackend @Inject constructor() {
         if (records[key]?.deleted == false) {
             throw AuthException(AuthFailure.EMAIL_ALREADY_REGISTERED)
         }
-        createRecord(key, password.hashCode()).toDto()
+        createRecord(key, password.hashCode(), AuthProvider.EMAIL).toDto()
     }
 
     suspend fun signInWithGoogle(email: String): Pair<AccountDto, Boolean> = mutex.withLock {
         val key = email.lowercase()
         val existing = records[key]?.takeIf { !it.deleted }
         if (existing != null) return@withLock existing.toDto() to false
-        createRecord(key, passwordHash = null).toDto() to true
+        createRecord(key, passwordHash = null, authProvider = AuthProvider.GOOGLE).toDto() to true
+    }
+
+    suspend fun pushNotifications(accountId: String): Boolean = mutex.withLock {
+        requireRecord(accountId).pushNotifications
+    }
+
+    suspend fun setPushNotifications(accountId: String, enabled: Boolean) = mutex.withLock {
+        requireRecord(accountId).pushNotifications = enabled
+    }
+
+    suspend fun deleteAccount(accountId: String) = mutex.withLock {
+        val record = requireRecord(accountId)
+        record.deleted = true
+        record.invitedByCode = null
+        record.reservedBonusIon = 0
     }
 
     suspend fun isRegistered(email: String): Boolean = mutex.withLock {
@@ -126,7 +145,11 @@ class OnboardingBackend @Inject constructor() {
         records.values.firstOrNull { it.id == accountId && !it.deleted }
             ?: throw AuthException(AuthFailure.ACCOUNT_NOT_FOUND)
 
-    private fun createRecord(email: String, passwordHash: Int?): Record {
+    private fun createRecord(
+        email: String,
+        passwordHash: Int?,
+        authProvider: AuthProvider,
+    ): Record {
         val handle = uniqueHandle(email.substringBefore('@'))
         val record = Record(
             id = "acc_${records.size + 1}_$handle",
@@ -134,6 +157,7 @@ class OnboardingBackend @Inject constructor() {
             handle = handle,
             inviteCode = inviteCodeFor(handle),
             passwordHash = passwordHash,
+            authProvider = authProvider,
             reservedBonusIon = WELCOME_BONUS_ION,
         )
         records[email] = record
@@ -160,5 +184,6 @@ class OnboardingBackend @Inject constructor() {
         handle = handle,
         inviteCode = inviteCode,
         inviteLink = INVITE_LINK_PREFIX + inviteCode,
+        authProvider = authProvider.name,
     )
 }

@@ -80,6 +80,8 @@ fun AuraOutlinedButton(
     enabled: Boolean = true,
     height: Dp = 52.dp,
     shape: RoundedCornerShape = RoundedCornerShape(18.dp),
+    borderColor: Color = AuraTheme.colors.authOutline,
+    contentColor: Color = AuraTheme.colors.authSkipLabel,
 ) {
     val colors = AuraTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
@@ -98,7 +100,7 @@ fun AuraOutlinedButton(
             .pressScale(pressed = isPressed, enabled = enabled)
             .clip(shape)
             .background(background)
-            .border(1.dp, colors.authOutline, shape)
+            .border(1.dp, borderColor, shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -110,7 +112,7 @@ fun AuraOutlinedButton(
         Text(
             text = text,
             style = AuraTheme.typography.secondaryButtonLabel,
-            color = colors.authSkipLabel,
+            color = contentColor,
             textAlign = TextAlign.Center,
         )
     }

@@ -56,6 +56,7 @@ import com.aura.feature.home.presentation.preview.HomePreviewData
 @Composable
 fun HomeRoute(
     modifier: Modifier = Modifier,
+    onMenuClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -87,6 +88,7 @@ fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         actions = HomeActions(
+            onMenuClick = onMenuClick,
             onMainButtonClick = viewModel::onMainButtonClick,
             onTabSelected = onTabSelected,
         ),

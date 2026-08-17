@@ -1,6 +1,5 @@
 package com.aura.feature.network.presentation.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aura.R
+import com.aura.core.designsystem.component.AuraGlowLayer
 import com.aura.core.designsystem.component.AuraShadow
 import com.aura.core.designsystem.component.auraDropShadow
 import com.aura.core.designsystem.component.auraGlowLayer
@@ -90,24 +91,42 @@ fun PingChart(
                 .fillMaxWidth()
                 .height(PlotHeight)
         ) {
-            Canvas(Modifier.fillMaxSize()) {
-                val top = TopGridline.toPx()
-                val bottom = BottomGridline.toPx()
+            Spacer(
+                Modifier
+                    .fillMaxSize()
+                    .drawWithCache {
+                        val top = TopGridline.toPx()
+                        val bottom = BottomGridline.toPx()
+                        val points = history.toPoints(size.width, top, bottom)
+                        val areaPath = areaPath(points, bottom)
+                        val trendPath = trendPath(points)
+                        val latestGlow = auraGlowLayer(
+                            shadow = AuraShadow(colors.glowIce, 6.dp),
+                            width = LatestRadius.toPx() * 2f,
+                            height = LatestRadius.toPx() * 2f,
+                            center = Offset.Zero,
+                        )
 
-                drawGridline(colors.border, top, TopLabelWidth.toPx())
-                drawGridline(colors.border, bottom, BottomLabelWidth.toPx())
+                        onDrawBehind {
+                            drawGridline(colors.border, top, TopLabelWidth.toPx())
+                            drawGridline(colors.border, bottom, BottomLabelWidth.toPx())
 
-                drawThreshold(PING_WARNING_MS, top, bottom, colors.warning.copy(alpha = 0.5f))
-                drawThreshold(PING_GOOD_MS, top, bottom, colors.accentBlue.copy(alpha = 0.5f))
-                drawThreshold(PING_IDEAL_MS, top, bottom, colors.green)
+                            drawThreshold(
+                                PING_WARNING_MS, top, bottom, colors.warning.copy(alpha = 0.5f),
+                            )
+                            drawThreshold(
+                                PING_GOOD_MS, top, bottom, colors.accentBlue.copy(alpha = 0.5f),
+                            )
+                            drawThreshold(PING_IDEAL_MS, top, bottom, colors.green)
 
-                if (history.isEmpty()) return@Canvas
+                            if (points.isEmpty()) return@onDrawBehind
 
-                val points = history.toPoints(size.width, top, bottom)
-                drawArea(points, bottom, colors.iceBlue)
-                drawTrend(points, colors.accentBlue)
-                drawPoints(history, points, colors)
-            }
+                            drawArea(areaPath, points, bottom, colors.iceBlue)
+                            drawTrend(trendPath, colors.accentBlue)
+                            drawPoints(history, points, colors, latestGlow)
+                        }
+                    }
+            )
 
             AxisValue(
                 text = stringResource(R.string.net_axis_top),
@@ -228,15 +247,33 @@ private fun DrawScope.drawThreshold(valueMs: Int, top: Float, bottom: Float, col
     }
 }
 
-private fun DrawScope.drawArea(points: List<Offset>, bottom: Float, color: Color) {
-    if (points.size < 2) return
+private fun areaPath(points: List<Offset>, bottom: Float): Path? {
+    if (points.size < 2) return null
 
-    val path = Path().apply {
+    return Path().apply {
         moveTo(points.first().x, bottom)
         points.forEach { lineTo(it.x, it.y) }
         lineTo(points.last().x, bottom)
         close()
     }
+}
+
+private fun trendPath(points: List<Offset>): Path? {
+    if (points.size < 2) return null
+
+    return Path().apply {
+        moveTo(points.first().x, points.first().y)
+        points.drop(1).forEach { lineTo(it.x, it.y) }
+    }
+}
+
+private fun DrawScope.drawArea(
+    path: Path?,
+    points: List<Offset>,
+    bottom: Float,
+    color: Color,
+) {
+    if (path == null) return
 
     drawPath(
         path = path,
@@ -248,13 +285,8 @@ private fun DrawScope.drawArea(points: List<Offset>, bottom: Float, color: Color
     )
 }
 
-private fun DrawScope.drawTrend(points: List<Offset>, color: Color) {
-    if (points.size < 2) return
-
-    val path = Path().apply {
-        moveTo(points.first().x, points.first().y)
-        points.drop(1).forEach { lineTo(it.x, it.y) }
-    }
+private fun DrawScope.drawTrend(path: Path?, color: Color) {
+    if (path == null) return
 
     drawPath(
         path = path,
@@ -267,6 +299,7 @@ private fun DrawScope.drawPoints(
     history: List<PingRecord>,
     points: List<Offset>,
     colors: AuraColors,
+    latestGlow: AuraGlowLayer,
 ) {
     points.forEachIndexed { index, point ->
         drawCircle(color = colors.accentBlue, radius = PointRadius.toPx(), center = point)
@@ -282,13 +315,7 @@ private fun DrawScope.drawPoints(
     }
 
     val last = points.lastOrNull() ?: return
-    val glow = auraGlowLayer(
-        shadow = AuraShadow(colors.glowIce, 6.dp),
-        width = LatestRadius.toPx() * 2f,
-        height = LatestRadius.toPx() * 2f,
-        center = Offset.Zero,
-    )
 
-    drawAuraGlow(glow, center = last)
+    drawAuraGlow(latestGlow, center = last)
     drawCircle(color = colors.textBright, radius = LatestRadius.toPx(), center = last)
 }

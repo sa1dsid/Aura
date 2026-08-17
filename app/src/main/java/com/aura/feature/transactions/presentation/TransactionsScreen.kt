@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -86,6 +87,9 @@ private fun TransactionsContent(
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
+    val visibleEvents = remember(uiState.events, uiState.filter) {
+        uiState.events.filterBy(uiState.filter)
+    }
 
     Column(
         modifier = modifier
@@ -140,7 +144,7 @@ private fun TransactionsContent(
             Spacer(Modifier.height(12.dp))
 
             TransactionsLogCard(
-                events = uiState.events.filterBy(uiState.filter),
+                events = visibleEvents,
                 modifier = Modifier.weight(1f),
             )
 

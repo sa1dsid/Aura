@@ -11,14 +11,25 @@ private const val DAY_PATTERN = "MMM dd"
 
 private const val DAYS_IN_YEAR = 1000
 
-fun Long.formatClock(): String = format(CLOCK_PATTERN)
+private val clockFormat = ThreadLocal.withInitial {
+    SimpleDateFormat(CLOCK_PATTERN, Locale.US)
+}
 
-fun Long.formatDayShort(): String = format(DAY_PATTERN)
+private val dayFormat = ThreadLocal.withInitial {
+    SimpleDateFormat(DAY_PATTERN, Locale.US)
+}
+
+private val dayKeyCalendar = ThreadLocal.withInitial { Calendar.getInstance() }
+
+fun Long.formatClock(): String = format(clockFormat)
+
+fun Long.formatDayShort(): String = format(dayFormat)
 
 fun Long.dayKey(): Int {
-    val calendar = Calendar.getInstance().apply { timeInMillis = this@dayKey }
+    val calendar = dayKeyCalendar.get()!!
+    calendar.timeInMillis = this
     return calendar.get(Calendar.YEAR) * DAYS_IN_YEAR + calendar.get(Calendar.DAY_OF_YEAR)
 }
 
-private fun Long.format(pattern: String): String =
-    SimpleDateFormat(pattern, Locale.US).format(Date(this))
+private fun Long.format(format: ThreadLocal<SimpleDateFormat>): String =
+    format.get()!!.format(Date(this))

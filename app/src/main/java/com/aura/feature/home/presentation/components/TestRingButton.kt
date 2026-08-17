@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -72,6 +73,22 @@ fun TestRingButton(
         label = "ring-glow",
     )
 
+    val currentFraction = rememberUpdatedState(fraction)
+    val ringModifier = remember(colors, isMuted) {
+        Modifier.ringGraphics(
+            fraction = { currentFraction.value },
+            trackColor = colors.border,
+            arcColor = if (isMuted) colors.accentBlue.copy(alpha = 0.45f) else colors.accentBlue,
+            ringShadows = colors.planetRingShadows,
+            coreShadows = colors.planetCoreShadows,
+            coreColor = colors.planetCore,
+            coreEdgeColor = colors.surfaceBottom,
+            coreBorderColor = colors.accentBlueSoft.copy(alpha = 0.22f),
+            coreInnerGlowColor = colors.accentBlue,
+            glowAlpha = { glowAlpha.value },
+        )
+    }
+
     Box(
         modifier = modifier.size(RingDiameter),
         contentAlignment = Alignment.Center,
@@ -80,18 +97,7 @@ fun TestRingButton(
             Modifier
                 .pressScale(pressed = isPressed, enabled = isReady, pressedScale = 0.965f)
                 .fillMaxSize()
-                .ringGraphics(
-                    fraction = fraction,
-                    trackColor = colors.border,
-                    arcColor = if (isMuted) colors.accentBlue.copy(alpha = 0.45f) else colors.accentBlue,
-                    ringShadows = colors.planetRingShadows,
-                    coreShadows = colors.planetCoreShadows,
-                    coreColor = colors.planetCore,
-                    coreEdgeColor = colors.surfaceBottom,
-                    coreBorderColor = colors.accentBlueSoft.copy(alpha = 0.22f),
-                    coreInnerGlowColor = colors.accentBlue,
-                    glowAlpha = { glowAlpha.value },
-                )
+                .then(ringModifier)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -109,7 +115,7 @@ private fun TestSessionState.Cooldown.remainingFraction(): Float =
     else (remaining.inWholeMilliseconds.toFloat() / total.inWholeMilliseconds).coerceIn(0f, 1f)
 
 private fun Modifier.ringGraphics(
-    fraction: Float,
+    fraction: () -> Float,
     trackColor: Color,
     arcColor: Color,
     ringShadows: List<AuraShadow>,
@@ -123,7 +129,6 @@ private fun Modifier.ringGraphics(
     val strokePx = RingStroke.toPx()
     val arcTopLeft = Offset(strokePx / 2f, strokePx / 2f)
     val arcSize = Size(size.width - strokePx, size.height - strokePx)
-    val sweepAngle = 360f * fraction
 
     val corePx = CoreDiameter.toPx()
     val coreCenter = Offset(size.width / 2f, size.height / 2f)
@@ -131,6 +136,8 @@ private fun Modifier.ringGraphics(
     val coreGlows = coreShadows.map { auraGlowLayer(it, corePx, corePx, coreCenter) }
 
     onDrawBehind {
+        val sweepAngle = 360f * fraction()
+
         drawArc(
             color = trackColor,
             startAngle = START_ANGLE,

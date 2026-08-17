@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -135,11 +137,30 @@ private fun TabItem(
         animationSpec = tween(TAB_FADE_MILLIS),
         label = "tab-tint",
     )
-    val glowAlpha by animateFloatAsState(
+    val glowAlpha = animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
         animationSpec = tween(TAB_FADE_MILLIS),
         label = "tab-glow",
     )
+    val hasGlow by remember { derivedStateOf { glowAlpha.value > 0f } }
+
+    val glowModifier = remember(colors.tabGlow) {
+        Modifier
+            .auraGlow(
+                color = colors.tabGlow.copy(alpha = 0.10f),
+                width = 31.dp,
+                height = 55.dp,
+                blurRadius = 40.dp,
+                alpha = { glowAlpha.value },
+            )
+            .auraGlow(
+                color = Color.White.copy(alpha = 0.12f),
+                width = 24.dp,
+                height = 31.dp,
+                blurRadius = 10.dp,
+                alpha = { glowAlpha.value },
+            )
+    }
 
     Column(
         modifier = modifier
@@ -156,27 +177,17 @@ private fun TabItem(
         Box(
             modifier = Modifier
                 .size(30.dp)
-                .auraGlow(
-                    color = colors.tabGlow.copy(alpha = 0.10f * glowAlpha),
-                    width = 31.dp,
-                    height = 55.dp,
-                    blurRadius = 40.dp,
-                )
-                .auraGlow(
-                    color = Color.White.copy(alpha = 0.12f * glowAlpha),
-                    width = 24.dp,
-                    height = 31.dp,
-                    blurRadius = 10.dp,
-                ),
+                .then(glowModifier),
             contentAlignment = Alignment.Center,
         ) {
-            if (glowAlpha > 0f) {
+            if (hasGlow) {
                 Icon(
                     painter = painterResource(iconRes),
                     contentDescription = null,
-                    tint = Color.White.copy(alpha = ICON_GLOW_ALPHA * glowAlpha),
+                    tint = Color.White.copy(alpha = ICON_GLOW_ALPHA),
                     modifier = Modifier
                         .size(ICON_GLOW_SIZE)
+                        .graphicsLayer { alpha = glowAlpha.value }
                         .blur(iconGlowBlur, BlurredEdgeTreatment.Unbounded),
                 )
             }

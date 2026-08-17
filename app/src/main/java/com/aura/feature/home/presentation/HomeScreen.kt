@@ -21,7 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -187,22 +187,22 @@ private fun HomeContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .drawBehind {
+                .drawWithCache {
                     val center = Offset(size.width / 2f, size.height * 0.46f)
                     val radius = size.width * 0.72f
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                colors.backgroundGlow.copy(alpha = 0.45f),
-                                colors.backgroundGlow.copy(alpha = 0.14f),
-                                Color.Transparent,
-                            ),
-                            center = center,
-                            radius = radius,
+                    val brush = Brush.radialGradient(
+                        colors = listOf(
+                            colors.backgroundGlow.copy(alpha = 0.45f),
+                            colors.backgroundGlow.copy(alpha = 0.14f),
+                            Color.Transparent,
                         ),
-                        radius = radius,
                         center = center,
+                        radius = radius,
                     )
+
+                    onDrawBehind {
+                        drawCircle(brush = brush, radius = radius, center = center)
+                    }
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

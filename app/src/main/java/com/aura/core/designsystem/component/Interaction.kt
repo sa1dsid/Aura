@@ -87,7 +87,7 @@ fun Modifier.pressScale(
     pressedScale: Float = 0.975f,
 ): Modifier {
     val isPressed = pressed && enabled
-    val scale by animateFloatAsState(
+    val scale = animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1f,
         animationSpec = if (isPressed) {
             tween(durationMillis = 80)
@@ -100,8 +100,8 @@ fun Modifier.pressScale(
         label = "press-scale",
     )
     return this.graphicsLayer {
-        scaleX = scale
-        scaleY = scale
+        scaleX = scale.value
+        scaleY = scale.value
     }
 }
 

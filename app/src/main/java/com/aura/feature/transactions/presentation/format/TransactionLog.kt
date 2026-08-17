@@ -13,16 +13,19 @@ sealed interface TransactionLogLine {
 fun List<TransactionEvent>.toLogLines(): List<TransactionLogLine> {
     if (isEmpty()) return emptyList()
 
-    val lines = mutableListOf<TransactionLogLine>()
+    val keys = IntArray(size) { this[it].timestamp.dayKey() }
+    val lines = ArrayList<TransactionLogLine>(size + 1)
     var currentKey: Int? = null
 
     forEachIndexed { index, event ->
-        val key = event.timestamp.dayKey()
+        val key = keys[index]
         if (key != currentKey) {
             currentKey = key
+            var runEnd = index
+            while (runEnd < size && keys[runEnd] == key) runEnd++
             lines += TransactionLogLine.DayComment(
                 timestamp = event.timestamp,
-                count = drop(index).takeWhile { it.timestamp.dayKey() == key }.size,
+                count = runEnd - index,
             )
         }
         lines += TransactionLogLine.Entry(event)

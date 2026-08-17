@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -110,18 +112,24 @@ fun AuraNewsPlanet(
             Box(
                 Modifier
                     .size(24.dp)
-                    .drawBehind {
+                    .graphicsLayer()
+                    .drawWithCache {
                         val radius = size.minDimension / 2f
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    colors.danger.copy(alpha = 0.55f * pulse.value),
-                                ),
-                                radius = radius,
+                        val brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                colors.danger.copy(alpha = 0.55f),
                             ),
                             radius = radius,
                         )
+
+                        onDrawBehind {
+                            drawCircle(
+                                brush = brush,
+                                radius = radius,
+                                alpha = pulse.value,
+                            )
+                        }
                     }
             )
         }

@@ -6,4 +6,27 @@
     <string name="net_history_empty">Замеров ещё нет · запустите тест, чтобы начать журнал</string>
     <string name="diag_share_text">Загрузка %1$s Mbps · Отдача %2$s Mbps · Пинг %3$s ms · измерено в IO Aura</string>
     <string name="cd_share">Поделиться результатом</string>
+
+    <!-- Terminal, Transactions и Promo Codes. Названия типов событий, ключи лога и
+         логотип не переводятся — они технические. -->
+    <string name="terminal_title">Терминал</string>
+    <string name="terminal_card_transactions_hint">непрочитанных</string>
+    <string name="terminal_card_promo_hint">открыть</string>
+    <string name="tx_title">Транзакции</string>
+    <string name="tx_subtitle">Все события ION и Spark — купоны живут отдельно в Promo Codes</string>
+    <string name="tx_history">ИСТОРИЯ</string>
+    <string name="tx_filter_all">ВСЕ</string>
+    <string name="tx_empty_title">Событий пока нет</string>
+    <string name="tx_empty_text">Нажмите кнопку на главной, чтобы начать зарабатывать</string>
+    <string name="promo_title">Промокоды</string>
+    <string name="promo_subtitle">Все полученные коды — VPN и Spark, нажмите на тикет, чтобы скопировать</string>
+    <string name="promo_section_spark">КОДЫ SPARK</string>
+    <string name="promo_section_vpn">КОДЫ VPN</string>
+    <string name="promo_more_spark">прокрутите, ещё %1$d кодов Spark ↓</string>
+    <string name="promo_more_vpn">прокрутите, ещё %1$d кодов VPN ↓</string>
+    <string name="promo_empty_title">Кодов пока нет</string>
+    <string name="promo_empty_text">Копите Spark и достигайте целей, чтобы получить первый</string>
+    <string name="promo_copied">Код скопирован</string>
+    <string name="cd_back">Назад</string>
+    <string name="cd_copy_code">Скопировать код</string>
 </resources>

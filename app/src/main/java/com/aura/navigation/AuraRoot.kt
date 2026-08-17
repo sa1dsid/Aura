@@ -17,6 +17,9 @@ import com.aura.feature.onboarding.presentation.auth.AuthRoute
 import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusRoute
 import com.aura.feature.onboarding.presentation.invite.InviteRoute
 import com.aura.feature.onboarding.presentation.splash.SplashRoute
+import com.aura.feature.promo.presentation.PromoCodesRoute
+import com.aura.feature.terminal.presentation.TerminalRoute
+import com.aura.feature.transactions.presentation.TransactionsRoute
 
 enum class AuraStage { SPLASH, AUTH, INVITE, BONUS, HOME }
 
@@ -61,6 +64,8 @@ fun AuraRoot(modifier: Modifier = Modifier) {
     }
 }
 
+private enum class TerminalDestination { ROOT, TRANSACTIONS, PROMO_CODES }
+
 @Composable
 private fun MainTabs(
     onSessionClosed: () -> Unit,
@@ -68,9 +73,15 @@ private fun MainTabs(
 ) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.HOME) }
     var isMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var terminalDestination by rememberSaveable { mutableStateOf(TerminalDestination.ROOT) }
+
+    val openTerminalRoot = { terminalDestination = TerminalDestination.ROOT }
 
     val selectTab: (HomeTab) -> Unit = { selected ->
-        if (selected in IMPLEMENTED_TABS) tab = selected
+        if (selected in IMPLEMENTED_TABS) {
+            tab = selected
+            openTerminalRoot()
+        }
     }
     val openMenu: () -> Unit = { isMenuOpen = true }
 
@@ -81,6 +92,28 @@ private fun MainTabs(
                 onTabSelected = selectTab,
                 modifier = Modifier.fillMaxSize(),
             )
+
+            HomeTab.TERMINAL -> when (terminalDestination) {
+                TerminalDestination.ROOT -> TerminalRoute(
+                    onOpenTransactions = { terminalDestination = TerminalDestination.TRANSACTIONS },
+                    onOpenPromoCodes = { terminalDestination = TerminalDestination.PROMO_CODES },
+                    onMenuClick = openMenu,
+                    onTabSelected = selectTab,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                TerminalDestination.TRANSACTIONS -> TransactionsRoute(
+                    onBack = openTerminalRoot,
+                    onTabSelected = selectTab,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                TerminalDestination.PROMO_CODES -> PromoCodesRoute(
+                    onBack = openTerminalRoot,
+                    onTabSelected = selectTab,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
 
             else -> HomeRoute(
                 onMenuClick = openMenu,
@@ -97,4 +130,4 @@ private fun MainTabs(
     }
 }
 
-private val IMPLEMENTED_TABS = setOf(HomeTab.HOME, HomeTab.NETWORK)
+private val IMPLEMENTED_TABS = setOf(HomeTab.HOME, HomeTab.TERMINAL, HomeTab.NETWORK)

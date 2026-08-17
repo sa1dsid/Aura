@@ -80,4 +80,61 @@
          конфиденциальности», и поиском по menu_privacy ссылка не находится. -->
     <string name="auth_terms_link">Terms of Service</string>
     <string name="auth_privacy_link">Privacy Policy</string>
+
+    <!-- Terminal, Transactions и Promo Codes. В поставке заказчика от 09.08 этих ключей
+         нет (ТЗ Transactions от 12.08 обещает их следующей поставкой), поэтому блок
+         временный: когда строки придут, заменить на их ID и убрать отсюда.
+         Логотип на Терминале — КОРОТКАЯ форма «I Ø» без слова Aura, так задумано
+         дизайнером, поэтому ключ отдельный от home_logo. -->
+    <string name="terminal_logo">I Ø</string>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_card_transactions">TRANSACTIONS</string>
+    <string name="terminal_card_transactions_hint">unread</string>
+    <string name="terminal_card_promo">PROMO CODES</string>
+    <string name="terminal_card_promo_hint">tap to check</string>
+    <string name="terminal_card_counter">+%1$d</string>
+
+    <string name="tx_title">Transactions</string>
+    <!-- ДЛИННАЯ: подзаголовок экрана, в макете переносится на две строки. -->
+    <string name="tx_subtitle">Every ION and Spark event — coupons live separately in Promo Codes</string>
+    <string name="tx_history">HISTORY</string>
+    <string name="tx_filter_all">ALL</string>
+    <string name="tx_filter_ion">ION</string>
+    <string name="tx_filter_spark">SPARK</string>
+    <string name="tx_filter_data_share">DATA SHARE</string>
+    <string name="tx_filter_referral">REFERRAL</string>
+    <string name="tx_filter_exchange">EXCHANGE</string>
+    <string name="tx_empty_title">No events yet</string>
+    <string name="tx_empty_text">Press the button on Home to start earning</string>
+
+    <!-- transactions_log.json: событие занимает две строки, комментарии группируют по
+         датам. Ключи и разделители — часть JSON-подобного лога, не переводятся.
+         Типы, источники и суммы приходят с сервера как есть и тоже не переводятся. -->
+    <string name="tx_log_title">transactions_log.json · %1$d events</string>
+    <string name="tx_log_day">// %1$s (%2$d events)</string>
+    <string name="tx_log_line_head">%1$s:type:%2$s,%3$s:%4$s,</string>
+    <string name="tx_log_line_tail">amount:%1$s</string>
+    <string name="tx_log_more">// scroll for more ↓</string>
+
+    <string name="promo_title">Promo Codes</string>
+    <!-- ДЛИННАЯ: подзаголовок экрана, в макете переносится на две строки. -->
+    <string name="promo_subtitle">Every code you\'ve earned — VPN and Spark, tap a ticket to copy</string>
+    <string name="promo_section_spark">SPARK CODES</string>
+    <string name="promo_section_vpn">VPN CODES</string>
+    <string name="promo_badge_spark">SPARK</string>
+    <string name="promo_badge_vpn">VPN</string>
+    <string name="promo_more_spark">scroll for %1$d more Spark codes ↓</string>
+    <string name="promo_more_vpn">scroll for %1$d more VPN codes ↓</string>
+    <string name="promo_empty_title">No codes yet</string>
+    <!-- ДЛИННАЯ: пустое состояние, в макете переносится на две строки. -->
+    <string name="promo_empty_text">Earn Spark and reach targets to get your first one</string>
+    <string name="promo_ticket_date">%1$s, %2$s</string>
+    <string name="promo_copied">Code copied</string>
+
+    <!-- Ник в шапке вложенного экрана. Дубликат net_handle по смыслу — свести в один
+         ключ, когда придёт поставка строк. -->
+    <string name="handle_format">@%1$s</string>
+
+    <string name="cd_back">Back</string>
+    <string name="cd_copy_code">Copy code</string>
 </resources>

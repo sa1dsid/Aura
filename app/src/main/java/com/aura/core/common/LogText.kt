@@ -1,4 +1,4 @@
-package com.aura.feature.network.presentation.format
+package com.aura.core.common
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle

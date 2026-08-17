@@ -1,4 +1,4 @@
-package com.aura.feature.network.presentation.components
+package com.aura.feature.transactions.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -26,34 +27,42 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.common.LogValue
+import com.aura.core.common.formatClock
+import com.aura.core.common.formatDayShort
 import com.aura.core.common.logLine
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraLogScrollBar
+import com.aura.core.designsystem.component.auraDropShadow
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.brightDotShadows
 import com.aura.core.designsystem.component.scrollProgress
 import com.aura.core.designsystem.component.visibleFraction
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.feature.network.domain.model.PingRecord
-import com.aura.feature.network.presentation.format.NetworkLogLine
-import com.aura.feature.network.presentation.format.formatClockTime
-import com.aura.feature.network.presentation.format.formatLogDay
-import com.aura.feature.network.presentation.format.toLogLines
-
-private val LogHeight = 253.dp
+import com.aura.feature.transactions.domain.model.TransactionEvent
+import com.aura.feature.transactions.presentation.format.TransactionLogLine
+import com.aura.feature.transactions.presentation.format.toLogLines
 
 @Composable
-fun NetworkLogCard(
-    history: List<PingRecord>,
+fun TransactionsLogCard(
+    events: List<TransactionEvent>,
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
-    val lines = history.toLogLines()
+    val lines = events.toLogLines()
     val scrollState = rememberScrollState()
 
-    AuraCard(modifier = modifier.fillMaxWidth()) {
-        Column {
-            LogHeader(count = history.size)
+    AuraCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .auraDropShadow(
+                color = colors.glowIce.copy(alpha = 0.60f),
+                blurRadius = 8.dp,
+                cornerRadius = 16.dp,
+                spread = (-6).dp,
+            ),
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            LogHeader(count = events.size)
 
             Box(
                 Modifier
@@ -62,7 +71,11 @@ fun NetworkLogCard(
                     .background(colors.border)
             )
 
-            Row(Modifier.height(LogHeight)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -72,16 +85,15 @@ fun NetworkLogCard(
                         .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    if (lines.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.net_history_empty),
-                            style = AuraTheme.typography.caption,
-                            color = colors.textDisabled,
-                        )
-                    }
-
                     lines.forEachIndexed { index, line ->
                         LogRow(number = index + 1, line = line)
+                    }
+
+                    if (scrollState.maxValue > 0) {
+                        CommentRow(
+                            number = lines.size + 1,
+                            text = stringResource(R.string.tx_log_more),
+                        )
                     }
                 }
 
@@ -113,7 +125,7 @@ private fun LogHeader(count: Int, modifier: Modifier = Modifier) {
                 .background(colors.textBright)
         )
         Text(
-            text = stringResource(R.string.net_log_title, count),
+            text = stringResource(R.string.tx_log_title, count),
             style = AuraTheme.typography.caption,
             color = colors.textSecondary,
             maxLines = 1,
@@ -122,42 +134,27 @@ private fun LogHeader(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LogRow(number: Int, line: NetworkLogLine, modifier: Modifier = Modifier) {
-    val colors = AuraTheme.colors
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.net_log_number, number),
-            style = AuraTheme.typography.logNumber,
-            color = colors.textDisabled,
+private fun LogRow(number: Int, line: TransactionLogLine, modifier: Modifier = Modifier) {
+    when (line) {
+        is TransactionLogLine.DayComment -> CommentRow(
+            number = number,
+            text = stringResource(
+                R.string.tx_log_day,
+                line.timestamp.formatDayShort(),
+                line.count,
+            ),
+            modifier = modifier,
         )
 
-        when (line) {
-            is NetworkLogLine.DayComment -> Text(
-                text = stringResource(
-                    R.string.net_log_day,
-                    line.timestamp.formatLogDay(),
-                    line.count,
-                ),
-                style = AuraTheme.typography.caption.copy(fontStyle = FontStyle.Italic),
-                color = colors.textSecondary,
-            )
-
-            is NetworkLogLine.Entry -> Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
+        is TransactionLogLine.Entry -> NumberedRow(number = number, modifier = modifier) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = line.record.headLine(),
+                    text = line.event.headLine(),
                     style = AuraTheme.typography.caption,
-                    maxLines = 1,
                 )
                 Text(
-                    text = line.record.tailLine(),
+                    text = line.event.tailLine(),
                     style = AuraTheme.typography.caption,
-                    maxLines = 1,
                 )
             }
         }
@@ -165,45 +162,65 @@ private fun LogRow(number: Int, line: NetworkLogLine, modifier: Modifier = Modif
 }
 
 @Composable
-private fun PingRecord.headLine(): AnnotatedString {
+private fun CommentRow(number: Int, text: String, modifier: Modifier = Modifier) {
+    NumberedRow(number = number, modifier = modifier) {
+        Text(
+            text = text,
+            style = AuraTheme.typography.caption.copy(fontStyle = FontStyle.Italic),
+            color = AuraTheme.colors.textSecondary,
+        )
+    }
+}
+
+@Composable
+private fun NumberedRow(
+    number: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.net_log_number, number),
+            style = AuraTheme.typography.logNumber,
+            color = AuraTheme.colors.textDisabled,
+        )
+        content()
+    }
+}
+
+@Composable
+private fun TransactionEvent.headLine(): AnnotatedString {
     val colors = AuraTheme.colors
-    val empty = stringResource(R.string.net_value_empty)
 
     return logLine(
-        template = stringResource(R.string.net_log_line_head),
+        template = stringResource(R.string.tx_log_line_head),
         keyStyle = SpanStyle(color = colors.accentBlue),
         punctuationStyle = SpanStyle(color = colors.textDisabled),
         values = listOf(
-            LogValue(timestamp.formatClockTime(), SpanStyle(color = colors.accentBlue)),
-            LogValue(ipAddress ?: empty, SpanStyle(color = colors.textBright)),
-            LogValue(operator ?: empty, SpanStyle(color = colors.textBright)),
-            LogValue(
-                text = stringResource(R.string.net_ping_value, pingMs),
-                style = SpanStyle(color = if (vpnActive) colors.warning else colors.green),
-            ),
+            LogValue(timestamp.formatClock(), SpanStyle(color = colors.accentBlue)),
+            LogValue(typeLabel, SpanStyle(color = colors.textBright)),
+            LogValue(fieldKey, SpanStyle(color = colors.accentBlue)),
+            LogValue(fieldValue, SpanStyle(color = colors.textBright)),
         ),
     )
 }
 
 @Composable
-private fun PingRecord.tailLine(): AnnotatedString {
+private fun TransactionEvent.tailLine(): AnnotatedString {
     val colors = AuraTheme.colors
-    val empty = stringResource(R.string.net_value_empty)
-    val vpnLabel = stringResource(
-        if (vpnActive) R.string.net_log_vpn_on else R.string.net_log_vpn_off
-    )
 
     return logLine(
-        template = stringResource(R.string.net_log_line_tail),
+        template = stringResource(R.string.tx_log_line_tail),
         keyStyle = SpanStyle(color = colors.accentBlue),
         punctuationStyle = SpanStyle(color = colors.textDisabled),
         values = listOf(
-            LogValue(location ?: empty, SpanStyle(color = colors.textBright)),
             LogValue(
-                text = vpnLabel,
-                style = SpanStyle(color = if (vpnActive) colors.warning else colors.textBright),
+                text = amount,
+                style = SpanStyle(color = if (isCredit) colors.green else colors.textSecondary),
             ),
         ),
     )
 }
-

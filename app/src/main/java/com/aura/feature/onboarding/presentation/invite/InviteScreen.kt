@@ -26,6 +26,7 @@ import com.aura.core.designsystem.component.AuraOutlinedButton
 import com.aura.core.designsystem.component.AuraPrimaryButton
 import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.theme.AuraTheme
+import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteFailure
 import com.aura.feature.onboarding.presentation.components.InviteCodeField
 import com.aura.feature.onboarding.presentation.components.designBottomGap
@@ -143,7 +144,7 @@ fun InviteScreen(
             AuraPrimaryButton(
                 text = stringResource(R.string.invite_apply),
                 onClick = actions.onApplyClick,
-                enabled = uiState.code.isNotBlank() && !uiState.submitting,
+                enabled = uiState.code.length >= INVITE_CODE_LENGTH && !uiState.submitting,
             )
 
             Spacer(Modifier.height(12.dp))

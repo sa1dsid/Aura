@@ -4,6 +4,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.unit.dp
+
+private const val DOT_PITCH_X_FRACTION = 0.1272f
+
+private const val DOT_PITCH_Y_FRACTION = 0.0938f
+
+private val DotSize = 0.78.dp
 
 fun DrawScope.drawPlanet(
     bodyColor: Color,
@@ -14,10 +21,6 @@ fun DrawScope.drawPlanet(
     val outerRadius = size.minDimension / 2f
     val bodyRadius = outerRadius * bodyFraction
     val bodyCenter = center
-    val lightSource = Offset(
-        x = bodyCenter.x - bodyRadius * 0.5f,
-        y = bodyCenter.y - bodyRadius * 0.55f,
-    )
 
     if (haloAlpha > 0f) {
         drawCircle(
@@ -41,23 +44,19 @@ fun DrawScope.drawPlanet(
 
     drawCircle(color = bodyColor, radius = bodyRadius, center = bodyCenter)
 
-    val step = bodyRadius / 6.5f
-    val dotRadius = step * 0.22f
-    var y = bodyCenter.y - bodyRadius + step / 2f
+    val pitchX = bodyRadius * 2f * DOT_PITCH_X_FRACTION
+    val pitchY = bodyRadius * 2f * DOT_PITCH_Y_FRACTION
+    val dotRadius = DotSize.toPx() / 2f
+    var y = bodyCenter.y - bodyRadius + pitchY / 2f
     while (y < bodyCenter.y + bodyRadius) {
-        var x = bodyCenter.x - bodyRadius + step / 2f
+        var x = bodyCenter.x - bodyRadius + pitchX / 2f
         while (x < bodyCenter.x + bodyRadius) {
             val point = Offset(x, y)
             if ((point - bodyCenter).getDistance() <= bodyRadius - dotRadius) {
-                val lit = 1f - ((point - lightSource).getDistance() / (bodyRadius * 2.4f))
-                drawCircle(
-                    color = dotColor.copy(alpha = (0.30f + 0.60f * lit).coerceIn(0f, 1f)),
-                    radius = dotRadius,
-                    center = point,
-                )
+                drawCircle(color = dotColor, radius = dotRadius, center = point)
             }
-            x += step
+            x += pitchX
         }
-        y += step
+        y += pitchY
     }
 }

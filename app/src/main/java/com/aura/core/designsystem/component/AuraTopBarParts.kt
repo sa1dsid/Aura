@@ -95,7 +95,7 @@ fun AuraNewsPlanet(
             .drawBehind {
                 drawPlanet(
                     bodyColor = colors.surfaceTop,
-                    dotColor = colors.mapDotIdle,
+                    dotColor = colors.newsPlanetDot,
                     bodyFraction = PLANET_BODY_FRACTION,
                     haloAlpha = 0f,
                 )

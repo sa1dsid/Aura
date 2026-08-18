@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +31,7 @@ fun BalanceCardsRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         BalanceCard(
             label = stringResource(R.string.home_accrued),
@@ -61,37 +58,40 @@ private fun BalanceCard(
     val colors = AuraTheme.colors
 
     AuraCard(modifier = modifier) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 13.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
                 text = label,
                 style = AuraTheme.typography.cardLabel,
                 color = colors.textSecondary,
                 maxLines = 1,
             )
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Text(
                     text = amount.formatGrouped(),
                     style = AuraTheme.typography.displayNumber,
                     color = colors.textBright,
                 )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.unit_ion),
-                    style = AuraTheme.typography.unitLabel,
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(bottom = 3.dp),
-                )
-                if (showLiveDot) {
-                    Spacer(Modifier.width(5.dp))
-                    Box(
-                        Modifier
-                            .padding(bottom = 6.dp)
-                            .size(6.dp)
-                            .auraGlowLayers(colors.signalDotShadows)
-                            .clip(CircleShape)
-                            .background(colors.accentBlue)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.unit_ion),
+                        style = AuraTheme.typography.unitLabel,
+                        color = colors.textSecondary,
                     )
+                    if (showLiveDot) {
+                        Box(
+                            Modifier
+                                .size(6.dp)
+                                .auraGlowLayers(colors.signalDotShadows)
+                                .clip(CircleShape)
+                                .background(colors.accentBlue)
+                        )
+                    }
                 }
             }
         }

@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -142,60 +141,71 @@ private fun NetworkContent(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = ScreenPadding),
+            .padding(contentPadding),
+        contentPadding = PaddingValues(horizontal = ScreenPadding),
     ) {
-        NetworkTopBar(
-            handle = state.handle,
-            hasUnreadNews = state.hasUnreadNews,
-            onMenuClick = actions.onMenuClick,
-            onNewsClick = actions.onNewsClick,
-        )
+        item {
+            NetworkTopBar(
+                handle = state.handle,
+                hasUnreadNews = state.hasUnreadNews,
+                onMenuClick = actions.onMenuClick,
+                onNewsClick = actions.onNewsClick,
+            )
 
-        Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
 
-        NetworkHeader(lastTestedAt = state.lastTestedAt)
+            NetworkHeader(lastTestedAt = state.lastTestedAt)
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
+        }
 
-        MetricCardsRow(metrics = state.metrics)
+        item {
+            MetricCardsRow(metrics = state.metrics)
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
-        DataCardsGrid(
-            connection = state.connection,
-            onVpnCardClick = actions.onVpnCardClick,
-        )
+        item {
+            DataCardsGrid(
+                connection = state.connection,
+                onVpnCardClick = actions.onVpnCardClick,
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        SectionLabel(text = stringResource(R.string.net_history))
+            SectionLabel(text = stringResource(R.string.net_history))
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
+        }
 
-        PingHistoryCard(history = state.history)
+        item {
+            PingHistoryCard(history = state.history)
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
 
-        NetworkLogCard(history = state.history)
+        item {
+            NetworkLogCard(history = state.history)
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        SectionLabel(text = stringResource(R.string.diag_section))
+            SectionLabel(text = stringResource(R.string.diag_section))
 
-        Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
+        }
 
-        DiagnosticsCard(
-            diagnostics = state.diagnostics,
-            onStartTestClick = actions.onStartTestClick,
-            onShareResultClick = actions.onShareResultClick,
-        )
+        item {
+            DiagnosticsCard(
+                diagnostics = state.diagnostics,
+                onStartTestClick = actions.onStartTestClick,
+                onShareResultClick = actions.onShareResultClick,
+            )
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 

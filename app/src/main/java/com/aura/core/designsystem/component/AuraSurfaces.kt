@@ -29,6 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.theme.AuraTheme
 
+private const val CARD_GLOW_ALPHA = 0.60f
+
+private val CARD_GLOW_BLUR = 8.dp
+
+private val CARD_CORNER = 16.dp
+
 @Composable
 fun AuraCard(
     modifier: Modifier = Modifier,
@@ -36,11 +42,14 @@ fun AuraCard(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     flat: Boolean = false,
+    glow: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colors = AuraTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by rememberPressedState(interactionSource)
+
+    val glowModifier = rememberAuraCardGlow(enabled = glow, color = colors.glowIce)
 
     val isInteractive = onClick != null && enabled
     val isHighlighted = isPressed && isInteractive
@@ -68,6 +77,7 @@ fun AuraCard(
     Box(
         modifier = modifier
             .pressScale(pressed = isPressed, enabled = isInteractive)
+            .then(glowModifier)
             .clip(shape)
             .background(Brush.verticalGradient(listOf(topColor, bottomColor)))
             .border(0.5.dp, borderColor, shape)
@@ -87,6 +97,20 @@ fun AuraCard(
         content()
     }
 }
+
+@Composable
+private fun rememberAuraCardGlow(enabled: Boolean, color: Color): Modifier =
+    remember(enabled, color) {
+        if (!enabled) {
+            Modifier
+        } else {
+            Modifier.auraDropShadow(
+                color = color.copy(alpha = CARD_GLOW_ALPHA),
+                blurRadius = CARD_GLOW_BLUR,
+                cornerRadius = CARD_CORNER,
+            )
+        }
+    }
 
 @Composable
 fun AuraPill(

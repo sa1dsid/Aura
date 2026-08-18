@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -124,6 +125,8 @@ private fun PromoCodesContent(
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
+    val sparkCodes = remember(uiState.codes) { uiState.codes.ofKind(PromoCodeKind.SPARK) }
+    val vpnCodes = remember(uiState.codes) { uiState.codes.ofKind(PromoCodeKind.VPN) }
 
     Column(
         modifier = modifier
@@ -166,7 +169,7 @@ private fun PromoCodesContent(
             PromoSection(
                 labelRes = R.string.promo_section_spark,
                 moreRes = R.string.promo_more_spark,
-                codes = uiState.codes.ofKind(PromoCodeKind.SPARK),
+                codes = sparkCodes,
                 onCodeClick = actions.onCodeClick,
             )
 
@@ -175,7 +178,7 @@ private fun PromoCodesContent(
             PromoSection(
                 labelRes = R.string.promo_section_vpn,
                 moreRes = R.string.promo_more_vpn,
-                codes = uiState.codes.ofKind(PromoCodeKind.VPN),
+                codes = vpnCodes,
                 onCodeClick = actions.onCodeClick,
             )
         }

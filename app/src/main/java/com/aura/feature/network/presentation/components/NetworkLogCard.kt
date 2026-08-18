@@ -11,18 +11,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.common.LogValue
@@ -42,16 +47,27 @@ import com.aura.feature.network.presentation.format.toLogLines
 
 private val LogHeight = 253.dp
 
+private val KeepScrollInside = object : NestedScrollConnection {
+
+    override fun onPostScroll(
+        consumed: Offset,
+        available: Offset,
+        source: NestedScrollSource,
+    ): Offset = available
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
+}
+
 @Composable
 fun NetworkLogCard(
     history: List<PingRecord>,
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
-    val lines = history.toLogLines()
+    val lines = remember(history) { history.toLogLines() }
     val scrollState = rememberScrollState()
 
-    AuraCard(modifier = modifier.fillMaxWidth()) {
+    AuraCard(modifier = modifier.fillMaxWidth(), glow = true) {
         Column {
             LogHeader(count = history.size)
 
@@ -67,9 +83,14 @@ fun NetworkLogCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clipToBounds()
+                        .nestedScroll(KeepScrollInside)
                         .verticalScroll(scrollState)
-                        .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+                        .padding(
+                            start = 16.dp,
+                            end = 12.dp,
+                            top = 12.dp,
+                            bottom = 12.dp,
+                        ),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     if (lines.isEmpty()) {
@@ -86,8 +107,8 @@ fun NetworkLogCard(
                 }
 
                 AuraLogScrollBar(
-                    fraction = scrollState.scrollProgress(),
-                    visibleFraction = scrollState.visibleFraction(),
+                    fraction = scrollState::scrollProgress,
+                    visibleFraction = scrollState::visibleFraction,
                 )
             }
         }

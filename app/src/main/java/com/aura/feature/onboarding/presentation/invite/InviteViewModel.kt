@@ -2,6 +2,7 @@ package com.aura.feature.onboarding.presentation.invite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
@@ -61,7 +62,7 @@ class InviteViewModel @Inject constructor(
 
     fun onApplyClick() {
         val state = _uiState.value
-        if (state.submitting || state.code.isBlank()) return
+        if (state.submitting || state.code.length < INVITE_CODE_LENGTH) return
 
         finish { accountId -> applyInviteCode(accountId, state.code) }
     }

@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -147,51 +146,56 @@ private fun HomeContent(
     val colors = AuraTheme.colors
     val home = state.home
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
+            .padding(contentPadding),
+        contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
-        HomeTopBar(
-            hasUnreadNews = home.news.hasUnread,
-            onMenuClick = actions.onMenuClick,
-            onNewsClick = actions.onNewsClick,
-        )
+        item {
+            HomeTopBar(
+                hasUnreadNews = home.news.hasUnread,
+                onMenuClick = actions.onMenuClick,
+                onNewsClick = actions.onNewsClick,
+            )
 
-        Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
 
-        MeshMapCard(mesh = state.mesh)
+            MeshMapCard(mesh = state.mesh)
 
-        Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
+        }
 
-        BalanceCardsRow(balances = home.balances)
+        item {
+            BalanceCardsRow(balances = home.balances)
 
-        Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
 
-        NodeStatusCard(nodeStatus = home.nodeStatus)
+            NodeStatusCard(nodeStatus = home.nodeStatus)
 
-        Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(10.dp))
+        }
 
-        TeaserCards(
-            teasers = home.teasers,
-            currentTier = home.nodeStatus.currentTier,
-            onBonusWithdrawalClick = actions.onBonusWithdrawalClick,
-            onSparkClick = actions.onSparkClick,
-            onVpnCodeClick = actions.onVpnCodeClick,
-        )
+        item {
+            TeaserCards(
+                teasers = home.teasers,
+                currentTier = home.nodeStatus.currentTier,
+                onBonusWithdrawalClick = actions.onBonusWithdrawalClick,
+                onSparkClick = actions.onSparkClick,
+                onVpnCodeClick = actions.onVpnCodeClick,
+            )
 
-        Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
+        }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .drawBehind {
-                    val center = Offset(size.width / 2f, size.height * 0.46f)
-                    val radius = size.width * 0.72f
-                    drawCircle(
-                        brush = Brush.radialGradient(
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawWithCache {
+                        val center = Offset(size.width / 2f, size.height * 0.46f)
+                        val radius = size.width * 0.72f
+                        val brush = Brush.radialGradient(
                             colors = listOf(
                                 colors.backgroundGlow.copy(alpha = 0.45f),
                                 colors.backgroundGlow.copy(alpha = 0.14f),
@@ -199,43 +203,47 @@ private fun HomeContent(
                             ),
                             center = center,
                             radius = radius,
-                        ),
-                        radius = radius,
-                        center = center,
-                    )
-                },
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            ConnectionBadge(
-                connection = home.connection,
-                onClick = actions.onConnectionBadgeClick,
-            )
+                        )
 
-            Spacer(Modifier.height(21.dp))
+                        onDrawBehind {
+                            drawCircle(brush = brush, radius = radius, center = center)
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ConnectionBadge(
+                    connection = home.connection,
+                    onClick = actions.onConnectionBadgeClick,
+                )
 
-            TestRingButton(
-                session = home.session,
-                onClick = actions.onMainButtonClick,
-            )
+                Spacer(Modifier.height(21.dp))
 
-            Spacer(Modifier.height(18.dp))
+                TestRingButton(
+                    session = home.session,
+                    onClick = actions.onMainButtonClick,
+                )
 
-            Text(
-                text = stringResource(R.string.timer_stay_hint),
-                style = AuraTheme.typography.caption,
-                color = colors.textSecondary,
-                textAlign = TextAlign.Center,
-            )
+                Spacer(Modifier.height(18.dp))
+
+                Text(
+                    text = stringResource(R.string.timer_stay_hint),
+                    style = AuraTheme.typography.caption,
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
         }
 
-        Spacer(Modifier.height(16.dp))
+        item {
+            InviteRow(
+                invite = home.invite,
+                onInviteClick = actions.onInviteClick,
+            )
 
-        InviteRow(
-            invite = home.invite,
-            onInviteClick = actions.onInviteClick,
-        )
-
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 

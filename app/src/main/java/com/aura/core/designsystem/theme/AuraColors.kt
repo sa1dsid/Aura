@@ -61,6 +61,7 @@ data class AuraColors(
     val bonusBadgeGlow: Color,
     val bonusActionGlow: Color,
     val accountAvatarDot: Color,
+    val newsPlanetDot: Color,
 )
 
 val AuraDarkColors = AuraColors(
@@ -120,4 +121,5 @@ val AuraDarkColors = AuraColors(
     bonusBadgeGlow = Color(0xFFA8D8F0),
     bonusActionGlow = Color(0xFFE8F8FF),
     accountAvatarDot = Color(0x4DA9B4BF),
+    newsPlanetDot = Color(0x44F6FBFF),
 )

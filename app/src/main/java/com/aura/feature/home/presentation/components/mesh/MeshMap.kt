@@ -1,5 +1,6 @@
 package com.aura.feature.home.presentation.components.mesh
 
+import android.graphics.Paint as AndroidPaint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -23,10 +25,13 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PointMode
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.NativePaint
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +45,9 @@ import com.aura.core.designsystem.component.signalDotShadows
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.UserPresence
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -92,11 +99,20 @@ fun MeshMap(
     val userShadows = remember(colors) { colors.signalDotShadows }
 
     val context = LocalContext.current
-    val dotGrid = remember(projection, context) {
-        WorldLandmass.dotGrid(context, projection, MeshMapDefaults.DOT_COLUMNS)
+    val dotGrid by produceState(
+        initialValue = WorldLandmass.cached(projection, MeshMapDefaults.DOT_COLUMNS),
+        projection,
+        context,
+    ) {
+        if (value == null) {
+            value = withContext(Dispatchers.Default) {
+                WorldLandmass.dotGrid(context, projection, MeshMapDefaults.DOT_COLUMNS)
+            }
+        }
     }
     val liveDots = remember(cities, dotGrid) {
-        cities.filter { it.isLive }.map { dotGrid.snap(projection.normalize(it.location)) }
+        val grid = dotGrid ?: return@remember emptyList()
+        cities.filter { it.isLive }.map { grid.snap(projection.normalize(it.location)) }
     }
 
     val pulse = rememberInfiniteTransition(label = "mesh-map").animateFloat(
@@ -118,7 +134,8 @@ fun MeshMap(
         }
     }
     val userDot = remember(shownPresence, dotGrid) {
-        shownPresence?.let { dotGrid.snap(projection.normalize(it.location)) }
+        val grid = dotGrid ?: return@remember null
+        shownPresence?.let { grid.snap(projection.normalize(it.location)) }
     }
 
     Box(
@@ -136,7 +153,7 @@ fun MeshMap(
                 )
             }
     ) {
-        Spacer(
+        Box(
             modifier = Modifier
                 .matchParentSize()
                 .graphicsLayer {
@@ -145,56 +162,92 @@ fun MeshMap(
                     translationX = state.offset.x
                     translationY = state.offset.y
                 }
-                .drawWithCache {
-                    val idlePoints = dotGrid.dots.scaledTo(size)
-                    val livePoints = liveDots.scaledTo(size)
-                    val userPoint = userDot?.scaledTo(size)
+        ) {
+            Spacer(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawWithCache {
+                        val grid = dotGrid ?: return@drawWithCache onDrawBehind {}
 
-                    val spacing = size.width / MeshMapDefaults.DOT_COLUMNS
-                    val idleDotPx = spacing * MeshMapDefaults.IDLE_DOT_RATIO
-                    val liveDotPx = spacing * MeshMapDefaults.LIVE_DOT_RATIO
-                    val userDotPx = spacing * MeshMapDefaults.USER_DOT_RATIO
-
-                    val liveGlow = liveShadows.map {
-                        auraGlowLayer(it, liveDotPx, liveDotPx, Offset.Zero)
-                    }
-                    val userGlow = userShadows.map {
-                        auraGlowLayer(it, userDotPx, userDotPx, Offset.Zero)
-                    }
-
-                    onDrawBehind {
-                        drawPoints(
-                            points = idlePoints,
-                            pointMode = PointMode.Points,
-                            color = colors.mapDotIdle,
-                            strokeWidth = idleDotPx,
-                            cap = StrokeCap.Round,
+                        val spacing = size.width / MeshMapDefaults.DOT_COLUMNS
+                        val coordinates = grid.dots.toPointArray(size)
+                        val paint = pointPaint(
+                            colors.mapDotIdle,
+                            spacing * MeshMapDefaults.IDLE_DOT_RATIO,
                         )
 
-                        livePoints.forEachIndexed { index, point ->
-                            drawGlowingDot(
-                                glow = liveGlow,
-                                center = point,
-                                color = colors.mapDotLive,
-                                coreRadius = liveDotPx / 2f,
-                                phase = pulse.value + index * 0.37f,
-                            )
-                        }
-
-                        if (userPoint != null) {
-                            drawGlowingDot(
-                                glow = userGlow,
-                                center = userPoint,
-                                color = colors.mapDotUser,
-                                coreRadius = userDotPx / 2f,
-                                phase = pulse.value,
-                                alpha = presenceAlpha.value,
-                            )
+                        onDrawBehind {
+                            drawIntoCanvas { canvas ->
+                                canvas.nativeCanvas.drawPoints(coordinates, paint)
+                            }
                         }
                     }
-                }
-        )
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer()
+                    .drawWithCache {
+                        val livePoints = liveDots.scaledTo(size)
+                        val userPoint = userDot?.scaledTo(size)
+
+                        val spacing = size.width / MeshMapDefaults.DOT_COLUMNS
+                        val liveDotPx = spacing * MeshMapDefaults.LIVE_DOT_RATIO
+                        val userDotPx = spacing * MeshMapDefaults.USER_DOT_RATIO
+
+                        val liveGlow = liveShadows.map {
+                            auraGlowLayer(it, liveDotPx, liveDotPx, Offset.Zero)
+                        }
+                        val userGlow = userShadows.map {
+                            auraGlowLayer(it, userDotPx, userDotPx, Offset.Zero)
+                        }
+
+                        onDrawBehind {
+                            livePoints.forEachIndexed { index, point ->
+                                drawGlowingDot(
+                                    glow = liveGlow,
+                                    center = point,
+                                    color = colors.mapDotLive,
+                                    coreRadius = liveDotPx / 2f,
+                                    phase = pulse.value + index * 0.37f,
+                                )
+                            }
+
+                            if (userPoint != null) {
+                                drawGlowingDot(
+                                    glow = userGlow,
+                                    center = userPoint,
+                                    color = colors.mapDotUser,
+                                    coreRadius = userDotPx / 2f,
+                                    phase = pulse.value,
+                                    alpha = presenceAlpha.value,
+                                )
+                            }
+                        }
+                    }
+            )
+        }
     }
+}
+
+private fun List<Offset>.toPointArray(size: Size): FloatArray {
+    val coordinates = FloatArray(this.size * 2)
+    forEachIndexed { index, dot ->
+        coordinates[index * 2] = dot.x * size.width
+        coordinates[index * 2 + 1] = dot.y * size.height
+    }
+    return coordinates
+}
+
+private fun pointPaint(color: Color, strokeWidth: Float): NativePaint {
+    val paint = Paint().asFrameworkPaint()
+    paint.isAntiAlias = true
+    paint.color = color.toArgb()
+    paint.style = AndroidPaint.Style.STROKE
+    paint.strokeWidth = strokeWidth
+    paint.strokeCap = AndroidPaint.Cap.ROUND
+    return paint
 }
 
 private fun List<Offset>.scaledTo(size: Size): List<Offset> =

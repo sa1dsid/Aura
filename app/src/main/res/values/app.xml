@@ -9,6 +9,7 @@
     <string name="home_connecting">CONNECTING TO MESH</string>
     <string name="cd_menu">Menu</string>
     <string name="unit_ion">ION</string>
+    <string name="bonus_text_accent">reserved</string>
     <string name="timer_paused_vpn">PAUSED · VPN ON</string>
 
     <string name="network_mobile_2g">Mobile 2G</string>

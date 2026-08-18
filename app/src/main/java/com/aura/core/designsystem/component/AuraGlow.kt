@@ -115,11 +115,12 @@ fun Modifier.auraGlow(
     height: Dp,
     blurRadius: Dp = 64.dp,
     offsetY: Dp = 0.dp,
+    alpha: () -> Float = { 1f },
 ): Modifier = drawWithCache {
     val glowCenter = Offset(size.width / 2f, size.height / 2f + offsetY.toPx())
     val layer = glowLayer(color, blurRadius.toPx(), width.toPx(), height.toPx(), glowCenter)
 
-    onDrawBehind { drawAuraGlow(layer) }
+    onDrawBehind { drawAuraGlow(layer, alpha = alpha()) }
 }
 
 fun Modifier.auraGlowLayers(

@@ -3,6 +3,7 @@ package com.aura.feature.onboarding.domain.usecase
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
+import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.test.runTest
@@ -133,6 +134,7 @@ class AuthValidationTest {
                             email = "said@ioaura.app",
                             handle = "said",
                             inviteLink = "https://ioaura.app/i/SAID001",
+                            authProvider = AuthProvider.EMAIL,
                         ),
                         accountCreated = accountCreated,
                     )

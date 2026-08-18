@@ -3,11 +3,25 @@ package com.aura.feature.home.presentation.components.mesh
 import android.content.Context
 import android.graphics.BitmapFactory
 import com.aura.R
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 internal object WorldLandmass {
 
+    private val cache = AtomicReference<Pair<CacheKey, MeshDotGrid>?>(null)
+
+    fun cached(projection: WorldProjection, columns: Int): MeshDotGrid? =
+        cache.get()?.takeIf { it.first == CacheKey(projection, columns) }?.second
+
     fun dotGrid(context: Context, projection: WorldProjection, columns: Int): MeshDotGrid {
+        cached(projection, columns)?.let { return it }
+
+        val grid = decode(context, projection, columns)
+        cache.set(CacheKey(projection, columns) to grid)
+        return grid
+    }
+
+    private fun decode(context: Context, projection: WorldProjection, columns: Int): MeshDotGrid {
         val rows = (columns / projection.aspectRatio).roundToInt().coerceAtLeast(1)
         val mask = BitmapFactory.decodeResource(
             context.resources,
@@ -32,6 +46,8 @@ internal object WorldLandmass {
 
         return MeshDotGrid(columns = columns, rows = rows, land = land)
     }
+
+    private data class CacheKey(val projection: WorldProjection, val columns: Int)
 
     private const val LAND_THRESHOLD = 127
 }

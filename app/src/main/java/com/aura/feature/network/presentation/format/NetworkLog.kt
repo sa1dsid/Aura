@@ -12,16 +12,19 @@ sealed interface NetworkLogLine {
 fun List<PingRecord>.toLogLines(): List<NetworkLogLine> {
     if (isEmpty()) return emptyList()
 
-    val lines = mutableListOf<NetworkLogLine>()
+    val keys = IntArray(size) { this[it].timestamp.dayKey() }
+    val lines = ArrayList<NetworkLogLine>(size + 1)
     var currentKey: Int? = null
 
     forEachIndexed { index, record ->
-        val key = record.timestamp.dayKey()
+        val key = keys[index]
         if (key != currentKey) {
             currentKey = key
+            var runEnd = index
+            while (runEnd < size && keys[runEnd] == key) runEnd++
             lines += NetworkLogLine.DayComment(
                 timestamp = record.timestamp,
-                count = drop(index).takeWhile { it.timestamp.dayKey() == key }.size,
+                count = runEnd - index,
             )
         }
         lines += NetworkLogLine.Entry(record)

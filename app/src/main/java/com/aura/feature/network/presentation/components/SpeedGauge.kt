@@ -2,15 +2,15 @@ package com.aura.feature.network.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -50,7 +50,7 @@ fun SpeedGauge(
 ) {
     val colors = AuraTheme.colors
 
-    val lit by animateFloatAsState(
+    val lit = animateFloatAsState(
         targetValue = litFraction.coerceIn(0f, 1f),
         animationSpec = tween(220),
         label = "gauge-lit",
@@ -62,49 +62,62 @@ fun SpeedGauge(
             .height(GaugeHeight),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val radius = GaugeRadius.toPx()
-            val center = Offset(size.width - VisibleInset.toPx() - radius, size.height / 2f)
-            val litTicks = (TICK_COUNT * lit).roundToInt()
+        Spacer(
+            Modifier
+                .fillMaxSize()
+                .drawWithCache {
+                    val radius = GaugeRadius.toPx()
+                    val center = Offset(size.width - VisibleInset.toPx() - radius, size.height / 2f)
+                    val tickLength = TickLength.toPx()
+                    val tickWidth = TickWidth.toPx()
+                    val markWidth = MarkWidth.toPx()
 
-            val markGlow = auraGlowLayer(
-                shadow = AuraShadow(colors.glowIce.copy(alpha = 0.80f), 8.dp),
-                width = MarkWidth.toPx(),
-                height = TickLength.toPx(),
-                center = Offset.Zero,
-            )
-
-            repeat(TICK_COUNT) { index ->
-                val angle = START_ANGLE + (END_ANGLE - START_ANGLE) * index / (TICK_COUNT - 1)
-                val isMark = index == 0
-                val isLit = index < litTicks
-
-                drawTick(
-                    center = center,
-                    radius = radius,
-                    angleDegrees = angle,
-                    color = when {
-                        isMark -> colors.textBright
-                        isLit -> colors.textBright
-                        else -> colors.textDisabled
-                    },
-                    width = if (isMark) MarkWidth.toPx() else TickWidth.toPx(),
-                    length = TickLength.toPx(),
-                )
-
-                if (isMark) {
-                    val midpoint = radius - TickLength.toPx() / 2f
-                    val radians = Math.toRadians(angle.toDouble())
-                    drawAuraGlow(
-                        layer = markGlow,
-                        center = Offset(
-                            center.x + cos(radians).toFloat() * midpoint,
-                            center.y + sin(radians).toFloat() * midpoint,
-                        ),
+                    val markGlow = auraGlowLayer(
+                        shadow = AuraShadow(colors.glowIce.copy(alpha = 0.80f), 8.dp),
+                        width = markWidth,
+                        height = tickLength,
+                        center = Offset.Zero,
                     )
+
+                    val angles = FloatArray(TICK_COUNT) { index ->
+                        START_ANGLE + (END_ANGLE - START_ANGLE) * index / (TICK_COUNT - 1)
+                    }
+
+                    onDrawBehind {
+                        val litTicks = (TICK_COUNT * lit.value).roundToInt()
+
+                        repeat(TICK_COUNT) { index ->
+                            val angle = angles[index]
+                            val isMark = index == 0
+
+                            drawTick(
+                                center = center,
+                                radius = radius,
+                                angleDegrees = angle,
+                                color = if (isMark || index < litTicks) {
+                                    colors.textBright
+                                } else {
+                                    colors.textDisabled
+                                },
+                                width = if (isMark) markWidth else tickWidth,
+                                length = tickLength,
+                            )
+
+                            if (isMark) {
+                                val midpoint = radius - tickLength / 2f
+                                val radians = Math.toRadians(angle.toDouble())
+                                drawAuraGlow(
+                                    layer = markGlow,
+                                    center = Offset(
+                                        center.x + cos(radians).toFloat() * midpoint,
+                                        center.y + sin(radians).toFloat() * midpoint,
+                                    ),
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        }
+        )
 
         content()
     }

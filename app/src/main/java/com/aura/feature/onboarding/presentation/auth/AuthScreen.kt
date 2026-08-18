@@ -24,9 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -193,16 +195,12 @@ fun AuthScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 17.5.dp)
-                    .padding(
-                        bottom = designBottomGap(
-                            if (uiState.mode == AuthMode.SIGN_UP) 28.dp else 49.dp
-                        )
-                    )
+                    .padding(bottom = designBottomGap(28.dp))
                     .auraGlow(
                         color = colors.authGlow,
                         width = 260.dp,
                         height = 72.dp,
-                        offsetY = if (uiState.mode == AuthMode.SIGN_UP) (-10.5).dp else 0.dp,
+                        offsetY = (-10.5).dp,
                     ),
             ) {
                 AuraPrimaryButton(
@@ -216,10 +214,9 @@ fun AuthScreen(
                     enabled = !uiState.submitting,
                 )
 
-                if (uiState.mode == AuthMode.SIGN_UP) {
-                    Spacer(Modifier.height(8.dp))
-                    LegalNotice()
-                }
+                Spacer(Modifier.height(8.dp))
+
+                LegalNotice(visible = uiState.mode == AuthMode.SIGN_UP)
             }
         }
 
@@ -267,7 +264,7 @@ private fun ForgotPasswordRow(
 }
 
 @Composable
-private fun LegalNotice(modifier: Modifier = Modifier) {
+private fun LegalNotice(visible: Boolean, modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
     val line = stringResource(R.string.auth_terms_line)
     val links = listOf(
@@ -288,7 +285,10 @@ private fun LegalNotice(modifier: Modifier = Modifier) {
         },
         style = AuraTheme.typography.legalLabel,
         textAlign = TextAlign.Center,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (visible) 1f else 0f)
+            .clearAndSetSemantics { },
     )
 }
 

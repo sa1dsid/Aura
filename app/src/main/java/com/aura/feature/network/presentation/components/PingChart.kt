@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +56,7 @@ private val TopLabelInset = 10.dp
 
 private val BottomLabelInset = 194.dp
 
-private val LatestBadgeInset = 157.dp
+private val LatestBadgeInset = 177.dp
 
 private val TopLabelWidth = 30.dp
 
@@ -74,7 +76,9 @@ private val PointRadius = 1.33.dp
 
 private val VpnRingRadius = 2.5.dp
 
-private val VpnRingWidth = 1.dp
+private val VpnRingWidth = 1.25.dp
+
+private val VpnRingGlowBlur = 5.dp
 
 private val LatestRadius = 4.dp
 
@@ -106,6 +110,12 @@ fun PingChart(
                             height = LatestRadius.toPx() * 2f,
                             center = Offset.Zero,
                         )
+                        val vpnGlow = auraGlowLayer(
+                            shadow = AuraShadow(colors.warning, VpnRingGlowBlur),
+                            width = VpnRingRadius.toPx() * 2f,
+                            height = VpnRingRadius.toPx() * 2f,
+                            center = Offset.Zero,
+                        )
 
                         onDrawBehind {
                             drawGridline(colors.border, top, TopLabelWidth.toPx())
@@ -123,7 +133,7 @@ fun PingChart(
 
                             drawArea(areaPath, points, bottom, colors.iceBlue)
                             drawTrend(trendPath, colors.accentBlue)
-                            drawPoints(history, points, colors, latestGlow)
+                            drawPoints(history, points, colors, latestGlow, vpnGlow)
                         }
                     }
             )
@@ -147,7 +157,8 @@ fun PingChart(
                     record = latest,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = LatestBadgeInset),
+                        .padding(top = LatestBadgeInset)
+                        .wrapContentHeight(Alignment.Top, unbounded = true),
                 )
             }
         }
@@ -184,14 +195,17 @@ private fun AxisValue(
 @Composable
 private fun LatestBadge(record: PingRecord, modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
+    val glow = remember(colors.glowIce) {
+        Modifier.auraDropShadow(
+            color = colors.glowIce.copy(alpha = 0.60f),
+            blurRadius = 8.dp,
+            cornerRadius = 10.dp,
+        )
+    }
 
     Column(
         modifier = modifier
-            .auraDropShadow(
-                color = colors.glowIce.copy(alpha = 0.60f),
-                blurRadius = 4.dp,
-                cornerRadius = 10.dp,
-            )
+            .then(glow)
             .clip(RoundedCornerShape(10.dp))
             .background(colors.background)
             .border(0.5.dp, colors.textBright, RoundedCornerShape(10.dp))
@@ -300,11 +314,13 @@ private fun DrawScope.drawPoints(
     points: List<Offset>,
     colors: AuraColors,
     latestGlow: AuraGlowLayer,
+    vpnGlow: AuraGlowLayer,
 ) {
     points.forEachIndexed { index, point ->
         drawCircle(color = colors.accentBlue, radius = PointRadius.toPx(), center = point)
 
         if (history[index].vpnActive) {
+            drawAuraGlow(vpnGlow, center = point)
             drawCircle(
                 color = colors.warning,
                 radius = VpnRingRadius.toPx(),

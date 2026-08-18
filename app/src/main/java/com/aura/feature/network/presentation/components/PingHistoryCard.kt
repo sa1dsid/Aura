@@ -40,7 +40,7 @@ fun PingHistoryCard(
 ) {
     val colors = AuraTheme.colors
 
-    AuraCard(modifier = modifier.fillMaxWidth()) {
+    AuraCard(modifier = modifier.fillMaxWidth(), glow = true) {
         Column(Modifier.padding(vertical = 12.dp)) {
             Column(Modifier.padding(horizontal = 16.dp)) {
                 Text(

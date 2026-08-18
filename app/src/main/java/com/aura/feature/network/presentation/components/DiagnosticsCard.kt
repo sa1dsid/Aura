@@ -60,7 +60,7 @@ fun DiagnosticsCard(
     val colors = AuraTheme.colors
     val result = (diagnostics as? SpeedTestState.Done)?.result
 
-    AuraCard(modifier = modifier.fillMaxWidth()) {
+    AuraCard(modifier = modifier.fillMaxWidth(), glow = true) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

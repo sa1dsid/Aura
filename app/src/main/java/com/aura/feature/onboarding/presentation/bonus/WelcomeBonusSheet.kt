@@ -30,6 +30,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +43,6 @@ import com.aura.R
 import com.aura.core.designsystem.component.auraDropShadow
 import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.feature.home.presentation.format.formatGrouped
 import com.aura.feature.onboarding.presentation.components.designBottomGap
 
 private val SheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
@@ -143,7 +146,7 @@ fun WelcomeBonusSheet(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = stringResource(R.string.bonus_text),
+                text = bonusText(),
                 style = AuraTheme.typography.sheetBody,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
@@ -164,6 +167,28 @@ fun WelcomeBonusSheet(
             SecondaryAction(
                 text = stringResource(R.string.bonus_later),
                 onClick = onDismiss,
+            )
+        }
+    }
+}
+
+@Composable
+private fun bonusText(): AnnotatedString {
+    val colors = AuraTheme.colors
+    val text = stringResource(R.string.bonus_text)
+    val accent = stringResource(R.string.bonus_text_accent)
+    val start = text.indexOf(accent)
+
+    return buildAnnotatedString {
+        append(text)
+        if (start >= 0) {
+            addStyle(
+                style = SpanStyle(
+                    fontWeight = FontWeight.Light,
+                    color = colors.textBright,
+                ),
+                start = start,
+                end = start + accent.length,
             )
         }
     }
@@ -235,7 +260,7 @@ private fun BonusBadge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = bonusIon.formatGrouped(),
+            text = bonusIon.toString(),
             style = AuraTheme.typography.bonusValue,
             color = colors.authSegmentActiveText,
             textAlign = TextAlign.Center,

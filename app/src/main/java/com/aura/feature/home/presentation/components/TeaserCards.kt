@@ -27,6 +27,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.activeDotShadows
@@ -46,6 +47,12 @@ private val IconSize = 24.dp
 private val ArrowBoxSize = 48.dp
 
 private val ProgressHeight = 1.dp
+
+private const val MONO_SPACE_EM = 0.6f
+
+private const val COUNTER_GAP_EM = 0.28f
+
+private val CounterGap = SpanStyle(letterSpacing = (COUNTER_GAP_EM - MONO_SPACE_EM).em)
 
 @Composable
 fun TeaserCards(
@@ -78,6 +85,7 @@ fun TeaserCards(
                     teasers.bonusWithdrawal.totalSteps.toString(),
                     SpanStyle(color = colors.progressTarget, fontSize = counterSize),
                 ),
+                gapStyle = CounterGap,
             ),
             subtitleStyle = counterLine,
             onClick = onBonusWithdrawalClick,
@@ -96,6 +104,7 @@ fun TeaserCards(
                     teasers.spark.target.formatGrouped(),
                     SpanStyle(color = colors.progressTarget),
                 ),
+                gapStyle = CounterGap,
             ),
             onClick = onSparkClick,
         )

@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -165,7 +164,6 @@ private fun TabItem(
     Column(
         modifier = modifier
             .height(56.dp)
-            .clipToBounds()
             .pressScale(interactionSource, pressedScale = 0.9f)
             .clickable(
                 interactionSource = interactionSource,

@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
@@ -38,6 +39,14 @@ import com.aura.feature.home.presentation.format.annotatedFormat
 import com.aura.feature.home.presentation.format.displayName
 import com.aura.feature.home.presentation.format.formatGrouped
 
+private val IconBoxSize = 32.dp
+
+private val IconSize = 24.dp
+
+private val ArrowBoxSize = 48.dp
+
+private val ProgressHeight = 1.dp
+
 @Composable
 fun TeaserCards(
     teasers: Teasers,
@@ -48,10 +57,13 @@ fun TeaserCards(
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
+    val typography = AuraTheme.typography
+    val counterSize = typography.badge.fontSize
+    val counterLine = typography.caption.copy(lineHeight = typography.badge.lineHeight)
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TeaserCard(
             iconRes = R.drawable.ic_send_2,
@@ -60,13 +72,14 @@ fun TeaserCards(
                 stringResource(R.string.teaser_bonus_steps),
                 StyledArg(
                     teasers.bonusWithdrawal.completedSteps.toString(),
-                    SpanStyle(color = colors.progressValue),
+                    SpanStyle(color = colors.progressValue, fontSize = counterSize),
                 ),
                 StyledArg(
                     teasers.bonusWithdrawal.totalSteps.toString(),
-                    SpanStyle(color = colors.progressTarget),
+                    SpanStyle(color = colors.progressTarget, fontSize = counterSize),
                 ),
             ),
+            subtitleStyle = counterLine,
             onClick = onBonusWithdrawalClick,
         )
 
@@ -95,9 +108,10 @@ fun TeaserCards(
                 StyledArg(currentTier.displayName()),
                 StyledArg(
                     teasers.vpnCode.contributionPercent.toString(),
-                    SpanStyle(color = colors.progressValue),
+                    SpanStyle(color = colors.progressValue, fontSize = counterSize),
                 ),
             ),
+            subtitleStyle = counterLine,
             enabled = teasers.vpnCode.isEnabled,
             iconTint = colors.accentBlue,
             leadingDotColor = if (teasers.vpnCode.isEnabled) colors.green else null,
@@ -114,6 +128,7 @@ private fun TeaserCard(
     subtitle: AnnotatedString,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    subtitleStyle: TextStyle = AuraTheme.typography.caption,
     enabled: Boolean = true,
     iconTint: Color? = null,
     leadingDotColor: Color? = null,
@@ -128,58 +143,71 @@ private fun TeaserCard(
         enabled = enabled,
         flat = true,
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(IconBoxSize),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(iconRes),
                     contentDescription = null,
                     tint = (iconTint ?: colors.textBright).copy(alpha = contentAlpha),
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(IconSize),
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = AuraTheme.typography.title,
+                    color = colors.textBright.copy(alpha = contentAlpha),
                 )
 
-                Spacer(Modifier.width(14.dp))
+                Spacer(Modifier.height(6.dp))
 
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = AuraTheme.typography.title,
-                        color = colors.textBright.copy(alpha = contentAlpha),
-                    )
-                    Spacer(Modifier.height(3.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (leadingDotColor != null) {
-                            Box(
-                                Modifier
-                                    .size(6.dp)
-                                    .auraGlowLayers(colors.activeDotShadows)
-                                    .clip(CircleShape)
-                                    .background(leadingDotColor)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                        }
-                        Text(
-                            text = subtitle,
-                            style = AuraTheme.typography.caption,
-                            color = colors.textSecondary.copy(alpha = contentAlpha),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    if (leadingDotColor != null) {
+                        Box(
+                            Modifier
+                                .size(6.dp)
+                                .auraGlowLayers(colors.activeDotShadows)
+                                .clip(CircleShape)
+                                .background(leadingDotColor)
                         )
                     }
+                    Text(
+                        text = subtitle,
+                        style = subtitleStyle,
+                        color = colors.textSecondary.copy(alpha = contentAlpha),
+                    )
                 }
 
+                if (progress != null) {
+                    Spacer(Modifier.height(8.dp))
+                    TeaserProgressBar(progress = progress, enabled = enabled)
+                }
+            }
+
+            Box(
+                modifier = Modifier.size(ArrowBoxSize),
+                contentAlignment = Alignment.Center,
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_right),
                     contentDescription = null,
                     tint = colors.textSecondary.copy(alpha = contentAlpha),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(IconSize),
                 )
-            }
-
-            if (progress != null) {
-                TeaserProgressBar(progress = progress, enabled = enabled)
             }
         }
     }
@@ -195,21 +223,18 @@ private fun TeaserProgressBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp)
-            .padding(bottom = 12.dp)
-            .height(2.dp)
-            .clip(RoundedCornerShape(1.dp))
+            .height(ProgressHeight)
+            .clip(RoundedCornerShape(percent = 50))
             .background(colors.border),
     ) {
         Box(
             Modifier
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(2.dp)
-                .clip(RoundedCornerShape(1.dp))
+                .height(ProgressHeight)
+                .clip(RoundedCornerShape(percent = 50))
                 .background(
                     if (enabled) colors.textBright else colors.textTertiary
                 )
         )
     }
 }
-

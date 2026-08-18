@@ -4,16 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,11 +58,6 @@ private val KeepScrollInside = object : NestedScrollConnection {
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
 }
 
-private fun NetworkLogLine.key(index: Int): Any = when (this) {
-    is NetworkLogLine.DayComment -> "day-$timestamp"
-    is NetworkLogLine.Entry -> "entry-$index-${record.timestamp}"
-}
-
 @Composable
 fun NetworkLogCard(
     history: List<PingRecord>,
@@ -72,7 +65,7 @@ fun NetworkLogCard(
 ) {
     val colors = AuraTheme.colors
     val lines = remember(history) { history.toLogLines() }
-    val listState = rememberLazyListState()
+    val scrollState = rememberScrollState()
 
     AuraCard(modifier = modifier.fillMaxWidth(), glow = true) {
         Column {
@@ -86,41 +79,36 @@ fun NetworkLogCard(
             )
 
             Row(Modifier.height(LogHeight)) {
-                LazyColumn(
-                    state = listState,
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .nestedScroll(KeepScrollInside),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 12.dp,
-                        top = 12.dp,
-                        bottom = 12.dp,
-                    ),
+                        .nestedScroll(KeepScrollInside)
+                        .verticalScroll(scrollState)
+                        .padding(
+                            start = 16.dp,
+                            end = 12.dp,
+                            top = 12.dp,
+                            bottom = 12.dp,
+                        ),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     if (lines.isEmpty()) {
-                        item {
-                            Text(
-                                text = stringResource(R.string.net_history_empty),
-                                style = AuraTheme.typography.caption,
-                                color = colors.textDisabled,
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.net_history_empty),
+                            style = AuraTheme.typography.caption,
+                            color = colors.textDisabled,
+                        )
                     }
 
-                    itemsIndexed(
-                        items = lines,
-                        key = { index, line -> line.key(index) },
-                    ) { index, line ->
+                    lines.forEachIndexed { index, line ->
                         LogRow(number = index + 1, line = line)
                     }
                 }
 
                 AuraLogScrollBar(
-                    fraction = listState::scrollProgress,
-                    visibleFraction = listState::visibleFraction,
+                    fraction = scrollState::scrollProgress,
+                    visibleFraction = scrollState::visibleFraction,
                 )
             }
         }

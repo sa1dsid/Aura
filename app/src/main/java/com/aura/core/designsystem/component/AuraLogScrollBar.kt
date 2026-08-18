@@ -1,6 +1,7 @@
 package com.aura.core.designsystem.component
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -102,6 +103,19 @@ private fun ScrollArrow(pointsUp: Boolean, modifier: Modifier = Modifier) {
         }
         drawPath(path = path, color = color)
     }
+}
+
+fun ScrollState.scrollProgress(): Float {
+    val max = maxValue
+    if (max == 0 || max == Int.MAX_VALUE) return 0f
+    return (value.toFloat() / max).coerceIn(0f, 1f)
+}
+
+fun ScrollState.visibleFraction(): Float {
+    val viewport = viewportSize
+    val max = maxValue
+    if (viewport == 0 || max == 0 || max == Int.MAX_VALUE) return 1f
+    return (viewport.toFloat() / (viewport + max)).coerceIn(0f, 1f)
 }
 
 fun LazyListState.scrollProgress(): Float {

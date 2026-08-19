@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,8 +59,6 @@ fun TerminalEntryCards(
     onPromoCodesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = AuraTheme.colors
-
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(CardGap),
@@ -70,9 +67,6 @@ fun TerminalEntryCards(
             label = stringResource(R.string.terminal_card_transactions),
             count = counters.unreadTransactions,
             hint = stringResource(R.string.terminal_card_transactions_hint),
-            counterColor = colors.textBright,
-            containerColor = colors.surfaceTop,
-            glow = true,
             onClick = onTransactionsClick,
             modifier = Modifier.weight(1f),
         )
@@ -80,8 +74,6 @@ fun TerminalEntryCards(
             label = stringResource(R.string.terminal_card_promo),
             count = counters.unreadPromoCodes,
             hint = stringResource(R.string.terminal_card_promo_hint),
-            counterColor = colors.textIce,
-            containerColor = colors.background,
             onClick = onPromoCodesClick,
             modifier = Modifier.weight(1f),
         )
@@ -93,19 +85,16 @@ private fun TerminalEntryCard(
     label: String,
     count: Int,
     hint: String,
-    counterColor: Color,
-    containerColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    glow: Boolean = false,
 ) {
     val colors = AuraTheme.colors
 
     AuraCard(
         modifier = modifier.height(CardHeight),
         onClick = onClick,
-        glow = glow,
-        containerColor = containerColor,
+        glowOnPress = true,
+        containerColor = colors.background,
         borderWidth = CardBorder,
     ) {
         Column(
@@ -133,7 +122,7 @@ private fun TerminalEntryCard(
                     Text(
                         text = stringResource(R.string.terminal_card_counter, count),
                         style = AuraTheme.typography.actionLabel,
-                        color = counterColor,
+                        color = colors.textIce,
                         maxLines = 1,
                     )
                 }

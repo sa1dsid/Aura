@@ -172,6 +172,7 @@ fun Modifier.auraDropShadow(
     blurRadius: Dp,
     cornerRadius: Dp,
     spread: Dp = 0.dp,
+    alpha: () -> Float = { 1f },
 ): Modifier = drawWithCache {
     val paint = if (HARDWARE_BLUR_SUPPORTED) blurPaint(color, blurRadius.toPx()) else null
     val blur = blurRadius.toPx()
@@ -179,7 +180,11 @@ fun Modifier.auraDropShadow(
     val corner = cornerRadius.toPx() + grow
 
     onDrawBehind {
+        val glow = alpha()
+        if (glow <= 0f) return@onDrawBehind
+
         if (paint != null) {
+            paint.alpha = (color.alpha * glow * 255f).roundToInt().coerceIn(0, 255)
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawRoundRect(
                     -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
@@ -196,7 +201,7 @@ fun Modifier.auraDropShadow(
                 topLeft = Offset(-offset, -offset),
                 size = Size(size.width + offset * 2, size.height + offset * 2),
                 cornerRadius = CornerRadius(cornerRadius.toPx() + offset),
-                alpha = color.alpha * fade * 0.09f,
+                alpha = color.alpha * fade * 0.09f * glow,
             )
         }
     }

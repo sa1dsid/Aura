@@ -1,6 +1,7 @@
 package com.aura.core.designsystem.component
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,6 +45,7 @@ fun AuraCard(
     enabled: Boolean = true,
     flat: Boolean = false,
     glow: Boolean = false,
+    glowOnPress: Boolean = false,
     containerColor: Color? = null,
     borderWidth: Dp = 0.5.dp,
     content: @Composable () -> Unit,
@@ -51,10 +54,24 @@ fun AuraCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by rememberPressedState(interactionSource)
 
-    val glowModifier = rememberAuraCardGlow(enabled = glow, color = colors.glowIce)
-
     val isInteractive = onClick != null && enabled
     val isHighlighted = isPressed && isInteractive
+
+    val glowAlpha = animateFloatAsState(
+        targetValue = when {
+            glowOnPress -> if (isHighlighted) 1f else 0f
+            glow -> 1f
+            else -> 0f
+        },
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "card-glow",
+    )
+
+    val glowModifier = rememberAuraCardGlow(
+        enabled = glow || glowOnPress,
+        color = colors.glowIce,
+        alpha = glowAlpha,
+    )
 
     val topColor by animateColorAsState(
         targetValue = when {
@@ -106,18 +123,22 @@ fun AuraCard(
 }
 
 @Composable
-private fun rememberAuraCardGlow(enabled: Boolean, color: Color): Modifier =
-    remember(enabled, color) {
-        if (!enabled) {
-            Modifier
-        } else {
-            Modifier.auraDropShadow(
-                color = color.copy(alpha = CARD_GLOW_ALPHA),
-                blurRadius = CARD_GLOW_BLUR,
-                cornerRadius = CARD_CORNER,
-            )
-        }
+private fun rememberAuraCardGlow(
+    enabled: Boolean,
+    color: Color,
+    alpha: State<Float>,
+): Modifier = remember(enabled, color, alpha) {
+    if (!enabled) {
+        Modifier
+    } else {
+        Modifier.auraDropShadow(
+            color = color.copy(alpha = CARD_GLOW_ALPHA),
+            blurRadius = CARD_GLOW_BLUR,
+            cornerRadius = CARD_CORNER,
+            alpha = alpha::value,
+        )
     }
+}
 
 @Composable
 fun AuraPill(

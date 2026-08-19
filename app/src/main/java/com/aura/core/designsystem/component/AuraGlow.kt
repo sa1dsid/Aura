@@ -126,13 +126,18 @@ fun Modifier.auraGlow(
 fun Modifier.auraGlowLayers(
     shadows: List<AuraShadow>,
     coreSize: Dp? = null,
+    alpha: () -> Float = { 1f },
 ): Modifier = drawWithCache {
     val glowCenter = Offset(size.width / 2f, size.height / 2f)
     val baseWidth = coreSize?.toPx() ?: size.width
     val baseHeight = coreSize?.toPx() ?: size.height
     val layers = shadows.map { auraGlowLayer(it, baseWidth, baseHeight, glowCenter) }
 
-    onDrawBehind { layers.forEach { drawAuraGlow(it) } }
+    onDrawBehind {
+        val glow = alpha()
+        if (glow <= 0f) return@onDrawBehind
+        layers.forEach { drawAuraGlow(it, alpha = glow) }
+    }
 }
 
 fun Density.auraGlowLayer(

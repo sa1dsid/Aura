@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
@@ -152,18 +151,11 @@ private fun UnreadDot(modifier: Modifier = Modifier) {
         label = "unread-pulse",
     )
 
-    Box(modifier = modifier.size(DotSize)) {
-        Box(
-            Modifier
-                .matchParentSize()
-                .graphicsLayer { alpha = pulse.value }
-                .auraGlowLayers(colors.unreadDotShadows)
-        )
-        Box(
-            Modifier
-                .matchParentSize()
-                .clip(CircleShape)
-                .background(colors.warning)
-        )
-    }
+    Box(
+        modifier = modifier
+            .size(DotSize)
+            .auraGlowLayers(colors.unreadDotShadows, alpha = pulse::value)
+            .clip(CircleShape)
+            .background(colors.warning)
+    )
 }

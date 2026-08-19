@@ -43,6 +43,8 @@ fun AuraCard(
     enabled: Boolean = true,
     flat: Boolean = false,
     glow: Boolean = false,
+    containerColor: Color? = null,
+    borderWidth: Dp = 0.5.dp,
     content: @Composable () -> Unit,
 ) {
     val colors = AuraTheme.colors
@@ -55,13 +57,18 @@ fun AuraCard(
     val isHighlighted = isPressed && isInteractive
 
     val topColor by animateColorAsState(
-        targetValue = if (isHighlighted) colors.surfaceElevated else colors.surfaceTop,
+        targetValue = when {
+            isHighlighted -> colors.surfaceElevated
+            containerColor != null -> containerColor
+            else -> colors.surfaceTop
+        },
         animationSpec = tween(PRESS_FADE_MILLIS),
         label = "card-background-top",
     )
     val bottomColor by animateColorAsState(
         targetValue = when {
             isHighlighted -> colors.surfaceElevated
+            containerColor != null -> containerColor
             flat -> colors.surfaceTop
             else -> colors.surfaceBottom
         },
@@ -80,7 +87,7 @@ fun AuraCard(
             .then(glowModifier)
             .clip(shape)
             .background(Brush.verticalGradient(listOf(topColor, bottomColor)))
-            .border(0.5.dp, borderColor, shape)
+            .border(borderWidth, borderColor, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(

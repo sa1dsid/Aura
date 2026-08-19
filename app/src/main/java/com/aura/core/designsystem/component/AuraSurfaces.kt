@@ -130,6 +130,8 @@ fun AuraPill(
     leadingDotColor: Color? = null,
     horizontalPadding: Dp = 10.dp,
     verticalPadding: Dp = 5.dp,
+    topPadding: Dp = verticalPadding,
+    bottomPadding: Dp = verticalPadding,
     borderWidth: Dp = 1.dp,
     contentShadow: Shadow? = null,
     textStyle: TextStyle? = null,
@@ -163,7 +165,12 @@ fun AuraPill(
                     Modifier
                 }
             )
-            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+            .padding(
+                start = horizontalPadding,
+                top = topPadding,
+                end = horizontalPadding,
+                bottom = bottomPadding,
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {

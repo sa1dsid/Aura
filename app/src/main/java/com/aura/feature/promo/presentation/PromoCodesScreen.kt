@@ -47,6 +47,8 @@ import com.aura.feature.promo.presentation.preview.PromoPreviewData
 
 private val ScreenPadding = 15.dp
 
+private val TopBarGap = 12.dp
+
 private const val VISIBLE_TICKETS = 3
 
 @Composable
@@ -132,8 +134,7 @@ private fun PromoCodesContent(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = ScreenPadding),
+            .verticalScroll(rememberScrollState()),
     ) {
         AuraNestedTopBar(
             handle = uiState.handle,
@@ -142,48 +143,50 @@ private fun PromoCodesContent(
             onNewsClick = actions.onNewsClick,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(TopBarGap))
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.promo_title),
-                style = AuraTheme.typography.screenHeading,
-                color = colors.textBright,
-            )
-            Text(
-                text = stringResource(R.string.promo_subtitle),
-                style = AuraTheme.typography.body,
-                color = colors.textSecondary,
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        if (uiState.codes.isEmpty()) {
-            AuraEmptyState(
-                iconRes = R.drawable.ic_ticket_expired,
-                title = stringResource(R.string.promo_empty_title),
-                text = stringResource(R.string.promo_empty_text),
-            )
-        } else {
-            PromoSection(
-                labelRes = R.string.promo_section_spark,
-                moreRes = R.string.promo_more_spark,
-                codes = sparkCodes,
-                onCodeClick = actions.onCodeClick,
-            )
+        Column(modifier = Modifier.padding(horizontal = ScreenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.promo_title),
+                    style = AuraTheme.typography.screenHeading,
+                    color = colors.textBright,
+                )
+                Text(
+                    text = stringResource(R.string.promo_subtitle),
+                    style = AuraTheme.typography.body,
+                    color = colors.textSecondary,
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            PromoSection(
-                labelRes = R.string.promo_section_vpn,
-                moreRes = R.string.promo_more_vpn,
-                codes = vpnCodes,
-                onCodeClick = actions.onCodeClick,
-            )
-        }
+            if (uiState.codes.isEmpty()) {
+                AuraEmptyState(
+                    iconRes = R.drawable.ic_ticket_expired,
+                    title = stringResource(R.string.promo_empty_title),
+                    text = stringResource(R.string.promo_empty_text),
+                )
+            } else {
+                PromoSection(
+                    labelRes = R.string.promo_section_spark,
+                    moreRes = R.string.promo_more_spark,
+                    codes = sparkCodes,
+                    onCodeClick = actions.onCodeClick,
+                )
 
-        Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
+
+                PromoSection(
+                    labelRes = R.string.promo_section_vpn,
+                    moreRes = R.string.promo_more_vpn,
+                    codes = vpnCodes,
+                    onCodeClick = actions.onCodeClick,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 

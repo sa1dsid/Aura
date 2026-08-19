@@ -34,7 +34,6 @@ import com.aura.core.common.formatDayShort
 import com.aura.core.common.logLine
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraLogScrollBar
-import com.aura.core.designsystem.component.auraDropShadow
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.brightDotShadows
 import com.aura.core.designsystem.component.scrollProgress
@@ -55,14 +54,8 @@ fun TransactionsLogCard(
     val hasOverflow = listState.canScrollForward || listState.canScrollBackward
 
     AuraCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .auraDropShadow(
-                color = colors.glowIce.copy(alpha = 0.60f),
-                blurRadius = 8.dp,
-                cornerRadius = 16.dp,
-                spread = (-6).dp,
-            ),
+        modifier = modifier.fillMaxWidth(),
+        glow = true,
     ) {
         Column(Modifier.fillMaxSize()) {
             LogHeader(count = events.size)

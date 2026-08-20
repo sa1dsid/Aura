@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import com.aura.R
 
@@ -21,6 +22,11 @@ private val AuraDisplayFamily = FontFamily(
     Font(R.font.space_grotesk_regular, FontWeight.Normal),
     Font(R.font.space_grotesk_medium, FontWeight.Medium),
     Font(R.font.space_grotesk_bold, FontWeight.Bold),
+)
+
+private val EvenLineHeight = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Center,
+    trim = LineHeightStyle.Trim.None,
 )
 
 @Immutable
@@ -58,6 +64,8 @@ data class AuraTypography(
     val sheetHeading: TextStyle,
     val sheetBody: TextStyle,
     val sheetActionLabel: TextStyle,
+    val dialogHeading: TextStyle,
+    val dialogBody: TextStyle,
     val cardTitle: TextStyle,
     val metricNumber: TextStyle,
     val dataValue: TextStyle,
@@ -305,6 +313,22 @@ val AuraDefaultTypography = AuraTypography(
         fontSize = 16.sp,
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
+    ),
+    dialogHeading = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 19.sp,
+        lineHeight = 24.2.sp,
+        letterSpacing = 0.sp,
+        lineHeightStyle = EvenLineHeight,
+    ),
+    dialogBody = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.5.sp,
+        lineHeight = 20.9.sp,
+        letterSpacing = 0.sp,
+        lineHeightStyle = EvenLineHeight,
     ),
     cardTitle = TextStyle(
         fontFamily = AuraDisplayFamily,

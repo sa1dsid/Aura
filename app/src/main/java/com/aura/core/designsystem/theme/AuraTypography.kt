@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.sp
 import com.aura.R
 
 private val AuraFontFamily = FontFamily(
+    Font(R.font.jetbrains_mono_thin, FontWeight.Thin),
     Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
     Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
     Font(R.font.jetbrains_mono_semibold, FontWeight.SemiBold),
@@ -64,6 +65,13 @@ data class AuraTypography(
     val gaugeLabel: TextStyle,
     val latestValue: TextStyle,
     val logNumber: TextStyle,
+    val cardCaption: TextStyle,
+    val cardUnit: TextStyle,
+    val cardNote: TextStyle,
+    val listValue: TextStyle,
+    val listRowTitle: TextStyle,
+    val bracket: TextStyle,
+    val sectionTitle: TextStyle,
 )
 
 val AuraDefaultTypography = AuraTypography(
@@ -346,5 +354,54 @@ val AuraDefaultTypography = AuraTypography(
         fontSize = 10.sp,
         lineHeight = 13.2.sp,
         letterSpacing = 0.08.sp,
+    ),
+    cardCaption = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Light,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    cardUnit = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    cardNote = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    listValue = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.08.sp,
+    ),
+    listRowTitle = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.112.sp,
+    ),
+    bracket = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Thin,
+        fontSize = 16.sp,
+        lineHeight = 21.sp,
+        letterSpacing = 0.sp,
+    ),
+    sectionTitle = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.sp,
     ),
 )

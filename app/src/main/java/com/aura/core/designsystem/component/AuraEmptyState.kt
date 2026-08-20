@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aura.core.designsystem.theme.AuraTheme
 
@@ -31,6 +33,7 @@ fun AuraEmptyState(
     title: String,
     text: String,
     modifier: Modifier = Modifier,
+    textWidth: Dp? = null,
 ) {
     val colors = AuraTheme.colors
 
@@ -72,6 +75,7 @@ fun AuraEmptyState(
                 style = AuraTheme.typography.body,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
+                modifier = if (textWidth == null) Modifier else Modifier.width(textWidth),
             )
         }
     }

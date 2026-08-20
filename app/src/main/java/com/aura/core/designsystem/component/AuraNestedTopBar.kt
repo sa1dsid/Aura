@@ -66,6 +66,7 @@ fun AuraNestedTopBar(
     onBackClick: () -> Unit,
     onNewsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    handleAlign: TextAlign = TextAlign.Center,
 ) {
     Row(
         modifier = modifier
@@ -82,7 +83,7 @@ fun AuraNestedTopBar(
             style = AuraTheme.typography.cardTitle,
             color = AuraTheme.colors.textPrimary,
             maxLines = 1,
-            textAlign = TextAlign.Center,
+            textAlign = handleAlign,
             modifier = Modifier.weight(1f),
         )
 

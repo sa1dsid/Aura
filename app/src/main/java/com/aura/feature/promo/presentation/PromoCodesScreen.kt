@@ -159,6 +159,7 @@ private fun PromoCodesContent(
             hasUnreadNews = uiState.hasUnreadNews,
             onBackClick = actions.onBackClick,
             onNewsClick = actions.onNewsClick,
+            handleAlign = TextAlign.Start,
         )
 
         Spacer(Modifier.height(TopBarGap))
@@ -251,8 +252,6 @@ private fun PromoSection(
                 text = stringResource(moreRes, codes.size - VISIBLE_TICKETS),
                 style = AuraTheme.typography.caption,
                 color = colors.textDisabled,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

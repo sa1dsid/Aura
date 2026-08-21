@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -35,6 +42,7 @@ import com.aura.core.designsystem.component.AuraNestedTopBar
 import com.aura.core.designsystem.component.AuraToastHost
 import com.aura.core.designsystem.component.AuraToastKind
 import com.aura.core.designsystem.component.AuraToastState
+import com.aura.core.designsystem.component.keepScrollInside
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.HomeTab
@@ -47,7 +55,19 @@ import com.aura.feature.promo.presentation.preview.PromoPreviewData
 
 private val ScreenPadding = 15.dp
 
+private val TopBarGap = 12.dp
+
 private const val VISIBLE_TICKETS = 3
+
+private val TicketHeight = 64.dp
+
+private val TicketGap = 8.dp
+
+private val WindowHeight = TicketHeight * VISIBLE_TICKETS + TicketGap * (VISIBLE_TICKETS - 1)
+
+private const val FADE_HOLD = 0.15f
+
+private const val FADE_FLOOR = 0.36f
 
 @Composable
 fun PromoCodesRoute(
@@ -132,58 +152,60 @@ private fun PromoCodesContent(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = ScreenPadding),
+            .verticalScroll(rememberScrollState()),
     ) {
         AuraNestedTopBar(
             handle = uiState.handle,
             hasUnreadNews = uiState.hasUnreadNews,
             onBackClick = actions.onBackClick,
             onNewsClick = actions.onNewsClick,
+            handleAlign = TextAlign.Start,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(TopBarGap))
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.promo_title),
-                style = AuraTheme.typography.screenHeading,
-                color = colors.textBright,
-            )
-            Text(
-                text = stringResource(R.string.promo_subtitle),
-                style = AuraTheme.typography.body,
-                color = colors.textSecondary,
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        if (uiState.codes.isEmpty()) {
-            AuraEmptyState(
-                iconRes = R.drawable.ic_ticket_expired,
-                title = stringResource(R.string.promo_empty_title),
-                text = stringResource(R.string.promo_empty_text),
-            )
-        } else {
-            PromoSection(
-                labelRes = R.string.promo_section_spark,
-                moreRes = R.string.promo_more_spark,
-                codes = sparkCodes,
-                onCodeClick = actions.onCodeClick,
-            )
+        Column(modifier = Modifier.padding(horizontal = ScreenPadding)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.promo_title),
+                    style = AuraTheme.typography.screenHeading,
+                    color = colors.textBright,
+                )
+                Text(
+                    text = stringResource(R.string.promo_subtitle),
+                    style = AuraTheme.typography.body,
+                    color = colors.textSecondary,
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            PromoSection(
-                labelRes = R.string.promo_section_vpn,
-                moreRes = R.string.promo_more_vpn,
-                codes = vpnCodes,
-                onCodeClick = actions.onCodeClick,
-            )
-        }
+            if (uiState.codes.isEmpty()) {
+                AuraEmptyState(
+                    iconRes = R.drawable.ic_ticket_expired,
+                    title = stringResource(R.string.promo_empty_title),
+                    text = stringResource(R.string.promo_empty_text),
+                )
+            } else {
+                PromoSection(
+                    labelRes = R.string.promo_section_spark,
+                    moreRes = R.string.promo_more_spark,
+                    codes = sparkCodes,
+                    onCodeClick = actions.onCodeClick,
+                )
 
-        Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
+
+                PromoSection(
+                    labelRes = R.string.promo_section_vpn,
+                    moreRes = R.string.promo_more_vpn,
+                    codes = vpnCodes,
+                    onCodeClick = actions.onCodeClick,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }
 
@@ -199,6 +221,9 @@ private fun PromoSection(
 
     val colors = AuraTheme.colors
 
+    val overflows = codes.size > VISIBLE_TICKETS
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -209,23 +234,43 @@ private fun PromoSection(
             color = colors.textSecondary,
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            modifier = Modifier
+                .heightIn(max = WindowHeight)
+                .then(if (overflows) Modifier.fadeOutBottom() else Modifier)
+                .verticalScroll(scrollState, enabled = overflows)
+                .then(if (overflows) Modifier.keepScrollInside() else Modifier),
+            verticalArrangement = Arrangement.spacedBy(TicketGap),
+        ) {
             codes.forEach { code ->
                 PromoTicket(code = code, onClick = { onCodeClick(code) })
             }
         }
 
-        if (codes.size > VISIBLE_TICKETS) {
+        if (overflows) {
             Text(
                 text = stringResource(moreRes, codes.size - VISIBLE_TICKETS),
                 style = AuraTheme.typography.caption,
                 color = colors.textDisabled,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
 }
+
+private fun Modifier.fadeOutBottom(): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithCache {
+        val mask = Brush.verticalGradient(
+            0f to Color.Black,
+            FADE_HOLD to Color.Black,
+            1f to Color.Black.copy(alpha = FADE_FLOOR),
+        )
+
+        onDrawWithContent {
+            drawContent()
+            drawRect(brush = mask, blendMode = BlendMode.DstIn)
+        }
+    }
 
 @Preview(widthDp = 375, heightDp = 812, showBackground = true, backgroundColor = 0xFF030507)
 @Composable

@@ -28,6 +28,10 @@ import com.aura.feature.terminal.presentation.components.TerminalTopBar
 
 private val ScreenPadding = 15.dp
 
+private val TopBarGap = 12.dp
+
+private val TitleGap = 16.dp
+
 @Composable
 fun TerminalRoute(
     onOpenTransactions: () -> Unit,
@@ -93,8 +97,7 @@ private fun TerminalContent(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = ScreenPadding),
+            .verticalScroll(rememberScrollState()),
     ) {
         TerminalTopBar(
             hasUnreadNews = uiState.hasUnreadNews,
@@ -102,21 +105,23 @@ private fun TerminalContent(
             onNewsClick = actions.onNewsClick,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(TopBarGap))
 
-        Text(
-            text = stringResource(R.string.terminal_title),
-            style = AuraTheme.typography.screenHeading,
-            color = AuraTheme.colors.textBright,
-        )
+        Column(modifier = Modifier.padding(horizontal = ScreenPadding)) {
+            Text(
+                text = stringResource(R.string.terminal_title),
+                style = AuraTheme.typography.screenHeading,
+                color = AuraTheme.colors.textBright,
+            )
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(TitleGap))
 
-        TerminalEntryCards(
-            counters = uiState.counters,
-            onTransactionsClick = actions.onTransactionsClick,
-            onPromoCodesClick = actions.onPromoCodesClick,
-        )
+            TerminalEntryCards(
+                counters = uiState.counters,
+                onTransactionsClick = actions.onTransactionsClick,
+                onPromoCodesClick = actions.onPromoCodesClick,
+            )
+        }
     }
 }
 

@@ -19,10 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.theme.AuraTheme
+
+private val BarHeight = 60.dp
+
+private val BarPadding = 16.dp
 
 @Composable
 fun AuraBackButton(
@@ -61,11 +66,13 @@ fun AuraNestedTopBar(
     onBackClick: () -> Unit,
     onNewsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    handleAlign: TextAlign = TextAlign.Center,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(60.dp),
+            .height(BarHeight)
+            .padding(horizontal = BarPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -76,9 +83,8 @@ fun AuraNestedTopBar(
             style = AuraTheme.typography.cardTitle,
             color = AuraTheme.colors.textPrimary,
             maxLines = 1,
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 4.dp),
+            textAlign = handleAlign,
+            modifier = Modifier.weight(1f),
         )
 
         AuraNewsPlanet(hasUnread = hasUnreadNews, onClick = onNewsClick)

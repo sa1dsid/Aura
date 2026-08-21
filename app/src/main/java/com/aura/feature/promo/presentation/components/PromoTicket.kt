@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -27,8 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +52,12 @@ private val TicketHeight = 64.dp
 private val NotchSize = 14.dp
 
 private val DividerHeight = 42.dp
+
+private val DividerWidth = 1.dp
+
+private val DashOn = 3.dp
+
+private val DashOff = 2.dp
 
 private const val USED_ALPHA = 0.72f
 
@@ -125,12 +135,7 @@ fun PromoTicket(
                     modifier = Modifier.width(12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        Modifier
-                            .width(1.dp)
-                            .height(DividerHeight)
-                            .background(colors.textDisabled)
-                    )
+                    TicketDivider()
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -161,6 +166,33 @@ fun PromoTicket(
         Notch(Modifier.align(Alignment.CenterStart).offset(x = (-6).dp))
         Notch(Modifier.align(Alignment.CenterEnd).offset(x = 6.dp))
     }
+}
+
+@Composable
+private fun TicketDivider(modifier: Modifier = Modifier) {
+    val color = AuraTheme.colors.textDisabled
+
+    Box(
+        modifier
+            .width(DividerWidth)
+            .requiredHeight(DividerHeight)
+            .drawWithCache {
+                val effect = PathEffect.dashPathEffect(
+                    floatArrayOf(DashOn.toPx(), DashOff.toPx()),
+                )
+                val x = size.width / 2f
+
+                onDrawBehind {
+                    drawLine(
+                        color = color,
+                        start = Offset(x, 0f),
+                        end = Offset(x, size.height),
+                        strokeWidth = size.width,
+                        pathEffect = effect,
+                    )
+                }
+            }
+    )
 }
 
 @Composable

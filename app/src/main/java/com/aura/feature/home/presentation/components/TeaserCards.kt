@@ -151,6 +151,7 @@ private fun TeaserCard(
         onClick = onClick,
         enabled = enabled,
         flat = true,
+        glowOnPress = true,
     ) {
         Row(
             modifier = Modifier

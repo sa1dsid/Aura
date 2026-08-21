@@ -32,6 +32,8 @@ import com.aura.feature.transactions.presentation.preview.TransactionsPreviewDat
 
 private val ScreenPadding = 15.dp
 
+private val TopBarGap = 12.dp
+
 @Composable
 fun TransactionsRoute(
     onBack: () -> Unit,
@@ -94,8 +96,7 @@ private fun TransactionsContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding)
-            .padding(horizontal = ScreenPadding),
+            .padding(contentPadding),
     ) {
         AuraNestedTopBar(
             handle = uiState.handle,
@@ -104,51 +105,57 @@ private fun TransactionsContent(
             onNewsClick = actions.onNewsClick,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(TopBarGap))
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = ScreenPadding),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.tx_title),
+                    style = AuraTheme.typography.screenHeading,
+                    color = colors.textBright,
+                )
+                Text(
+                    text = stringResource(R.string.tx_subtitle),
+                    style = AuraTheme.typography.body,
+                    color = colors.textSecondary,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
             Text(
-                text = stringResource(R.string.tx_title),
-                style = AuraTheme.typography.screenHeading,
-                color = colors.textBright,
-            )
-            Text(
-                text = stringResource(R.string.tx_subtitle),
-                style = AuraTheme.typography.body,
+                text = stringResource(R.string.tx_history),
+                style = AuraTheme.typography.cardLabel,
                 color = colors.textSecondary,
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = stringResource(R.string.tx_history),
-            style = AuraTheme.typography.cardLabel,
-            color = colors.textSecondary,
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        if (uiState.events.isEmpty()) {
-            AuraEmptyState(
-                iconRes = R.drawable.ic_transaction_minus,
-                title = stringResource(R.string.tx_empty_title),
-                text = stringResource(R.string.tx_empty_text),
-            )
-        } else {
-            TransactionFilterRow(
-                selected = uiState.filter,
-                onFilterClick = actions.onFilterClick,
             )
 
             Spacer(Modifier.height(12.dp))
 
-            TransactionsLogCard(
-                events = visibleEvents,
-                modifier = Modifier.weight(1f),
-            )
+            if (uiState.events.isEmpty()) {
+                AuraEmptyState(
+                    iconRes = R.drawable.ic_transaction_minus,
+                    title = stringResource(R.string.tx_empty_title),
+                    text = stringResource(R.string.tx_empty_text),
+                )
+            } else {
+                TransactionFilterRow(
+                    selected = uiState.filter,
+                    onFilterClick = actions.onFilterClick,
+                )
 
-            Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
+
+                TransactionsLogCard(
+                    events = visibleEvents,
+                    modifier = Modifier.weight(1f),
+                )
+
+                Spacer(Modifier.height(16.dp))
+            }
         }
     }
 }

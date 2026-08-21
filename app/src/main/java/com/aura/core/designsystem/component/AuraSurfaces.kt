@@ -1,6 +1,7 @@
 package com.aura.core.designsystem.component
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,25 +45,47 @@ fun AuraCard(
     enabled: Boolean = true,
     flat: Boolean = false,
     glow: Boolean = false,
+    glowOnPress: Boolean = false,
+    containerColor: Color? = null,
+    borderWidth: Dp = 0.5.dp,
     content: @Composable () -> Unit,
 ) {
     val colors = AuraTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by rememberPressedState(interactionSource)
 
-    val glowModifier = rememberAuraCardGlow(enabled = glow, color = colors.glowIce)
-
     val isInteractive = onClick != null && enabled
     val isHighlighted = isPressed && isInteractive
 
+    val glowAlpha = animateFloatAsState(
+        targetValue = when {
+            glowOnPress -> if (isHighlighted) 1f else 0f
+            glow -> 1f
+            else -> 0f
+        },
+        animationSpec = tween(PRESS_FADE_MILLIS),
+        label = "card-glow",
+    )
+
+    val glowModifier = rememberAuraCardGlow(
+        enabled = glow || glowOnPress,
+        color = colors.glowIce,
+        alpha = glowAlpha,
+    )
+
     val topColor by animateColorAsState(
-        targetValue = if (isHighlighted) colors.surfaceElevated else colors.surfaceTop,
+        targetValue = when {
+            isHighlighted -> colors.surfaceElevated
+            containerColor != null -> containerColor
+            else -> colors.surfaceTop
+        },
         animationSpec = tween(PRESS_FADE_MILLIS),
         label = "card-background-top",
     )
     val bottomColor by animateColorAsState(
         targetValue = when {
             isHighlighted -> colors.surfaceElevated
+            containerColor != null -> containerColor
             flat -> colors.surfaceTop
             else -> colors.surfaceBottom
         },
@@ -80,7 +104,7 @@ fun AuraCard(
             .then(glowModifier)
             .clip(shape)
             .background(Brush.verticalGradient(listOf(topColor, bottomColor)))
-            .border(0.5.dp, borderColor, shape)
+            .border(borderWidth, borderColor, shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(
@@ -99,18 +123,22 @@ fun AuraCard(
 }
 
 @Composable
-private fun rememberAuraCardGlow(enabled: Boolean, color: Color): Modifier =
-    remember(enabled, color) {
-        if (!enabled) {
-            Modifier
-        } else {
-            Modifier.auraDropShadow(
-                color = color.copy(alpha = CARD_GLOW_ALPHA),
-                blurRadius = CARD_GLOW_BLUR,
-                cornerRadius = CARD_CORNER,
-            )
-        }
+private fun rememberAuraCardGlow(
+    enabled: Boolean,
+    color: Color,
+    alpha: State<Float>,
+): Modifier = remember(enabled, color, alpha) {
+    if (!enabled) {
+        Modifier
+    } else {
+        Modifier.auraDropShadow(
+            color = color.copy(alpha = CARD_GLOW_ALPHA),
+            blurRadius = CARD_GLOW_BLUR,
+            cornerRadius = CARD_CORNER,
+            alpha = alpha::value,
+        )
     }
+}
 
 @Composable
 fun AuraPill(
@@ -123,6 +151,8 @@ fun AuraPill(
     leadingDotColor: Color? = null,
     horizontalPadding: Dp = 10.dp,
     verticalPadding: Dp = 5.dp,
+    topPadding: Dp = verticalPadding,
+    bottomPadding: Dp = verticalPadding,
     borderWidth: Dp = 1.dp,
     contentShadow: Shadow? = null,
     textStyle: TextStyle? = null,
@@ -156,7 +186,12 @@ fun AuraPill(
                     Modifier
                 }
             )
-            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+            .padding(
+                start = horizontalPadding,
+                top = topPadding,
+                end = horizontalPadding,
+                bottom = bottomPadding,
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {

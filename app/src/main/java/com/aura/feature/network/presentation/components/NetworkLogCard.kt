@@ -19,15 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.common.LogValue
@@ -35,6 +30,7 @@ import com.aura.core.common.logLine
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraLogScrollBar
 import com.aura.core.designsystem.component.auraGlowLayers
+import com.aura.core.designsystem.component.keepScrollInside
 import com.aura.core.designsystem.component.brightDotShadows
 import com.aura.core.designsystem.component.scrollProgress
 import com.aura.core.designsystem.component.visibleFraction
@@ -46,17 +42,6 @@ import com.aura.feature.network.presentation.format.formatLogDay
 import com.aura.feature.network.presentation.format.toLogLines
 
 private val LogHeight = 253.dp
-
-private val KeepScrollInside = object : NestedScrollConnection {
-
-    override fun onPostScroll(
-        consumed: Offset,
-        available: Offset,
-        source: NestedScrollSource,
-    ): Offset = available
-
-    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
-}
 
 @Composable
 fun NetworkLogCard(
@@ -83,7 +68,7 @@ fun NetworkLogCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .nestedScroll(KeepScrollInside)
+                        .keepScrollInside()
                         .verticalScroll(scrollState)
                         .padding(
                             start = 16.dp,

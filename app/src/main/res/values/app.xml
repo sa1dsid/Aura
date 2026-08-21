@@ -86,8 +86,9 @@
          нет (ТЗ Transactions от 12.08 обещает их следующей поставкой), поэтому блок
          временный: когда строки придут, заменить на их ID и убрать отсюда.
          Логотип на Терминале — КОРОТКАЯ форма «I Ø» без слова Aura, так задумано
-         дизайнером, поэтому ключ отдельный от home_logo. -->
-    <string name="terminal_logo">I Ø</string>
+         дизайнером: это вектор ic_logo_io, а не текст, поэтому от него остаётся
+         только описание для скринридера. -->
+    <string name="cd_logo">IO Aura</string>
     <string name="terminal_title">Terminal</string>
     <string name="terminal_card_transactions">TRANSACTIONS</string>
     <string name="terminal_card_transactions_hint">unread</string>

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,10 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -34,7 +32,7 @@ import com.aura.core.common.formatDayShort
 import com.aura.core.common.logLine
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraLogScrollBar
-import com.aura.core.designsystem.component.auraDropShadow
+import com.aura.core.designsystem.component.keepScrollInside
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.component.brightDotShadows
 import com.aura.core.designsystem.component.scrollProgress
@@ -51,18 +49,12 @@ fun TransactionsLogCard(
 ) {
     val colors = AuraTheme.colors
     val lines = remember(events) { events.toLogLines() }
-    val listState = rememberLazyListState()
-    val hasOverflow = listState.canScrollForward || listState.canScrollBackward
+    val scrollState = rememberScrollState()
+    val hasOverflow = scrollState.maxValue > 0 && scrollState.maxValue != Int.MAX_VALUE
 
     AuraCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .auraDropShadow(
-                color = colors.glowIce.copy(alpha = 0.60f),
-                blurRadius = 8.dp,
-                cornerRadius = 16.dp,
-                spread = (-6).dp,
-            ),
+        modifier = modifier.fillMaxWidth(),
+        glow = true,
     ) {
         Column(Modifier.fillMaxSize()) {
             LogHeader(count = events.size)
@@ -79,36 +71,35 @@ fun TransactionsLogCard(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                LazyColumn(
-                    state = listState,
+                Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 12.dp,
-                        top = 12.dp,
-                        bottom = 12.dp,
-                    ),
+                        .fillMaxHeight()
+                        .keepScrollInside()
+                        .verticalScroll(scrollState)
+                        .padding(
+                            start = 16.dp,
+                            end = 12.dp,
+                            top = 12.dp,
+                            bottom = 12.dp,
+                        ),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    itemsIndexed(lines) { index, line ->
+                    lines.forEachIndexed { index, line ->
                         LogRow(number = index + 1, line = line)
                     }
 
                     if (hasOverflow) {
-                        item {
-                            CommentRow(
-                                number = lines.size + 1,
-                                text = stringResource(R.string.tx_log_more),
-                            )
-                        }
+                        CommentRow(
+                            number = lines.size + 1,
+                            text = stringResource(R.string.tx_log_more),
+                        )
                     }
                 }
 
                 AuraLogScrollBar(
-                    fraction = listState::scrollProgress,
-                    visibleFraction = listState::visibleFraction,
+                    fraction = scrollState::scrollProgress,
+                    visibleFraction = scrollState::visibleFraction,
                 )
             }
         }

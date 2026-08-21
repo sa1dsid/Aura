@@ -22,13 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraShadow
-import com.aura.core.designsystem.component.auraDropShadow
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraColors
 import com.aura.core.designsystem.theme.AuraTheme
@@ -39,6 +37,10 @@ private const val PULSE_MILLIS = 1400
 private const val PULSE_FLOOR = 0.35f
 
 private val CardHeight = 93.dp
+
+private val CardBorder = 1.dp
+
+private val CardGap = 16.dp
 
 private val DotSize = 6.dp
 
@@ -58,7 +60,7 @@ fun TerminalEntryCards(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(CardGap),
     ) {
         TerminalEntryCard(
             label = stringResource(R.string.terminal_card_transactions),
@@ -88,15 +90,11 @@ private fun TerminalEntryCard(
     val colors = AuraTheme.colors
 
     AuraCard(
-        modifier = modifier
-            .height(CardHeight)
-            .auraDropShadow(
-                color = colors.glowIce.copy(alpha = 0.60f),
-                blurRadius = 8.dp,
-                cornerRadius = 16.dp,
-                spread = (-6).dp,
-            ),
+        modifier = modifier.height(CardHeight),
         onClick = onClick,
+        glowOnPress = true,
+        containerColor = colors.background,
+        borderWidth = CardBorder,
     ) {
         Column(
             modifier = Modifier
@@ -123,7 +121,7 @@ private fun TerminalEntryCard(
                     Text(
                         text = stringResource(R.string.terminal_card_counter, count),
                         style = AuraTheme.typography.actionLabel,
-                        color = colors.textBright,
+                        color = colors.textIce,
                         maxLines = 1,
                     )
                 }
@@ -153,18 +151,11 @@ private fun UnreadDot(modifier: Modifier = Modifier) {
         label = "unread-pulse",
     )
 
-    Box(modifier = modifier.size(DotSize)) {
-        Box(
-            Modifier
-                .matchParentSize()
-                .graphicsLayer { alpha = pulse.value }
-                .auraGlowLayers(colors.unreadDotShadows)
-        )
-        Box(
-            Modifier
-                .matchParentSize()
-                .clip(CircleShape)
-                .background(colors.warning)
-        )
-    }
+    Box(
+        modifier = modifier
+            .size(DotSize)
+            .auraGlowLayers(colors.unreadDotShadows, alpha = pulse::value)
+            .clip(CircleShape)
+            .background(colors.warning)
+    )
 }

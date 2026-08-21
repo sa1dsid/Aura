@@ -12,6 +12,7 @@ import com.aura.feature.account.presentation.menu.AccountMenuRoute
 import com.aura.feature.home.presentation.HomeRoute
 import com.aura.feature.home.presentation.HomeTab
 import com.aura.feature.network.presentation.NetworkRoute
+import com.aura.feature.nodes.presentation.NodesRoute
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.presentation.auth.AuthRoute
 import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusRoute
@@ -93,6 +94,12 @@ private fun MainTabs(
                 modifier = Modifier.fillMaxSize(),
             )
 
+            HomeTab.NODES -> NodesRoute(
+                onMenuClick = openMenu,
+                onTabSelected = selectTab,
+                modifier = Modifier.fillMaxSize(),
+            )
+
             HomeTab.TERMINAL -> when (terminalDestination) {
                 TerminalDestination.ROOT -> TerminalRoute(
                     onOpenTransactions = { terminalDestination = TerminalDestination.TRANSACTIONS },
@@ -130,4 +137,5 @@ private fun MainTabs(
     }
 }
 
-private val IMPLEMENTED_TABS = setOf(HomeTab.HOME, HomeTab.TERMINAL, HomeTab.NETWORK)
+private val IMPLEMENTED_TABS =
+    setOf(HomeTab.HOME, HomeTab.NODES, HomeTab.TERMINAL, HomeTab.NETWORK)

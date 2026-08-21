@@ -29,4 +29,31 @@
     <string name="promo_copied">Код скопирован</string>
     <string name="cd_back">Назад</string>
     <string name="cd_copy_code">Скопировать код</string>
+
+    <!-- Nodes. Названия соцсетей, ник, код и названия тиров не переводятся. -->
+    <string name="nodes_title">Узлы</string>
+    <string name="nodes_subtitle">Ваша сеть приглашённых друзей</string>
+    <string name="nodes_invite_title">Получите подарок в IO Aura</string>
+    <string name="nodes_invite_quote">\"Я собираю подарки в IO Aura — заходите по моей ссылке и тоже получите бонус.\"</string>
+    <string name="nodes_code_label">Ваш код</string>
+    <string name="nodes_share">Поделиться ссылкой</string>
+    <string name="nodes_code_copied">Код скопирован</string>
+    <string name="nodes_friends_joined">Друзей пришло</string>
+    <string name="nodes_more_for">До %1$s</string>
+    <string name="nodes_earned">Заработано с рефералов</string>
+    <string name="nodes_unit_bonus">(бонус)</string>
+    <string name="nodes_tier_line">Ваш тир — %1$s: +%2$d%% от Spark активных друзей, +%3$s%% от их выводимого баланса, начисляется автоматически</string>
+    <string name="nodes_squad_title">Этот отряд открыл %1$s</string>
+    <string name="nodes_squad_active">%1$d АКТИВНЫХ ДРУЗЕЙ</string>
+    <string name="nodes_squad_unlocked">%1$s ОТКРЫТ</string>
+    <string name="nodes_friends">Ваши друзья</string>
+    <string name="nodes_badge_earning">Зарабатывает</string>
+    <string name="nodes_badge_spark_only">Только Spark</string>
+    <string name="nodes_badge_inactive">Неактивен</string>
+    <string name="nodes_empty_title">Друзей пока нет</string>
+    <string name="nodes_empty_text">Поделитесь кодом выше — как только кто-то зайдёт по нему, он появится здесь.</string>
+    <string name="nodes_find_title">НАЙДИТЕ СВОЙ УЗЕЛ</string>
+    <string name="nodes_find_subtitle">Меш живёт и за пределами приложения — присоединяйтесь к отряду.</string>
+    <string name="nodes_share_text">Я собираю подарки в IO Aura — заходите по моей ссылке и тоже получите бонус. %1$s</string>
+    <string name="cd_open_link">Открыть</string>
 </resources>

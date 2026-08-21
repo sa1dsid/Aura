@@ -5,10 +5,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import com.aura.R
 
 private val AuraFontFamily = FontFamily(
+    Font(R.font.jetbrains_mono_thin, FontWeight.Thin),
     Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
     Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
     Font(R.font.jetbrains_mono_semibold, FontWeight.SemiBold),
@@ -20,6 +22,11 @@ private val AuraDisplayFamily = FontFamily(
     Font(R.font.space_grotesk_regular, FontWeight.Normal),
     Font(R.font.space_grotesk_medium, FontWeight.Medium),
     Font(R.font.space_grotesk_bold, FontWeight.Bold),
+)
+
+private val EvenLineHeight = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Center,
+    trim = LineHeightStyle.Trim.None,
 )
 
 @Immutable
@@ -57,6 +64,8 @@ data class AuraTypography(
     val sheetHeading: TextStyle,
     val sheetBody: TextStyle,
     val sheetActionLabel: TextStyle,
+    val dialogHeading: TextStyle,
+    val dialogBody: TextStyle,
     val cardTitle: TextStyle,
     val metricNumber: TextStyle,
     val dataValue: TextStyle,
@@ -64,6 +73,13 @@ data class AuraTypography(
     val gaugeLabel: TextStyle,
     val latestValue: TextStyle,
     val logNumber: TextStyle,
+    val cardCaption: TextStyle,
+    val cardUnit: TextStyle,
+    val cardNote: TextStyle,
+    val listValue: TextStyle,
+    val listRowTitle: TextStyle,
+    val bracket: TextStyle,
+    val sectionTitle: TextStyle,
 )
 
 val AuraDefaultTypography = AuraTypography(
@@ -298,6 +314,22 @@ val AuraDefaultTypography = AuraTypography(
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
     ),
+    dialogHeading = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 19.sp,
+        lineHeight = 24.2.sp,
+        letterSpacing = 0.sp,
+        lineHeightStyle = EvenLineHeight,
+    ),
+    dialogBody = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.5.sp,
+        lineHeight = 20.9.sp,
+        letterSpacing = 0.sp,
+        lineHeightStyle = EvenLineHeight,
+    ),
     cardTitle = TextStyle(
         fontFamily = AuraDisplayFamily,
         fontWeight = FontWeight.Bold,
@@ -346,5 +378,54 @@ val AuraDefaultTypography = AuraTypography(
         fontSize = 10.sp,
         lineHeight = 13.2.sp,
         letterSpacing = 0.08.sp,
+    ),
+    cardCaption = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Light,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    cardUnit = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    cardNote = TextStyle(
+        fontFamily = AuraDisplayFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.sp,
+    ),
+    listValue = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 0.08.sp,
+    ),
+    listRowTitle = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.112.sp,
+    ),
+    bracket = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Thin,
+        fontSize = 16.sp,
+        lineHeight = 21.sp,
+        letterSpacing = 0.sp,
+    ),
+    sectionTitle = TextStyle(
+        fontFamily = AuraFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.sp,
     ),
 )

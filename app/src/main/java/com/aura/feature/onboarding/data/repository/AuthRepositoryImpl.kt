@@ -1,13 +1,14 @@
 package com.aura.feature.onboarding.data.repository
 
+import com.aura.core.api.toAuthFailure
+import com.aura.core.auth.TokenStore
 import com.aura.core.common.IoDispatcher
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.onboarding.data.mapper.toDomain
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.domain.model.Account
-import com.aura.feature.onboarding.domain.model.AuthException
-import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,10 +20,26 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val remote: OnboardingRemoteDataSource,
     private val sessionStore: SessionStore,
+    private val tokenStore: TokenStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AuthRepository {
 
     override suspend fun currentAccount(): Account? = sessionStore.account.value
+
+    override suspend fun restoreSession(): StartDestination = withContext(ioDispatcher) {
+        if (tokenStore.token() == null) return@withContext StartDestination.AUTH
+
+        try {
+            val session = remote.restore().toDomain()
+            sessionStore.open(session.account)
+            if (session.invitePending) StartDestination.INVITE else StartDestination.HOME
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            tokenStore.clear()
+            StartDestination.AUTH
+        }
+    }
 
     override suspend fun signIn(email: String, password: String): Result<AuthSession> =
         authenticate { remote.signIn(email, password).toDomain() }
@@ -30,8 +47,8 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signUp(email: String, password: String): Result<AuthSession> =
         authenticate { remote.signUp(email, password).toDomain() }
 
-    override suspend fun continueWithGoogle(): Result<AuthSession> =
-        authenticate { remote.signInWithGoogle().toDomain() }
+    override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
+        authenticate { remote.signInWithGoogle(idToken).toDomain() }
 
     override suspend fun requestPasswordReset(email: String): Result<Unit> =
         withContext(ioDispatcher) {
@@ -40,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
-                Result.failure(error.asAuthFailure())
+                Result.failure(error.toAuthFailure())
             }
         }
 
@@ -53,10 +70,7 @@ class AuthRepositoryImpl @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
-                Result.failure(error.asAuthFailure())
+                Result.failure(error.toAuthFailure())
             }
         }
-
-    private fun Throwable.asAuthFailure(): Throwable =
-        this as? AuthException ?: AuthException(AuthFailure.NETWORK)
 }

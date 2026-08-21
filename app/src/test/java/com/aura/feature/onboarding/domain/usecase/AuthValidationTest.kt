@@ -5,6 +5,7 @@ import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -106,6 +107,8 @@ class AuthValidationTest {
 
         override suspend fun currentAccount(): Account? = null
 
+        override suspend fun restoreSession(): StartDestination = StartDestination.AUTH
+
         override suspend fun signIn(email: String, password: String): Result<AuthSession> {
             signInEmail = email
             signInPassword = password
@@ -117,7 +120,7 @@ class AuthValidationTest {
             return session(accountCreated = true)
         }
 
-        override suspend fun continueWithGoogle(): Result<AuthSession> =
+        override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
             session(accountCreated = true)
 
         override suspend fun requestPasswordReset(email: String): Result<Unit> {
@@ -137,6 +140,7 @@ class AuthValidationTest {
                             authProvider = AuthProvider.EMAIL,
                         ),
                         accountCreated = accountCreated,
+                        invitePending = accountCreated,
                     )
                 )
     }

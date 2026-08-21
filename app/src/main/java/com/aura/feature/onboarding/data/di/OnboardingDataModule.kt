@@ -2,7 +2,7 @@ package com.aura.feature.onboarding.data.di
 
 import com.aura.feature.onboarding.data.attribution.InstallReferrerSource
 import com.aura.feature.onboarding.data.attribution.PlayInstallReferrerSource
-import com.aura.feature.onboarding.data.remote.MockOnboardingRemoteDataSource
+import com.aura.feature.onboarding.data.remote.ApiOnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.repository.AuthRepositoryImpl
 import com.aura.feature.onboarding.data.repository.BootRepositoryImpl
@@ -29,7 +29,7 @@ interface OnboardingDataModule {
     @Binds
     @Singleton
     fun bindOnboardingRemoteDataSource(
-        impl: MockOnboardingRemoteDataSource,
+        impl: ApiOnboardingRemoteDataSource,
     ): OnboardingRemoteDataSource
 
     @Binds

@@ -16,20 +16,14 @@ private val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s.]+\\.[^@\\s]+$")
 
 class BootstrapUseCase @Inject constructor(
     private val bootRepository: BootRepository,
-    private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(): BootConfig {
-        val config = bootRepository.bootstrap()
-        authRepository.currentAccount()
-        return config
-    }
+    suspend operator fun invoke(): BootConfig = bootRepository.bootstrap()
 }
 
 class ResolveStartDestinationUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(): StartDestination =
-        if (authRepository.currentAccount() == null) StartDestination.AUTH else StartDestination.HOME
+    suspend operator fun invoke(): StartDestination = authRepository.restoreSession()
 }
 
 class SignInUseCase @Inject constructor(
@@ -62,7 +56,8 @@ class SignUpUseCase @Inject constructor(
 class ContinueWithGoogleUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(): Result<AuthSession> = authRepository.continueWithGoogle()
+    suspend operator fun invoke(idToken: String): Result<AuthSession> =
+        authRepository.continueWithGoogle(idToken)
 }
 
 class RequestPasswordResetUseCase @Inject constructor(

@@ -12,6 +12,7 @@ data class AccountDto(
 data class AuthSessionDto(
     val account: AccountDto,
     val accountCreated: Boolean,
+    val invitePending: Boolean,
 )
 
 data class OnboardingFlagsDto(

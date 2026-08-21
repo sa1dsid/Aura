@@ -1,7 +1,7 @@
 package com.aura.feature.account.data.di
 
 import com.aura.feature.account.data.remote.AccountRemoteDataSource
-import com.aura.feature.account.data.remote.MockAccountRemoteDataSource
+import com.aura.feature.account.data.remote.ApiAccountRemoteDataSource
 import com.aura.feature.account.data.repository.AccountRepositoryImpl
 import com.aura.feature.account.domain.repository.AccountRepository
 import dagger.Binds
@@ -17,7 +17,7 @@ interface AccountDataModule {
     @Binds
     @Singleton
     fun bindAccountRemoteDataSource(
-        impl: MockAccountRemoteDataSource,
+        impl: ApiAccountRemoteDataSource,
     ): AccountRemoteDataSource
 
     @Binds

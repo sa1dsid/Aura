@@ -11,6 +11,11 @@ fun Context.openUrl(url: String): Boolean {
     return startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 }
 
+fun Context.openSocialLink(appUrl: String?, webUrl: String) {
+    if (appUrl != null && openUrl(appUrl)) return
+    openUrl(webUrl)
+}
+
 fun Context.openVpnSettings() {
     val opened = startSafely(Intent(Settings.ACTION_VPN_SETTINGS))
     if (!opened) startSafely(Intent(Settings.ACTION_WIRELESS_SETTINGS))

@@ -139,4 +139,60 @@
 
     <string name="cd_back">Back</string>
     <string name="cd_copy_code">Copy code</string>
+
+    <!-- Nodes. В поставке заказчика от 09.08 есть только nodes_prime_reached и названия
+         тиров, остальных ключей экрана нет — блок временный, заменить на ID из поставки,
+         когда строки придут. Названия соцсетей, ник и код не переводятся. -->
+    <string name="nodes_title">Nodes</string>
+    <string name="nodes_subtitle">Your network of invited friends</string>
+
+    <string name="nodes_invite_title">Get a free gift in IO Aura</string>
+    <!-- ДЛИННАЯ: превью текста приглашения, боевой вариант приходит с сервера. -->
+    <string name="nodes_invite_quote">\"I collect gifts in IO Aura — join with my link and get a bonus too.\"</string>
+    <string name="nodes_code_label">Your code</string>
+    <string name="nodes_share">Share Invite Link</string>
+    <string name="nodes_code_copied">Code copied</string>
+
+    <string name="nodes_friends_joined">Friends joined</string>
+    <string name="nodes_more_for">More for %1$s</string>
+
+    <string name="nodes_earned">Earned From Referrals</string>
+    <string name="nodes_unit_spark">Spark</string>
+    <string name="nodes_unit_bonus">(bonus)</string>
+    <!-- ДЛИННАЯ: строка тира, проценты и название тира приходят с сервера.
+         После тире — неразрывный пробел, как в макете. -->
+    <string name="nodes_tier_line">Your tier —\u00A0%1$s: +%2$d%% of active friends\' Spark, +%3$s%% of their withdrawal balance, credited automatically to you</string>
+
+    <string name="nodes_squad_title">This Squad Unlocked %1$s</string>
+    <string name="nodes_squad_active">%1$d ACTIVE FRIENDS</string>
+    <string name="nodes_squad_separator">·</string>
+    <string name="nodes_squad_unlocked">%1$s UNLOCKED</string>
+
+    <string name="nodes_friends">Your friends</string>
+    <string name="nodes_badge_earning">Earning</string>
+    <string name="nodes_badge_spark_only">Spark only</string>
+    <string name="nodes_badge_inactive">Inactive</string>
+    <string name="nodes_value_empty">—</string>
+
+    <string name="nodes_empty_title">No friends yet</string>
+    <!-- ДЛИННАЯ: пустое состояние, в макете переносится на две строки. -->
+    <string name="nodes_empty_text">Share your code above — once someone joins with it, they\'ll show up here.</string>
+
+    <string name="nodes_find_title">FIND YOUR NODE</string>
+    <!-- ДЛИННАЯ: подпись секции соцсетей. -->
+    <string name="nodes_find_subtitle">The mesh lives outside the app too — join the squad.</string>
+    <string name="nodes_bracket_open">[</string>
+    <string name="nodes_bracket_close">]</string>
+    <string name="social_discord">Discord</string>
+    <string name="social_telegram">Telegram</string>
+    <string name="social_x">X</string>
+    <string name="social_reddit">Reddit</string>
+    <string name="social_instagram">Instagram</string>
+    <string name="social_snapchat">Snapchat</string>
+
+    <!-- ДЛИННАЯ: текст системного шэра приглашения, боевой вариант приходит с сервера. -->
+    <string name="nodes_share_text">I collect gifts in IO Aura — join with my link and get a bonus too. %1$s</string>
+
+    <string name="cd_open_link">Open</string>
+
 </resources>

@@ -81,7 +81,7 @@ fun AccountMenuSheet(
     val colors = AuraTheme.colors
 
     AuraBottomSheet(
-        visible = visible,
+        visible = visible && !state.isDeleteConfirmVisible,
         onDismissRequest = actions.onDismissRequest,
         modifier = modifier,
     ) {
@@ -138,7 +138,7 @@ fun AccountMenuSheet(
         )
     }
 
-    DeleteAccountSheet(
+    DeleteAccountDialog(
         visible = state.isDeleteConfirmVisible,
         onKeepClick = actions.onKeepAccountClick,
         onDeleteClick = actions.onDeletePermanentlyClick,

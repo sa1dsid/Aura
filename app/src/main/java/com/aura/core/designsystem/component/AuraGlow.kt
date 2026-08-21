@@ -134,9 +134,9 @@ fun Modifier.auraGlowLayers(
     val layers = shadows.map { auraGlowLayer(it, baseWidth, baseHeight, glowCenter) }
 
     onDrawBehind {
-        val glow = alpha()
-        if (glow <= 0f) return@onDrawBehind
-        layers.forEach { drawAuraGlow(it, alpha = glow) }
+        val fraction = alpha()
+        if (fraction <= 0f) return@onDrawBehind
+        layers.forEach { drawAuraGlow(it, alpha = fraction) }
     }
 }
 
@@ -185,11 +185,11 @@ fun Modifier.auraDropShadow(
     val corner = cornerRadius.toPx() + grow
 
     onDrawBehind {
-        val glow = alpha()
-        if (glow <= 0f) return@onDrawBehind
+        val fraction = alpha()
+        if (fraction <= 0f) return@onDrawBehind
 
         if (paint != null) {
-            paint.alpha = (color.alpha * glow * 255f).roundToInt().coerceIn(0, 255)
+            paint.alpha = (color.alpha * fraction * 255f).roundToInt().coerceIn(0, 255)
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawRoundRect(
                     -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
@@ -206,10 +206,24 @@ fun Modifier.auraDropShadow(
                 topLeft = Offset(-offset, -offset),
                 size = Size(size.width + offset * 2, size.height + offset * 2),
                 cornerRadius = CornerRadius(cornerRadius.toPx() + offset),
-                alpha = color.alpha * fade * 0.09f * glow,
+                alpha = color.alpha * fade * 0.09f * fraction,
             )
         }
     }
+}
+
+fun Modifier.auraDropShadows(
+    shadows: List<AuraShadow>,
+    cornerRadius: Dp,
+    alpha: () -> Float = { 1f },
+): Modifier = shadows.fold(this) { chain, shadow ->
+    chain.auraDropShadow(
+        color = shadow.color,
+        blurRadius = shadow.blurRadius,
+        cornerRadius = cornerRadius,
+        spread = shadow.spread,
+        alpha = alpha,
+    )
 }
 
 fun DrawScope.drawAuraArcGlow(

@@ -45,7 +45,6 @@ class MockHomeRemoteDataSource @Inject constructor() : HomeRemoteDataSource {
             friendsTarget = 4,
             referralRatePercent = 10,
             inviteLink = "https://ioaura.app/i/syrex",
-            hasUnreadNews = false,
         )
     }
 

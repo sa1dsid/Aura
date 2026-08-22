@@ -12,6 +12,14 @@
     <string name="bonus_text_accent">reserved</string>
     <string name="timer_paused_vpn">PAUSED · VPN ON</string>
 
+    <!-- Шторка NEWS & EVENTS. Заголовки, даты и тексты новостей приходят с сервера
+         и не переводятся. Пустого состояния в ТЗ и макете нет — news_empty
+         добавлен клиентом, текст на замену. -->
+    <string name="news_title">NEWS &amp; EVENTS</string>
+    <string name="news_hint">tap a card to expand · tap the planet to close</string>
+    <string name="news_empty">No news yet</string>
+    <string name="cd_news">News</string>
+
     <string name="network_mobile_2g">Mobile 2G</string>
     <string name="network_mobile_3g">Mobile 3G</string>
     <string name="network_mobile_4g">Mobile 4G</string>

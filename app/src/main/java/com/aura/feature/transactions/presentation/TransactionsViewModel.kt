@@ -2,6 +2,7 @@ package com.aura.feature.transactions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.transactions.domain.model.TRANSACTIONS_LIMIT
 import com.aura.feature.transactions.domain.model.TransactionFilter
@@ -18,6 +19,7 @@ private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
+    newsRepository: NewsRepository,
     sessionStore: SessionStore,
 ) : ViewModel() {
 
@@ -29,9 +31,11 @@ class TransactionsViewModel @Inject constructor(
         sessionStore.account,
         events,
         filter,
-    ) { account, loaded, selected ->
+        newsRepository.hasUnread,
+    ) { account, loaded, selected, hasUnreadNews ->
         TransactionsUiState(
             handle = account?.handle,
+            hasUnreadNews = hasUnreadNews,
             events = loaded,
             filter = selected,
         )

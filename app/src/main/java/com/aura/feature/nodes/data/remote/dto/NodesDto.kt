@@ -2,7 +2,6 @@ package com.aura.feature.nodes.data.remote.dto
 
 data class NodesSnapshotDto(
     val handle: String,
-    val hasUnreadNews: Boolean,
     val inviteCode: String,
     val inviteLink: String,
     val inviteQuote: String?,

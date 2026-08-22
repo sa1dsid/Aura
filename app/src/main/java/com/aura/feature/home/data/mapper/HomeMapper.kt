@@ -7,7 +7,6 @@ import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
 import com.aura.core.network.NetworkType
-import com.aura.feature.home.domain.model.NewsState
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SparkTeaser
@@ -57,7 +56,6 @@ fun HomeSnapshotDto.toDomain(
         referralRatePercent = referralRatePercent,
         inviteLink = inviteLink,
     ),
-    news = NewsState(hasUnread = hasUnreadNews),
 )
 
 private fun String.toNodeTier(): NodeTier? =

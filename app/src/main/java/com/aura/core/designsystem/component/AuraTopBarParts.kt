@@ -1,8 +1,9 @@
 package com.aura.core.designsystem.component
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -19,10 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -32,9 +30,31 @@ import com.aura.core.designsystem.theme.AuraTheme
 
 private const val PLANET_BODY_FRACTION = 21.5f / 48f
 
-private const val PULSE_MILLIS = 1400
+private const val PULSE_MILLIS = 700
+
+private const val PULSE_MIN_ALPHA = 0.45f
+
+private const val ALERT_FADE_MILLIS = 400
 
 private val PlanetSize = 48.dp
+
+private val FarGlowSize = 30.dp
+
+private val MediumGlowSize = 24.dp
+
+private val NearGlowSize = 26.dp
+
+private const val FAR_GLOW_ALPHA = 0.40f
+
+private const val MEDIUM_GLOW_ALPHA = 0.52f
+
+private const val NEAR_GLOW_ALPHA = 0.40f
+
+private val FarGlowBlur = 40.dp
+
+private val MediumGlowBlur = 16.dp
+
+private val NearGlowBlur = 8.dp
 
 @Composable
 fun AuraBurgerButton(
@@ -75,22 +95,30 @@ fun AuraNewsPlanet(
     val colors = AuraTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
+    val alert = animateFloatAsState(
+        targetValue = if (hasUnread) 1f else 0f,
+        animationSpec = tween(ALERT_FADE_MILLIS),
+        label = "news-alert",
+    )
+
     val pulse = rememberInfiniteTransition(label = "news-planet").animateFloat(
-        initialValue = 0f,
+        initialValue = PULSE_MIN_ALPHA,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(PULSE_MILLIS, easing = LinearEasing),
+            animation = tween(PULSE_MILLIS, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "news-pulse",
     )
 
+    val calmAlpha = { 1f - alert.value }
+    val alertAlpha = { alert.value * pulse.value }
+
     Box(
         modifier = modifier
             .size(PlanetSize)
-            .auraGlow(Color.White.copy(alpha = 0.40f), width = 30.dp, height = 30.dp, blurRadius = 40.dp)
-            .auraGlow(Color.White.copy(alpha = 0.52f), width = 24.dp, height = 24.dp, blurRadius = 16.dp)
-            .auraGlow(Color.White.copy(alpha = 0.40f), width = 26.dp, height = 26.dp, blurRadius = 8.dp)
+            .planetGlow(Color.White, calmAlpha)
+            .planetGlow(colors.warning, alertAlpha)
             .pressScale(interactionSource, pressedScale = 0.9f)
             .drawBehind {
                 drawPlanet(
@@ -104,34 +132,31 @@ fun AuraNewsPlanet(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
+                onClickLabel = stringResource(R.string.cd_news),
                 onClick = onClick,
             ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (hasUnread) {
-            Box(
-                Modifier
-                    .size(24.dp)
-                    .graphicsLayer()
-                    .drawWithCache {
-                        val radius = size.minDimension / 2f
-                        val brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                colors.danger.copy(alpha = 0.55f),
-                            ),
-                            radius = radius,
-                        )
-
-                        onDrawBehind {
-                            drawCircle(
-                                brush = brush,
-                                radius = radius,
-                                alpha = pulse.value,
-                            )
-                        }
-                    }
-            )
-        }
-    }
+    )
 }
+
+private fun Modifier.planetGlow(color: Color, alpha: () -> Float): Modifier = this
+    .auraGlow(
+        color = color.copy(alpha = FAR_GLOW_ALPHA),
+        width = FarGlowSize,
+        height = FarGlowSize,
+        blurRadius = FarGlowBlur,
+        alpha = alpha,
+    )
+    .auraGlow(
+        color = color.copy(alpha = MEDIUM_GLOW_ALPHA),
+        width = MediumGlowSize,
+        height = MediumGlowSize,
+        blurRadius = MediumGlowBlur,
+        alpha = alpha,
+    )
+    .auraGlow(
+        color = color.copy(alpha = NEAR_GLOW_ALPHA),
+        width = NearGlowSize,
+        height = NearGlowSize,
+        blurRadius = NearGlowBlur,
+        alpha = alpha,
+    )

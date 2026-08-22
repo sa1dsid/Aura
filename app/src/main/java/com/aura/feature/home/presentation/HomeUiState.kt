@@ -15,6 +15,7 @@ sealed interface HomeUiState {
     data class Content(
         val home: HomeState,
         val mesh: MeshState,
+        val hasUnreadNews: Boolean = false,
     ) : HomeUiState
 }
 

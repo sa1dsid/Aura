@@ -13,6 +13,7 @@ import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
 import com.aura.feature.home.domain.usecase.RefreshHomeUseCase
 import com.aura.feature.home.presentation.preview.HomePreviewData
+import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.network.domain.model.PingRecord
 import com.aura.feature.network.domain.model.SpeedTestResult
 import com.aura.feature.network.domain.repository.PingHistoryRepository
@@ -149,6 +150,7 @@ class HomeViewModelTest {
         refreshHome = RefreshHomeUseCase(homeRepository, meshRepository),
         creditTestReward = CreditTestRewardUseCase(homeRepository),
         sessionEngine = engine,
+        newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
     )
 

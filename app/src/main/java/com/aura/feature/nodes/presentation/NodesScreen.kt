@@ -58,6 +58,7 @@ private val EmptyTextWidth = 250.dp
 fun NodesRoute(
     modifier: Modifier = Modifier,
     onMenuClick: () -> Unit = {},
+    onNewsClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: NodesViewModel = hiltViewModel(),
 ) {
@@ -76,6 +77,7 @@ fun NodesRoute(
         uiState = uiState,
         actions = NodesActions(
             onMenuClick = onMenuClick,
+            onNewsClick = onNewsClick,
             onCodeClick = {
                 val code = invite?.code ?: return@NodesActions
                 clipboard.setText(AnnotatedString(code))
@@ -123,6 +125,7 @@ fun NodesScreen(
                 NodesUiState.Loading -> LoadingState(Modifier.padding(innerPadding))
                 is NodesUiState.Content -> NodesContent(
                     nodes = uiState.nodes,
+                    hasUnreadNews = uiState.hasUnreadNews,
                     actions = actions,
                     contentPadding = innerPadding,
                 )
@@ -142,6 +145,7 @@ fun NodesScreen(
 @Composable
 private fun NodesContent(
     nodes: NodesState,
+    hasUnreadNews: Boolean,
     actions: NodesActions,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -154,7 +158,7 @@ private fun NodesContent(
         item {
             NodesTopBar(
                 handle = nodes.handle,
-                hasUnreadNews = nodes.hasUnreadNews,
+                hasUnreadNews = hasUnreadNews,
                 onMenuClick = actions.onMenuClick,
                 onNewsClick = actions.onNewsClick,
             )

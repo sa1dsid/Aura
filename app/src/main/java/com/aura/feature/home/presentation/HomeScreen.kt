@@ -56,6 +56,7 @@ import com.aura.feature.home.presentation.preview.HomePreviewData
 fun HomeRoute(
     modifier: Modifier = Modifier,
     onMenuClick: () -> Unit = {},
+    onNewsClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -88,6 +89,7 @@ fun HomeRoute(
         uiState = uiState,
         actions = HomeActions(
             onMenuClick = onMenuClick,
+            onNewsClick = onNewsClick,
             onMainButtonClick = viewModel::onMainButtonClick,
             onTabSelected = onTabSelected,
         ),
@@ -154,7 +156,7 @@ private fun HomeContent(
     ) {
         item {
             HomeTopBar(
-                hasUnreadNews = home.news.hasUnread,
+                hasUnreadNews = state.hasUnreadNews,
                 onMenuClick = actions.onMenuClick,
                 onNewsClick = actions.onNewsClick,
             )

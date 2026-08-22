@@ -9,7 +9,10 @@ sealed interface NodesUiState {
 
     data object Loading : NodesUiState
 
-    data class Content(val nodes: NodesState) : NodesUiState
+    data class Content(
+        val nodes: NodesState,
+        val hasUnreadNews: Boolean = false,
+    ) : NodesUiState
 }
 
 @Immutable

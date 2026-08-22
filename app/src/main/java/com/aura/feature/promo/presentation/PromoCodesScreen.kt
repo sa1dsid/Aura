@@ -73,6 +73,7 @@ private const val FADE_FLOOR = 0.36f
 fun PromoCodesRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onNewsClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: PromoCodesViewModel = hiltViewModel(),
 ) {
@@ -87,6 +88,7 @@ fun PromoCodesRoute(
         uiState = uiState,
         actions = PromoCodesActions(
             onBackClick = onBack,
+            onNewsClick = onNewsClick,
             onCodeClick = { code ->
                 clipboard.setText(AnnotatedString(code.code))
                 toastState.show(

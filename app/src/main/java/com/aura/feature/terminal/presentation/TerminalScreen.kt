@@ -38,6 +38,7 @@ fun TerminalRoute(
     onOpenPromoCodes: () -> Unit,
     modifier: Modifier = Modifier,
     onMenuClick: () -> Unit = {},
+    onNewsClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: TerminalViewModel = hiltViewModel(),
 ) {
@@ -47,6 +48,7 @@ fun TerminalRoute(
         uiState = uiState,
         actions = TerminalActions(
             onMenuClick = onMenuClick,
+            onNewsClick = onNewsClick,
             onTransactionsClick = {
                 viewModel.onTransactionsOpened()
                 onOpenTransactions()

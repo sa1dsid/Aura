@@ -12,9 +12,14 @@ import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val RETRY_DELAY_MILLIS = 400L
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -48,7 +53,9 @@ class AuthRepositoryImpl @Inject constructor(
         authenticate { remote.signUp(email, password).toDomain() }
 
     override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
-        authenticate { remote.signInWithGoogle(idToken).toDomain() }
+        authenticate(googleSignIn = true) {
+            retryOnceOnBrokenConnection { remote.signInWithGoogle(idToken).toDomain() }
+        }
 
     override suspend fun requestPasswordReset(email: String): Result<Unit> =
         withContext(ioDispatcher) {
@@ -61,16 +68,29 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
 
-    private suspend fun authenticate(request: suspend () -> AuthSession): Result<AuthSession> =
-        withContext(ioDispatcher) {
-            try {
-                val session = request()
-                sessionStore.open(session.account)
-                Result.success(session)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                Result.failure(error.toAuthFailure())
-            }
+    private suspend fun authenticate(
+        googleSignIn: Boolean = false,
+        request: suspend () -> AuthSession,
+    ): Result<AuthSession> = withContext(ioDispatcher) {
+        try {
+            val session = request()
+            sessionStore.open(session.account)
+            Result.success(session)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            Result.failure(error.toAuthFailure(googleSignIn))
         }
+    }
+
+    private suspend fun <T> retryOnceOnBrokenConnection(request: suspend () -> T): T = try {
+        request()
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (timeout: SocketTimeoutException) {
+        throw timeout
+    } catch (broken: IOException) {
+        delay(RETRY_DELAY_MILLIS)
+        request()
+    }
 }

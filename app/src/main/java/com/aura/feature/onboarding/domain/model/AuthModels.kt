@@ -5,6 +5,7 @@ enum class AuthMode { SIGN_IN, SIGN_UP }
 data class AuthSession(
     val account: Account,
     val accountCreated: Boolean,
+    val invitePending: Boolean,
 )
 
 enum class AuthFailure {
@@ -15,6 +16,7 @@ enum class AuthFailure {
     ACCOUNT_NOT_FOUND,
     WRONG_PASSWORD,
     GOOGLE_CANCELLED,
+    GOOGLE_UNAVAILABLE,
     NETWORK,
 }
 

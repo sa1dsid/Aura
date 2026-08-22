@@ -5,15 +5,18 @@ import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.OnboardingFlags
+import com.aura.feature.onboarding.domain.model.StartDestination
 
 interface AuthRepository {
     suspend fun currentAccount(): Account?
+
+    suspend fun restoreSession(): StartDestination
 
     suspend fun signIn(email: String, password: String): Result<AuthSession>
 
     suspend fun signUp(email: String, password: String): Result<AuthSession>
 
-    suspend fun continueWithGoogle(): Result<AuthSession>
+    suspend fun continueWithGoogle(idToken: String): Result<AuthSession>
 
     suspend fun requestPasswordReset(email: String): Result<Unit>
 }

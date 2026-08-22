@@ -87,7 +87,7 @@ fun AuthRoute(
             onEmailChange = viewModel::onEmailChange,
             onPasswordChange = viewModel::onPasswordChange,
             onSubmit = viewModel::onSubmit,
-            onGoogleClick = viewModel::onGoogleClick,
+            onGoogleClick = { viewModel.onGoogleClick(context) },
             onForgotPasswordClick = viewModel::onForgotPasswordClick,
         ),
         toastState = toastState,
@@ -301,6 +301,7 @@ private fun AuthToast.textRes(): Int = when (this) {
     AuthToast.ACCOUNT_EXISTS -> R.string.toast_acc_exists
     AuthToast.NO_ACCOUNT -> R.string.toast_no_account
     AuthToast.NO_CONNECTION -> R.string.toast_no_connection
+    AuthToast.GOOGLE_UNAVAILABLE -> R.string.toast_google_unavailable
     AuthToast.RESET_LINK_SENT -> R.string.toast_reset_sent
 }
 

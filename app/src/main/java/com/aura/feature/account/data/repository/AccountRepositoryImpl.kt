@@ -1,5 +1,6 @@
 package com.aura.feature.account.data.repository
 
+import com.aura.core.auth.TokenStore
 import com.aura.core.common.IoDispatcher
 import com.aura.feature.account.data.mapper.toDomain
 import com.aura.feature.account.data.mapper.toProfile
@@ -22,6 +23,7 @@ import javax.inject.Singleton
 class AccountRepositoryImpl @Inject constructor(
     private val remote: AccountRemoteDataSource,
     private val sessionStore: SessionStore,
+    private val tokenStore: TokenStore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AccountRepository {
 
@@ -46,11 +48,12 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun logOut() {
         sessionStore.close()
+        tokenStore.clear()
     }
 
     override suspend fun deleteAccount(): Result<Unit> =
         request { accountId -> remote.deleteAccount(accountId) }
-            .onSuccess { sessionStore.close() }
+            .onSuccess { logOut() }
 
     private suspend fun <T> request(call: suspend (String) -> T): Result<T> =
         withContext(ioDispatcher) {

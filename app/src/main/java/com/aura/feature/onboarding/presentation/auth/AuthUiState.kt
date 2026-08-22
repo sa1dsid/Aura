@@ -20,6 +20,7 @@ enum class AuthToast {
     ACCOUNT_EXISTS,
     NO_ACCOUNT,
     NO_CONNECTION,
+    GOOGLE_UNAVAILABLE,
     RESET_LINK_SENT,
 }
 

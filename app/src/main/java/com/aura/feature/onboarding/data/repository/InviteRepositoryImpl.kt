@@ -1,11 +1,10 @@
 package com.aura.feature.onboarding.data.repository
 
+import com.aura.core.api.toInviteFailure
 import com.aura.core.common.IoDispatcher
 import com.aura.feature.onboarding.data.attribution.InviteAttributionStore
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.domain.model.InviteAttribution
-import com.aura.feature.onboarding.domain.model.InviteException
-import com.aura.feature.onboarding.domain.model.InviteFailure
 import com.aura.feature.onboarding.domain.repository.InviteRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -36,7 +35,7 @@ class InviteRepositoryImpl @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
-                Result.failure(error.asInviteFailure())
+                Result.failure(error.toInviteFailure())
             }
         }
 
@@ -49,10 +48,7 @@ class InviteRepositoryImpl @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
-                Result.failure(error.asInviteFailure())
+                Result.failure(error.toInviteFailure())
             }
         }
-
-    private fun Throwable.asInviteFailure(): Throwable =
-        this as? InviteException ?: InviteException(InviteFailure.NETWORK)
 }

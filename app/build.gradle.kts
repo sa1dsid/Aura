@@ -1,9 +1,16 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
+}
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use(::load)
 }
 
 android {
@@ -20,6 +27,18 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "API_BASE_URL",
+            "\"${localProperties.getProperty("AURA_API_BASE_URL", "")}\"",
+        )
+
+        buildConfigField(
+            "String",
+            "GOOGLE_CLIENT_ID",
+            "\"${localProperties.getProperty("AURA_GOOGLE_CLIENT_ID", "")}\"",
+        )
     }
 
     androidResources {
@@ -64,6 +83,16 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.install.referrer)
     implementation(libs.androidx.datastore.preferences)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.id)
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

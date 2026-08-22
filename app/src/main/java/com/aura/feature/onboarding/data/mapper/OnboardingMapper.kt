@@ -21,6 +21,7 @@ fun AccountDto.toDomain() = Account(
 fun AuthSessionDto.toDomain() = AuthSession(
     account = account.toDomain(),
     accountCreated = accountCreated,
+    invitePending = invitePending,
 )
 
 fun OnboardingFlagsDto.toDomain() = OnboardingFlags(

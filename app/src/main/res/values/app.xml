@@ -195,4 +195,9 @@
 
     <string name="cd_open_link">Open</string>
 
+    <!-- ДЛИННАЯ: бэкенд отвечает 503, когда не может проверить Google ID-токен.
+         В поставке заказчика ключа под этот случай нет, toast_no_connection не
+         подходит — сеть у пользователя рабочая, лежит именно проверка на сервере. -->
+    <string name="toast_google_unavailable">Google sign-in is unavailable · try email</string>
+
 </resources>

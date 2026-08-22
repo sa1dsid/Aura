@@ -1,9 +1,9 @@
 package com.aura.feature.account.data.remote
 
+import com.aura.core.api.AuraApi
+import com.aura.core.api.dto.PreferenceUpdateDto
 import com.aura.feature.account.data.remote.dto.AccountSettingsDto
 import com.aura.feature.account.data.remote.dto.LegalLinksDto
-import com.aura.feature.onboarding.data.remote.OnboardingBackend
-import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,34 +18,23 @@ interface AccountRemoteDataSource {
 }
 
 @Singleton
-class MockAccountRemoteDataSource @Inject constructor(
-    private val backend: OnboardingBackend,
+class ApiAccountRemoteDataSource @Inject constructor(
+    private val api: AuraApi,
 ) : AccountRemoteDataSource {
 
-    override suspend fun settings(accountId: String): AccountSettingsDto {
-        delay(SETTINGS_DELAY_MILLIS)
-        return AccountSettingsDto(pushNotifications = backend.pushNotifications(accountId))
-    }
+    override suspend fun settings(accountId: String): AccountSettingsDto =
+        AccountSettingsDto(pushNotifications = api.currentUser().pushEnabled)
 
     override suspend fun updatePushNotifications(accountId: String, enabled: Boolean) {
-        delay(NETWORK_DELAY_MILLIS)
-        backend.setPushNotifications(accountId, enabled)
+        api.updatePreferences(PreferenceUpdateDto(pushEnabled = enabled))
     }
 
     override suspend fun legalLinks(): LegalLinksDto {
-        delay(SETTINGS_DELAY_MILLIS)
-        return LegalLinksDto(termsUrl = TERMS_URL, privacyUrl = PRIVACY_URL)
+        val config = api.publicConfig()
+        return LegalLinksDto(termsUrl = config.termsUrl, privacyUrl = config.privacyUrl)
     }
 
     override suspend fun deleteAccount(accountId: String) {
-        delay(NETWORK_DELAY_MILLIS)
-        backend.deleteAccount(accountId)
-    }
-
-    private companion object {
-        const val NETWORK_DELAY_MILLIS = 600L
-        const val SETTINGS_DELAY_MILLIS = 200L
-        const val TERMS_URL = "https://ioaura.app/terms"
-        const val PRIVACY_URL = "https://ioaura.app/privacy"
+        api.deleteCurrentUser()
     }
 }

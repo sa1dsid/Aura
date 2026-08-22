@@ -54,6 +54,16 @@ class ApiErrorsTest {
     }
 
     @Test
+    fun `a rejected google token is not reported as a wrong password`() {
+        val body = """{"detail":"Invalid Google token"}"""
+
+        assertEquals(
+            AuthFailure.GOOGLE_UNAVAILABLE,
+            httpError(401, body).toAuthFailure(googleSignIn = true).failure,
+        )
+    }
+
+    @Test
     fun `a dropped connection reads as a network failure`() {
         assertEquals(AuthFailure.NETWORK, IOException("offline").toAuthFailure().failure)
     }

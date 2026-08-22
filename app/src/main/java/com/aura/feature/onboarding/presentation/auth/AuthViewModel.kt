@@ -39,6 +39,10 @@ class AuthViewModel @Inject constructor(
     private val eventChannel = Channel<AuthEvent>(Channel.BUFFERED)
     val events: Flow<AuthEvent> = eventChannel.receiveAsFlow()
 
+    init {
+        viewModelScope.launch { googleSignInClient.warmUp() }
+    }
+
     fun onModeChange(mode: AuthMode) {
         _uiState.update { it.copy(mode = mode, invalidField = null) }
     }

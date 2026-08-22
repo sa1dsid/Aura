@@ -47,9 +47,10 @@ import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.HomeTab
 import com.aura.feature.home.presentation.components.AuraBottomBar
+import com.aura.feature.promo.domain.model.PROMO_SECTION_LIMIT
 import com.aura.feature.promo.domain.model.PromoCode
 import com.aura.feature.promo.domain.model.PromoCodeKind
-import com.aura.feature.promo.domain.model.ofKind
+import com.aura.feature.promo.domain.model.sectionCodes
 import com.aura.feature.promo.presentation.components.PromoTicket
 import com.aura.feature.promo.presentation.preview.PromoPreviewData
 
@@ -145,8 +146,8 @@ private fun PromoCodesContent(
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
-    val sparkCodes = remember(uiState.codes) { uiState.codes.ofKind(PromoCodeKind.SPARK) }
-    val vpnCodes = remember(uiState.codes) { uiState.codes.ofKind(PromoCodeKind.VPN) }
+    val sparkCodes = remember(uiState.codes) { uiState.codes.sectionCodes(PromoCodeKind.SPARK) }
+    val vpnCodes = remember(uiState.codes) { uiState.codes.sectionCodes(PromoCodeKind.VPN) }
 
     Column(
         modifier = modifier
@@ -189,7 +190,6 @@ private fun PromoCodesContent(
             } else {
                 PromoSection(
                     labelRes = R.string.promo_section_spark,
-                    moreRes = R.string.promo_more_spark,
                     codes = sparkCodes,
                     onCodeClick = actions.onCodeClick,
                 )
@@ -198,7 +198,6 @@ private fun PromoCodesContent(
 
                 PromoSection(
                     labelRes = R.string.promo_section_vpn,
-                    moreRes = R.string.promo_more_vpn,
                     codes = vpnCodes,
                     onCodeClick = actions.onCodeClick,
                 )
@@ -212,7 +211,6 @@ private fun PromoCodesContent(
 @Composable
 private fun PromoSection(
     @StringRes labelRes: Int,
-    @StringRes moreRes: Int,
     codes: List<PromoCode>,
     onCodeClick: (PromoCode) -> Unit,
     modifier: Modifier = Modifier,
@@ -247,13 +245,11 @@ private fun PromoSection(
             }
         }
 
-        if (overflows) {
-            Text(
-                text = stringResource(moreRes, codes.size - VISIBLE_TICKETS),
-                style = AuraTheme.typography.caption,
-                color = colors.textDisabled,
-            )
-        }
+        Text(
+            text = stringResource(R.string.promo_section_stored, PROMO_SECTION_LIMIT),
+            style = AuraTheme.typography.caption,
+            color = colors.textDisabled,
+        )
     }
 }
 

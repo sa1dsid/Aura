@@ -16,4 +16,9 @@ data class PromoCode(
     val used: Boolean,
 )
 
-fun List<PromoCode>.ofKind(kind: PromoCodeKind): List<PromoCode> = filter { it.kind == kind }
+const val PROMO_SECTION_LIMIT = 7
+
+fun List<PromoCode>.sectionCodes(kind: PromoCodeKind): List<PromoCode> = this
+    .filter { it.kind == kind }
+    .sortedByDescending(PromoCode::issuedAt)
+    .take(PROMO_SECTION_LIMIT)

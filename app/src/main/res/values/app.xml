@@ -133,8 +133,7 @@
     <string name="promo_section_vpn">VPN CODES</string>
     <string name="promo_badge_spark">SPARK</string>
     <string name="promo_badge_vpn">VPN</string>
-    <string name="promo_more_spark">scroll for %1$d more Spark codes ↓</string>
-    <string name="promo_more_vpn">scroll for %1$d more VPN codes ↓</string>
+    <string name="promo_section_stored">last %1$d codes stored</string>
     <string name="promo_empty_title">No codes yet</string>
     <!-- ДЛИННАЯ: пустое состояние, в макете переносится на две строки. -->
     <string name="promo_empty_text">Earn Spark and reach targets to get your first one</string>

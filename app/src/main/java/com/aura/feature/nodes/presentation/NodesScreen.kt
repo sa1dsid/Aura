@@ -246,6 +246,7 @@ private fun NodesContent(
 
             SocialSection(
                 socials = nodes.socials,
+                handle = nodes.handle,
                 onSocialClick = actions.onSocialClick,
                 modifier = Modifier.padding(horizontal = ScreenPadding),
             )

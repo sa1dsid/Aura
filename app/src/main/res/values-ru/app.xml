@@ -27,8 +27,7 @@
     <string name="promo_subtitle">Все полученные коды — VPN и Spark, нажмите на тикет, чтобы скопировать</string>
     <string name="promo_section_spark">КОДЫ SPARK</string>
     <string name="promo_section_vpn">КОДЫ VPN</string>
-    <string name="promo_more_spark">прокрутите, ещё %1$d кодов Spark ↓</string>
-    <string name="promo_more_vpn">прокрутите, ещё %1$d кодов VPN ↓</string>
+    <string name="promo_section_stored">хранятся последние %1$d кодов</string>
     <string name="promo_empty_title">Кодов пока нет</string>
     <string name="promo_empty_text">Копите Spark и достигайте целей, чтобы получить первый</string>
     <string name="promo_copied">Код скопирован</string>

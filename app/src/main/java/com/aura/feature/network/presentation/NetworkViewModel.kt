@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.network.data.diagnostics.SpeedTestEngine
+import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.network.domain.model.SpeedTestState
 import com.aura.feature.network.domain.usecase.ObserveConnectionDetailsUseCase
 import com.aura.feature.network.domain.usecase.ObserveNetworkMetricsUseCase
@@ -28,6 +29,7 @@ class NetworkViewModel @Inject constructor(
     observeConnection: ObserveConnectionDetailsUseCase,
     observeMetrics: ObserveNetworkMetricsUseCase,
     observeHistory: ObservePingHistoryUseCase,
+    newsRepository: NewsRepository,
     sessionStore: SessionStore,
     private val refreshNetwork: RefreshNetworkUseCase,
     private val speedTestEngine: SpeedTestEngine,
@@ -55,6 +57,8 @@ class NetworkViewModel @Inject constructor(
             diagnostics = diagnostics,
             hasUnreadNews = false,
         )
+    }.combine(newsRepository.hasUnread) { content, hasUnreadNews ->
+        content.copy(hasUnreadNews = hasUnreadNews)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),

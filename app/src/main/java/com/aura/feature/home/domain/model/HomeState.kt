@@ -12,10 +12,6 @@ data class InviteState(
     val inviteLink: String,
 )
 
-data class NewsState(
-    val hasUnread: Boolean,
-)
-
 data class HomeState(
     val balances: IonBalances,
     val nodeStatus: NodeStatus,
@@ -23,5 +19,4 @@ data class HomeState(
     val connection: ConnectionState,
     val session: TestSessionState,
     val invite: InviteState,
-    val news: NewsState,
 )

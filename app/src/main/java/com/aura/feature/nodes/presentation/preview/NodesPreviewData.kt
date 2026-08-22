@@ -40,7 +40,6 @@ object NodesPreviewData {
 
     private val coreNode = NodesState(
         handle = "syrex",
-        hasUnreadNews = false,
         invite = invite,
         friendsJoined = 6,
         activeFriends = 2,

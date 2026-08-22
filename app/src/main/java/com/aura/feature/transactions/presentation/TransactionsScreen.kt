@@ -38,6 +38,7 @@ private val TopBarGap = 12.dp
 fun TransactionsRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onNewsClick: () -> Unit = {},
     onTabSelected: (HomeTab) -> Unit = {},
     viewModel: TransactionsViewModel = hiltViewModel(),
 ) {
@@ -49,6 +50,7 @@ fun TransactionsRoute(
         uiState = uiState,
         actions = TransactionsActions(
             onBackClick = onBack,
+            onNewsClick = onNewsClick,
             onFilterClick = viewModel::onFilterClick,
         ),
         onTabSelected = onTabSelected,

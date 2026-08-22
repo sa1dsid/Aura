@@ -22,5 +22,4 @@ data class HomeSnapshotDto(
     val friendsTarget: Int,
     val referralRatePercent: Int,
     val inviteLink: String,
-    val hasUnreadNews: Boolean,
 )

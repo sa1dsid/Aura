@@ -18,7 +18,6 @@ class MockNodesRemoteDataSource @Inject constructor() : NodesRemoteDataSource {
         delay(NETWORK_DELAY_MILLIS)
         return NodesSnapshotDto(
             handle = "syrex",
-            hasUnreadNews = false,
             inviteCode = "SYREX482",
             inviteLink = "https://ioaura.app/i/syrex",
             inviteQuote = null,

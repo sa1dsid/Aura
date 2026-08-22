@@ -11,6 +11,7 @@ import com.aura.feature.home.domain.usecase.CreditTestRewardUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
 import com.aura.feature.home.domain.usecase.RefreshHomeUseCase
+import com.aura.feature.news.domain.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class HomeViewModel @Inject constructor(
     private val refreshHome: RefreshHomeUseCase,
     private val creditTestReward: CreditTestRewardUseCase,
     private val sessionEngine: TestSessionEngine,
+    newsRepository: NewsRepository,
     networkMonitor: NetworkMonitor,
 ) : ViewModel() {
 
@@ -40,8 +42,12 @@ class HomeViewModel @Inject constructor(
     private var eventOnReturn: HomeEvent? = null
 
     val uiState: StateFlow<HomeUiState> =
-        combine(observeHomeState(), observeMeshState()) { home, mesh ->
-            HomeUiState.Content(home = home, mesh = mesh)
+        combine(
+            observeHomeState(),
+            observeMeshState(),
+            newsRepository.hasUnread,
+        ) { home, mesh, hasUnreadNews ->
+            HomeUiState.Content(home = home, mesh = mesh, hasUnreadNews = hasUnreadNews)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),

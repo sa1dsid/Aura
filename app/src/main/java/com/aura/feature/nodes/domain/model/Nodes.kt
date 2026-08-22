@@ -57,7 +57,6 @@ data class SocialLink(
 @Immutable
 data class NodesState(
     val handle: String,
-    val hasUnreadNews: Boolean,
     val invite: InviteOffer,
     val friendsJoined: Int,
     val activeFriends: Int,

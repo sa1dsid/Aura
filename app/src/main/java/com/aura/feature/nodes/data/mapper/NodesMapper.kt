@@ -17,7 +17,6 @@ private const val INITIALS_LIMIT = 2
 
 fun NodesSnapshotDto.toDomain(): NodesState = NodesState(
     handle = handle,
-    hasUnreadNews = hasUnreadNews,
     invite = InviteOffer(
         code = inviteCode,
         link = inviteLink,

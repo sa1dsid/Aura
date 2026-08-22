@@ -119,7 +119,6 @@ class NodesMapperTest {
         shareText: String? = null,
     ) = NodesSnapshotDto(
         handle = "syrex",
-        hasUnreadNews = false,
         inviteCode = "SYREX482",
         inviteLink = "https://ioaura.app/i/syrex",
         inviteQuote = quote,

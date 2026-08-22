@@ -12,6 +12,7 @@ import com.aura.feature.account.presentation.menu.AccountMenuRoute
 import com.aura.feature.home.presentation.HomeRoute
 import com.aura.feature.home.presentation.HomeTab
 import com.aura.feature.network.presentation.NetworkRoute
+import com.aura.feature.news.presentation.NewsDrawerRoute
 import com.aura.feature.nodes.presentation.NodesRoute
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.presentation.auth.AuthRoute
@@ -74,6 +75,7 @@ private fun MainTabs(
 ) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.HOME) }
     var isMenuOpen by rememberSaveable { mutableStateOf(false) }
+    var isNewsOpen by rememberSaveable { mutableStateOf(false) }
     var terminalDestination by rememberSaveable { mutableStateOf(TerminalDestination.ROOT) }
 
     val openTerminalRoot = { terminalDestination = TerminalDestination.ROOT }
@@ -84,18 +86,27 @@ private fun MainTabs(
             openTerminalRoot()
         }
     }
-    val openMenu: () -> Unit = { isMenuOpen = true }
+    val openMenu: () -> Unit = {
+        isNewsOpen = false
+        isMenuOpen = true
+    }
+    val openNews: () -> Unit = {
+        isMenuOpen = false
+        isNewsOpen = true
+    }
 
     Box(modifier) {
         when (tab) {
             HomeTab.NETWORK -> NetworkRoute(
                 onMenuClick = openMenu,
+                onNewsClick = openNews,
                 onTabSelected = selectTab,
                 modifier = Modifier.fillMaxSize(),
             )
 
             HomeTab.NODES -> NodesRoute(
                 onMenuClick = openMenu,
+                onNewsClick = openNews,
                 onTabSelected = selectTab,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -105,18 +116,21 @@ private fun MainTabs(
                     onOpenTransactions = { terminalDestination = TerminalDestination.TRANSACTIONS },
                     onOpenPromoCodes = { terminalDestination = TerminalDestination.PROMO_CODES },
                     onMenuClick = openMenu,
+                    onNewsClick = openNews,
                     onTabSelected = selectTab,
                     modifier = Modifier.fillMaxSize(),
                 )
 
                 TerminalDestination.TRANSACTIONS -> TransactionsRoute(
                     onBack = openTerminalRoot,
+                    onNewsClick = openNews,
                     onTabSelected = selectTab,
                     modifier = Modifier.fillMaxSize(),
                 )
 
                 TerminalDestination.PROMO_CODES -> PromoCodesRoute(
                     onBack = openTerminalRoot,
+                    onNewsClick = openNews,
                     onTabSelected = selectTab,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -124,6 +138,7 @@ private fun MainTabs(
 
             else -> HomeRoute(
                 onMenuClick = openMenu,
+                onNewsClick = openNews,
                 onTabSelected = selectTab,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -133,6 +148,11 @@ private fun MainTabs(
             visible = isMenuOpen,
             onDismissRequest = { isMenuOpen = false },
             onSessionClosed = onSessionClosed,
+        )
+
+        NewsDrawerRoute(
+            visible = isNewsOpen,
+            onDismissRequest = { isNewsOpen = false },
         )
     }
 }

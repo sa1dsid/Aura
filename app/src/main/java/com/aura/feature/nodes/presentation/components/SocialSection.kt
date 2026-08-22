@@ -51,6 +51,7 @@ private val ArrowSize = 24.dp
 @Composable
 fun SocialSection(
     socials: List<SocialLink>,
+    handle: String,
     onSocialClick: (SocialLink) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -75,7 +76,7 @@ fun SocialSection(
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             socials.forEach { link ->
-                SocialRow(link = link, onClick = { onSocialClick(link) })
+                SocialRow(link = link, handle = handle, onClick = { onSocialClick(link) })
             }
         }
     }
@@ -84,6 +85,7 @@ fun SocialSection(
 @Composable
 private fun SocialRow(
     link: SocialLink,
+    handle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -141,12 +143,21 @@ private fun SocialRow(
             modifier = Modifier.weight(1f),
         )
 
-        Icon(
-            painter = painterResource(R.drawable.ic_export),
-            contentDescription = stringResource(R.string.cd_open_link),
-            tint = colors.bonusBadgeBorder,
-            modifier = Modifier.size(ArrowSize),
-        )
+        if (pressed.value) {
+            Text(
+                text = stringResource(R.string.handle_format, handle),
+                style = AuraTheme.typography.listRowTitle,
+                color = colors.green,
+                maxLines = 1,
+            )
+        } else {
+            Icon(
+                painter = painterResource(R.drawable.ic_export),
+                contentDescription = stringResource(R.string.cd_open_link),
+                tint = colors.bonusBadgeBorder,
+                modifier = Modifier.size(ArrowSize),
+            )
+        }
     }
 }
 

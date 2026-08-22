@@ -13,6 +13,10 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use(::load)
 }
 
+val DEFAULT_API_BASE_URL = "http://3.127.248.37/"
+val DEFAULT_GOOGLE_CLIENT_ID =
+    "452007602997-jra2kfc3k744cllmet7jbkms57o6mj37.apps.googleusercontent.com"
+
 android {
     namespace = "com.aura"
     compileSdk {
@@ -31,13 +35,13 @@ android {
         buildConfigField(
             "String",
             "API_BASE_URL",
-            "\"${localProperties.getProperty("AURA_API_BASE_URL", "")}\"",
+            "\"${localProperties.getProperty("AURA_API_BASE_URL", DEFAULT_API_BASE_URL)}\"",
         )
 
         buildConfigField(
             "String",
             "GOOGLE_CLIENT_ID",
-            "\"${localProperties.getProperty("AURA_GOOGLE_CLIENT_ID", "")}\"",
+            "\"${localProperties.getProperty("AURA_GOOGLE_CLIENT_ID", DEFAULT_GOOGLE_CLIENT_ID)}\"",
         )
     }
 

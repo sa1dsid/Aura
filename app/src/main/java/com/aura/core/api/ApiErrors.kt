@@ -47,13 +47,18 @@ private fun Throwable.apiError(): ApiError? {
     return ApiError(code = http.code(), detail = text, fields = fields)
 }
 
-fun Throwable.toAuthFailure(): AuthException {
+fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
     if (this is AuthException) return this
     val error = apiError() ?: return AuthException(AuthFailure.NETWORK)
 
     return AuthException(
         when (error.code) {
-            UNAUTHORIZED -> AuthFailure.WRONG_PASSWORD
+            UNAUTHORIZED -> if (googleSignIn) {
+                AuthFailure.GOOGLE_UNAVAILABLE
+            } else {
+                AuthFailure.WRONG_PASSWORD
+            }
+
             CONFLICT -> AuthFailure.EMAIL_ALREADY_REGISTERED
             UNPROCESSABLE -> when {
                 "password" in error.fields -> AuthFailure.PASSWORD_TOO_SHORT

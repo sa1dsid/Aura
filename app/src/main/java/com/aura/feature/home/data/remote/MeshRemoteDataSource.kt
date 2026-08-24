@@ -1,6 +1,7 @@
 package com.aura.feature.home.data.remote
 
 import com.aura.core.geo.CityGazetteer
+import com.aura.core.geo.UserLocationSource
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.remote.dto.MeshCityDto
 import com.aura.feature.home.data.remote.dto.MeshSnapshotDto
@@ -18,6 +19,7 @@ interface MeshRemoteDataSource {
 class ApiMeshRemoteDataSource @Inject constructor(
     private val home: HomeRemoteDataSource,
     private val gazetteer: CityGazetteer,
+    private val userLocationSource: UserLocationSource,
     private val networkMonitor: NetworkMonitor,
 ) : MeshRemoteDataSource {
 
@@ -41,7 +43,9 @@ class ApiMeshRemoteDataSource @Inject constructor(
 
     override suspend fun fetchUserLocation(): UserLocationDto {
         val isVpnActive = networkMonitor.current().isVpnActive
-        val city = home.updateLocation(vpn = isVpnActive)
+        userLocationSource.remember(home.updateLocation(vpn = isVpnActive))
+
+        val city = userLocationSource.city.value
         val located = gazetteer.find(city)
 
         return UserLocationDto(

@@ -4,6 +4,7 @@ import com.aura.core.api.AuraApi
 import com.aura.core.api.dto.NetworkStateUpdateDto
 import com.aura.core.api.dto.PingCreateDto
 import com.aura.core.api.dto.PingDto
+import com.aura.core.geo.UserLocationSource
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
 import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
@@ -28,6 +29,7 @@ interface NetworkRemoteDataSource {
 class ApiNetworkRemoteDataSource @Inject constructor(
     private val api: AuraApi,
     private val networkMonitor: NetworkMonitor,
+    private val userLocationSource: UserLocationSource,
 ) : NetworkRemoteDataSource {
 
     @Volatile
@@ -45,6 +47,7 @@ class ApiNetworkRemoteDataSource @Inject constructor(
         )
 
         lastProtocol = state.ip.protocolName()
+        userLocationSource.remember(state.location)
 
         return NetworkSnapshotDto(
             networkType = status.type.name,
@@ -63,6 +66,7 @@ class ApiNetworkRemoteDataSource @Inject constructor(
         val status = networkMonitor.current()
         val summary = api.networkSummary()
         lastProtocol = summary.ip.protocolName() ?: summary.protocol
+        userLocationSource.remember(summary.location)
 
         return NetworkSnapshotDto(
             networkType = status.type.name,

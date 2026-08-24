@@ -1,5 +1,6 @@
 package com.aura.feature.home.presentation.preview
 
+import com.aura.feature.home.domain.model.BatteryOptimizationState
 import com.aura.feature.home.domain.model.BonusWithdrawalTeaser
 import com.aura.feature.home.domain.model.ConnectionState
 import com.aura.feature.home.domain.model.GeoPoint
@@ -25,7 +26,11 @@ object HomePreviewData {
 
     val content = HomeUiState.Content(
         home = HomeState(
-            balances = IonBalances(accrued = 4_210, availableToWithdraw = 3_000),
+            balances = IonBalances(
+                accrued = 4_210,
+                availableToWithdraw = 3_000,
+                reservedBonus = 3_000,
+            ),
             nodeStatus = NodeStatus(
                 currentTier = NodeTier.CORE_NODE,
                 referralRate = 2.5,
@@ -34,7 +39,13 @@ object HomePreviewData {
                 nextTier = NodeTier.IONIC_PRIME,
             ),
             teasers = Teasers(
-                bonusWithdrawal = BonusWithdrawalTeaser(completedSteps = 2, totalSteps = 3),
+                bonusWithdrawal = BonusWithdrawalTeaser(
+                    completedSteps = 2,
+                    totalSteps = 4,
+                    signalLockTaps = 20,
+                    networkSyncFriends = 4,
+                    fullUplinkDays = 6,
+                ),
                 spark = SparkTeaser(collected = 142_800, target = 240_000),
                 vpnCode = VpnCodeTeaser(
                     isEnabled = true,
@@ -58,6 +69,9 @@ object HomePreviewData {
                 referralRatePercent = 10,
                 inviteLink = "https://ioaura.app/i/syrex",
             ),
+            tapCount = 14,
+            unreadNews = 1,
+            batteryOptimization = BatteryOptimizationState(),
         ),
         mesh = MeshState(
             cities = listOf(

@@ -3,6 +3,7 @@ package com.aura.feature.home.data.remote.dto
 data class MeshSnapshotDto(
     val cities: List<MeshCityDto>,
     val nodesOnline: Int,
+    val stale: Boolean,
 )
 
 data class MeshCityDto(

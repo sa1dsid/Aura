@@ -13,6 +13,7 @@ data class NodesSnapshotDto(
     val tierWithdrawalPercent: Double,
     val nextTier: String?,
     val friendsToNextTier: Int,
+    val nextThreshold: Int?,
     val earnedSpark: Long,
     val earnedIon: Long,
     val friends: List<FriendDto>,

@@ -30,7 +30,7 @@ fun NodesSnapshotDto.toDomain(): NodesState = NodesState(
         sparkPercent = tierSparkPercent,
         withdrawalPercent = tierWithdrawalPercent,
     ),
-    nextTier = nextTier?.toTier(),
+    nextTier = nextTier?.toTier() ?: (tier.toTier() ?: ReferralTier.IDLE).next(),
     friendsToNextTier = friendsToNextTier,
     rewards = ReferralRewards(spark = earnedSpark, ion = earnedIon),
     friends = friends.map(FriendDto::toDomain),
@@ -57,6 +57,9 @@ private fun String.toInitials(): String = split(' ', '.')
     .take(INITIALS_LIMIT)
     .map { it.first().uppercaseChar() }
     .joinToString(separator = "")
+
+private fun ReferralTier.next(): ReferralTier? =
+    ReferralTier.entries.getOrNull(ordinal + 1)
 
 private fun String.toTier(): ReferralTier? =
     ReferralTier.entries.firstOrNull { it.name == uppercase() }

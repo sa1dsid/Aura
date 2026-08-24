@@ -281,6 +281,8 @@ private fun HomeEvent.toastKind(): AuraToastKind = when (this) {
 private fun Context.rejectionText(rejection: TestStartRejection): String = when (rejection) {
     TestStartRejection.DataShareDisabled -> getString(R.string.toast_datashare_off)
     TestStartRejection.VpnDetected -> getString(R.string.toast_vpn_block)
+    TestStartRejection.UnsupportedDevice -> getString(R.string.toast_device_unsupported)
+    TestStartRejection.Unavailable -> getString(R.string.toast_test_unavailable)
     is TestStartRejection.CooldownNotFinished ->
         getString(R.string.toast_cooldown, rejection.remaining.formatHoursMinutes())
 }

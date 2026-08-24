@@ -3,7 +3,6 @@ package com.aura.feature.network.data.repository
 import com.aura.core.common.IoDispatcher
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.network.data.local.NetworkLocalStore
-import com.aura.feature.network.data.mapper.lastTestedAtMillis
 import com.aura.feature.network.data.mapper.toDomain
 import com.aura.feature.network.data.mapper.toMetrics
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
@@ -17,7 +16,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,9 +46,6 @@ class NetworkRepositoryImpl @Inject constructor(
                 packetLossPercent = remoteMetrics?.packetLossPercent ?: quality?.packetLossPercent,
             )
         }
-
-    override fun observeLastTestedAt(): Flow<Long?> =
-        snapshot.map { it?.lastTestedAtMillis() }
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {

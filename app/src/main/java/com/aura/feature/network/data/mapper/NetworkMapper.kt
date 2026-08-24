@@ -26,8 +26,6 @@ fun NetworkSnapshotDto.toMetrics(): NetworkMetrics = NetworkMetrics(
     packetLossPercent = packetLossPercent?.toDoubleOrNull(),
 )
 
-fun NetworkSnapshotDto.lastTestedAtMillis(): Long? = lastTestedAt?.parseIsoMillis()
-
 fun PingDto.toDomain(): PingRecord? {
     val timestamp = measuredAt.parseIsoMillis() ?: return null
     val ping = pingMs.toDoubleOrNull()?.toInt() ?: return null

@@ -12,8 +12,6 @@ interface NetworkRepository {
 
     fun observeMetrics(): Flow<NetworkMetrics>
 
-    fun observeLastTestedAt(): Flow<Long?>
-
     suspend fun refresh()
 }
 

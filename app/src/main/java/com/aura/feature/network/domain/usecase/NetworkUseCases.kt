@@ -27,7 +27,11 @@ class ObservePingHistoryUseCase @Inject constructor(
 }
 
 class RefreshNetworkUseCase @Inject constructor(
-    private val repository: NetworkRepository,
+    private val networkRepository: NetworkRepository,
+    private val pingHistoryRepository: PingHistoryRepository,
 ) {
-    suspend operator fun invoke() = repository.refresh()
+    suspend operator fun invoke() {
+        networkRepository.refresh()
+        pingHistoryRepository.refresh()
+    }
 }

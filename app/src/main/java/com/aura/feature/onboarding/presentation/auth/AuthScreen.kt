@@ -297,6 +297,7 @@ private fun AuthToast.textRes(): Int = when (this) {
     AuthToast.EMAIL_REQUIRED -> R.string.toast_email_first
     AuthToast.EMAIL_INVALID -> R.string.toast_email_invalid
     AuthToast.PASSWORD_TOO_SHORT -> R.string.toast_pass_short
+    AuthToast.PASSWORD_TOO_LONG -> R.string.toast_pass_long
     AuthToast.WRONG_CREDENTIALS -> R.string.toast_wrong_creds
     AuthToast.ACCOUNT_EXISTS -> R.string.toast_acc_exists
     AuthToast.NO_ACCOUNT -> R.string.toast_no_account

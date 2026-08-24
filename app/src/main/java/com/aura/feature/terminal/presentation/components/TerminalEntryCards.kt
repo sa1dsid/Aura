@@ -65,19 +65,25 @@ fun TerminalEntryCards(
         TerminalEntryCard(
             label = stringResource(R.string.terminal_card_transactions),
             count = counters.unreadTransactions,
-            hint = stringResource(R.string.terminal_card_transactions_hint),
+            hint = terminalHint(counters.unreadTransactions),
             onClick = onTransactionsClick,
             modifier = Modifier.weight(1f),
         )
         TerminalEntryCard(
             label = stringResource(R.string.terminal_card_promo),
             count = counters.unreadPromoCodes,
-            hint = stringResource(R.string.terminal_card_promo_hint),
+            hint = terminalHint(counters.unreadPromoCodes),
             onClick = onPromoCodesClick,
             modifier = Modifier.weight(1f),
         )
     }
 }
+
+@Composable
+private fun terminalHint(count: Int): String = stringResource(
+    if (count > 0) R.string.terminal_card_transactions_hint
+    else R.string.terminal_card_promo_hint
+)
 
 @Composable
 private fun TerminalEntryCard(

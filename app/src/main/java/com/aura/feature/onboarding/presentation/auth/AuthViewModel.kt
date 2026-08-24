@@ -135,6 +135,7 @@ private fun AuthFailure.toToast(): AuthToast? = when (this) {
     AuthFailure.EMAIL_REQUIRED -> AuthToast.EMAIL_REQUIRED
     AuthFailure.EMAIL_INVALID -> AuthToast.EMAIL_INVALID
     AuthFailure.PASSWORD_TOO_SHORT -> AuthToast.PASSWORD_TOO_SHORT
+    AuthFailure.PASSWORD_TOO_LONG -> AuthToast.PASSWORD_TOO_LONG
     AuthFailure.EMAIL_ALREADY_REGISTERED -> AuthToast.ACCOUNT_EXISTS
     AuthFailure.ACCOUNT_NOT_FOUND -> AuthToast.NO_ACCOUNT
     AuthFailure.WRONG_PASSWORD -> AuthToast.WRONG_CREDENTIALS
@@ -151,6 +152,7 @@ private fun AuthFailure.toField(): AuthField? = when (this) {
     -> AuthField.EMAIL
 
     AuthFailure.PASSWORD_TOO_SHORT,
+    AuthFailure.PASSWORD_TOO_LONG,
     AuthFailure.WRONG_PASSWORD,
     -> AuthField.PASSWORD
 

@@ -4,6 +4,7 @@ import com.aura.core.common.ApplicationScope
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.network.domain.model.ConnectionGrade
 import com.aura.feature.network.domain.model.ConnectionScoring
+import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.model.SpeedTestFailure
 import com.aura.feature.network.domain.model.SpeedTestResult
 import com.aura.feature.network.domain.model.SpeedTestState
@@ -59,7 +60,7 @@ class SpeedTestEngine @Inject constructor(
 
             val result = measure()
             _state.value = SpeedTestState.Done(result)
-            pingHistory.record(result)
+            pingHistory.record(result, PingSource.DIAGNOSTIC)
         }
     }
 

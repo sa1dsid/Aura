@@ -3,6 +3,7 @@ package com.aura.feature.network.domain.repository
 import com.aura.feature.network.domain.model.ConnectionDetails
 import com.aura.feature.network.domain.model.NetworkMetrics
 import com.aura.feature.network.domain.model.PingRecord
+import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.model.SpeedTestResult
 import kotlinx.coroutines.flow.Flow
 
@@ -11,13 +12,17 @@ interface NetworkRepository {
 
     fun observeMetrics(): Flow<NetworkMetrics>
 
+    fun observeLastTestedAt(): Flow<Long?>
+
     suspend fun refresh()
 }
 
 interface PingHistoryRepository {
     fun observeHistory(): Flow<List<PingRecord>>
 
-    suspend fun recordProbe()
+    suspend fun refresh()
 
-    suspend fun record(result: SpeedTestResult)
+    suspend fun recordProbe(source: PingSource)
+
+    suspend fun record(result: SpeedTestResult, source: PingSource)
 }

@@ -52,3 +52,9 @@ class RefreshBatteryOptimizationUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.refreshBatteryOptimization()
 }
+
+class MarkBonusTeaserSeenUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.markBonusTeaserSeen()
+}

@@ -40,6 +40,8 @@ interface HomeRemoteDataSource {
     suspend fun updateLocation(vpn: Boolean): String?
 
     suspend fun mesh(): MeshDto
+
+    suspend fun markBonusTeaserSeen()
 }
 
 @Singleton
@@ -97,4 +99,8 @@ class ApiHomeRemoteDataSource @Inject constructor(
         api.updateLocation(LocationUpdateDto(vpn = vpn)).city
 
     override suspend fun mesh(): MeshDto = api.mesh()
+
+    override suspend fun markBonusTeaserSeen() {
+        api.markBonusTeaserSeen()
+    }
 }

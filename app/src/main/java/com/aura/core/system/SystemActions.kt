@@ -2,8 +2,12 @@ package com.aura.core.system
 
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.PowerManager
 import android.provider.Settings
 
 fun Context.openUrl(url: String): Boolean {
@@ -19,6 +23,37 @@ fun Context.openSocialLink(appUrl: String?, webUrl: String) {
 fun Context.openVpnSettings() {
     val opened = startSafely(Intent(Settings.ACTION_VPN_SETTINGS))
     if (!opened) startSafely(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+}
+
+fun Context.isBatteryOptimizationIgnored(): Boolean {
+    val power = getSystemService(PowerManager::class.java) ?: return false
+    return power.isIgnoringBatteryOptimizations(packageName)
+}
+
+fun Context.requestIgnoreBatteryOptimization(): Boolean {
+    val direct = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+        .setData(Uri.parse("package:$packageName"))
+
+    if (startSafely(direct)) return true
+
+    return startSafely(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+}
+
+fun Context.openPlayStore(packageName: String) {
+    if (openUrl("market://details?id=$packageName")) return
+    openUrl("https://play.google.com/store/apps/details?id=$packageName")
+}
+
+fun Context.isPackageInstalled(packageName: String): Boolean = try {
+    packageManager.getPackageInfo(packageName, 0)
+    true
+} catch (notFound: PackageManager.NameNotFoundException) {
+    false
+}
+
+fun Context.copyToClipboard(label: String, text: String) {
+    val clipboard = getSystemService(ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
 }
 
 fun Context.shareText(text: String) {

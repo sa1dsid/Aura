@@ -28,6 +28,8 @@ sealed interface HomeEvent {
     data object TestInterrupted : HomeEvent
 
     data object CooldownResumed : HomeEvent
+
+    data object BatteryOptimizationDisabled : HomeEvent
 }
 
 @Immutable

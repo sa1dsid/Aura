@@ -16,6 +16,8 @@ interface HomeRepository {
     suspend fun refreshBatteryOptimization()
 
     suspend fun sendHeartbeat()
+
+    suspend fun markBonusTeaserSeen()
 }
 
 interface MeshRepository {

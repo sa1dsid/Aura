@@ -107,6 +107,13 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun markBonusTeaserSeen() {
+        withContext(ioDispatcher) {
+            runCatching { remote.markBonusTeaserSeen() }
+        }
+        refresh()
+    }
+
     private suspend fun update(request: suspend () -> com.aura.core.api.dto.BatteryOptimizationDto) {
         withContext(ioDispatcher) {
             val state = try {

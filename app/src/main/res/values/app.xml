@@ -216,4 +216,8 @@
          не дошёл. В поставке ключа нет, toast_test_failed относится к диагностике. -->
     <string name="toast_test_unavailable">Test unavailable · try again</string>
 
+    <!-- ДЛИННАЯ: зелёный тост по ТЗ Home п.12 после того, как пользователь снял
+         оптимизацию батареи. В поставке заказчика ключа нет. -->
+    <string name="toast_battery_optimization_off">Battery optimization off · background tests will run</string>
+
 </resources>

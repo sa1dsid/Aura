@@ -8,6 +8,7 @@ import com.aura.core.api.dto.PasswordResetRequestDto
 import com.aura.core.api.dto.TokenResponseDto
 import com.aura.core.api.dto.UserDto
 import com.aura.core.auth.TokenStore
+import com.aura.core.config.AppConfigRepository
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
 import com.aura.feature.onboarding.data.remote.dto.BootConfigDto
@@ -46,10 +47,24 @@ interface OnboardingRemoteDataSource {
 class ApiOnboardingRemoteDataSource @Inject constructor(
     private val api: AuraApi,
     private val tokenStore: TokenStore,
+    private val appConfigRepository: AppConfigRepository,
 ) : OnboardingRemoteDataSource {
 
-    override suspend fun bootstrap(): BootConfigDto =
-        BootConfigDto(nodeCount = null, hotCities = emptyList())
+    override suspend fun bootstrap(): BootConfigDto {
+        appConfigRepository.refresh()
+        val mesh = try {
+            api.mesh()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            null
+        }
+
+        return BootConfigDto(
+            nodeCount = mesh?.nodesOnline?.takeIf { it > 0 },
+            hotCities = mesh?.glowingCities.orEmpty(),
+        )
+    }
 
     override suspend fun signIn(email: String, password: String): AuthSessionDto =
         api.login(EmailCredentialsDto(email = email, password = password)).toSession()

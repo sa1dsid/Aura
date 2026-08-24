@@ -2,6 +2,7 @@ package com.aura.feature.account.data.remote
 
 import com.aura.core.api.AuraApi
 import com.aura.core.api.dto.PreferenceUpdateDto
+import com.aura.core.config.AppConfigRepository
 import com.aura.feature.account.data.remote.dto.AccountSettingsDto
 import com.aura.feature.account.data.remote.dto.LegalLinksDto
 import javax.inject.Inject
@@ -20,6 +21,7 @@ interface AccountRemoteDataSource {
 @Singleton
 class ApiAccountRemoteDataSource @Inject constructor(
     private val api: AuraApi,
+    private val appConfigRepository: AppConfigRepository,
 ) : AccountRemoteDataSource {
 
     override suspend fun settings(accountId: String): AccountSettingsDto =
@@ -30,7 +32,8 @@ class ApiAccountRemoteDataSource @Inject constructor(
     }
 
     override suspend fun legalLinks(): LegalLinksDto {
-        val config = api.publicConfig()
+        appConfigRepository.refresh()
+        val config = appConfigRepository.config.value
         return LegalLinksDto(termsUrl = config.termsUrl, privacyUrl = config.privacyUrl)
     }
 

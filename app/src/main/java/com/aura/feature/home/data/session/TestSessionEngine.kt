@@ -84,6 +84,8 @@ class TestSessionEngine @Inject constructor(
     private var isStarting = false
     private var isFinishing = false
     private var heartbeat: Job? = null
+    private var release: Job? = null
+    private var interruptEpoch = 0L
 
     init {
         scope.launch { releasePendingSession() }
@@ -133,16 +135,21 @@ class TestSessionEngine @Inject constructor(
     }
 
     fun start() {
+        start(retryOnStuck = true)
+    }
+
+    private fun start(retryOnStuck: Boolean) {
         scope.launch {
-            val allowed = mutex.withLock {
+            release?.join()
+
+            val epoch = mutex.withLock {
                 if (isStarting || _state.value !is TestSessionState.Ready) {
-                    false
+                    null
                 } else {
                     isStarting = true
-                    true
+                    interruptEpoch
                 }
-            }
-            if (!allowed) return@launch
+            } ?: return@launch
 
             val status = networkMonitor.current()
             val started = try {
@@ -154,13 +161,14 @@ class TestSessionEngine @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
-                val retried = error.toTapRejection() == TestStartRejection.SessionStuck &&
-                    releasePendingSession()
+                val rejection = error.toTapRejection()
+                val retry = retryOnStuck && rejection == TestStartRejection.SessionStuck
 
+                if (retry) releasePendingSession()
                 mutex.withLock { isStarting = false }
 
-                if (retried) start() else {
-                    _events.tryEmit(TestSessionEvent.Rejected(error.toTapRejection()))
+                if (retry) start(retryOnStuck = false) else {
+                    _events.tryEmit(TestSessionEvent.Rejected(rejection))
                 }
                 return@launch
             }
@@ -175,10 +183,22 @@ class TestSessionEngine @Inject constructor(
             tapSessionStore.saveRate(started.sparkWindowRate.orDefaultFor(status.type))
             tapSessionStore.savePendingSessionId(id)
 
-            mutex.withLock {
+            val abandoned = mutex.withLock {
                 isStarting = false
-                sessionId = id
-                runningEndsAt = System.currentTimeMillis() + TEST_DURATION.inWholeMilliseconds
+                if (interruptEpoch != epoch) {
+                    true
+                } else {
+                    sessionId = id
+                    runningEndsAt = System.currentTimeMillis() +
+                        TEST_DURATION.inWholeMilliseconds
+                    false
+                }
+            }
+
+            if (abandoned) {
+                releaseSession(id, networkLost = false)
+                tick()
+                return@launch
             }
 
             startHeartbeat(id)
@@ -224,31 +244,36 @@ class TestSessionEngine @Inject constructor(
     }
 
     fun interrupt(networkLost: Boolean = false) {
-        scope.launch {
+        release = scope.launch {
             val id = mutex.withLock {
-                if (runningEndsAt == null) return@launch
-                val current = sessionId ?: return@launch
-                sessionId = null
-                runningEndsAt = null
+                interruptEpoch++
+                val current = sessionId?.takeIf { runningEndsAt != null }
+                if (current != null) {
+                    sessionId = null
+                    runningEndsAt = null
+                }
                 current
-            }
+            } ?: return@launch
 
             heartbeat?.cancel()
-
-            val released = runCatching {
-                remote.finishTap(
-                    sessionId = id,
-                    interrupted = true,
-                    networkLost = networkLost,
-                    appBackgrounded = !networkLost,
-                )
-            }.isSuccess
-
-            if (released) tapSessionStore.clearPendingSessionId()
+            releaseSession(id, networkLost)
 
             _events.tryEmit(TestSessionEvent.Interrupted)
             tick()
         }
+    }
+
+    private suspend fun releaseSession(id: String, networkLost: Boolean) {
+        val released = runCatching {
+            remote.finishTap(
+                sessionId = id,
+                interrupted = true,
+                networkLost = networkLost,
+                appBackgrounded = !networkLost,
+            )
+        }.isSuccess
+
+        if (released) tapSessionStore.clearPendingSessionId()
     }
 
     fun onVpnChanged(active: Boolean) {
@@ -403,7 +428,7 @@ class TestSessionEngine @Inject constructor(
 
     private companion object {
         val TICK = 1.seconds
-        val HEARTBEAT_INTERVAL = 10.seconds
+        val HEARTBEAT_INTERVAL = 5.seconds
         val HEARTBEAT_RETRY = 1.seconds
     }
 }

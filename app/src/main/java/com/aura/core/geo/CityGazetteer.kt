@@ -10,11 +10,10 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.IOException
 import java.text.Normalizer
-import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val ASSET_NAME = "cities.gz"
+private const val ASSET_NAME = "cities.txt"
 
 private const val SECTION_SEPARATOR = '\u001E'
 
@@ -76,7 +75,7 @@ class CityGazetteer @Inject constructor(
 
     private fun lookup(keys: Set<String>): Map<String, City> = try {
         context.assets.open(ASSET_NAME).use { raw ->
-            GZIPInputStream(raw, BUFFER_SIZE).bufferedReader().use { reader ->
+            raw.bufferedReader().buffered(BUFFER_SIZE).use { reader ->
                 reader.scan(keys)
             }
         }

@@ -35,7 +35,7 @@ fun DashboardDto.toDomain(
     ),
     nodeStatus = NodeStatus(
         currentTier = node.tier.toNodeTier() ?: NodeTier.IDLE_NODE,
-        referralRate = node.ionReferralPercentStage2.toDouble(),
+        referralRate = node.rateMultiplierPercent / PERCENT_BASE.toDouble(),
         progressToNext = node.progressCurrent.toLong(),
         progressTarget = node.progressTarget?.toLong(),
         nextTier = (node.tier.toNodeTier() ?: NodeTier.IDLE_NODE).next(),

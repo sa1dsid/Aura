@@ -49,13 +49,17 @@ class NetworkRepositoryImpl @Inject constructor(
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {
-            try {
-                remote.syncState()
-                snapshot.value = remote.summary()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-            }
+            load { remote.syncState() }
+            load { remote.summary() }
+        }
+    }
+
+    private suspend fun load(request: suspend () -> NetworkSnapshotDto) {
+        try {
+            snapshot.value = request()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
         }
     }
 }

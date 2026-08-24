@@ -30,6 +30,7 @@ object ApiModule {
         ignoreUnknownKeys = true
         explicitNulls = false
         coerceInputValues = true
+        encodeDefaults = true
     }
 
     @Provides

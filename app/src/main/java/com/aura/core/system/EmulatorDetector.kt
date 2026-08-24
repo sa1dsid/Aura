@@ -1,13 +1,16 @@
 package com.aura.core.system
 
 import android.os.Build
+import com.aura.BuildConfig
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class EmulatorDetector @Inject constructor() {
 
-    val isEmulator: Boolean by lazy(LazyThreadSafetyMode.PUBLICATION) { detect() }
+    val isEmulator: Boolean by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        !BuildConfig.ALLOW_EMULATOR && detect()
+    }
 
     private fun detect(): Boolean {
         val fingerprint = Build.FINGERPRINT.orEmpty()

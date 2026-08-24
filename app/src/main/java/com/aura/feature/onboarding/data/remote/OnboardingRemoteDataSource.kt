@@ -78,7 +78,7 @@ class ApiOnboardingRemoteDataSource @Inject constructor(
     override suspend fun restore(): AuthSessionDto {
         val user = api.currentUser()
         return AuthSessionDto(
-            account = user.toAccount(inviteLink = personalUrl()),
+            account = user.toAccount(inviteLink = null),
             accountCreated = false,
             invitePending = user.inviteDecision == INVITE_DECISION_PENDING,
         )

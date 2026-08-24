@@ -13,8 +13,11 @@ import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val UNAUTHORIZED = 401
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -35,9 +38,12 @@ class AuthRepositoryImpl @Inject constructor(
             if (session.invitePending) StartDestination.INVITE else StartDestination.HOME
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (error: Throwable) {
+        } catch (error: HttpException) {
+            if (error.code() != UNAUTHORIZED) return@withContext StartDestination.HOME
             tokenStore.clear()
             StartDestination.AUTH
+        } catch (error: Throwable) {
+            StartDestination.HOME
         }
     }
 

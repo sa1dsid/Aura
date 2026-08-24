@@ -10,7 +10,9 @@ import com.aura.feature.onboarding.domain.usecase.BootstrapUseCase
 import com.aura.feature.onboarding.domain.usecase.ResolveStartDestinationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,8 @@ import javax.inject.Inject
 private const val MIN_VISIBLE_MILLIS = 1_500L
 
 private const val CHAR_DELAY_MILLIS = 7L
+
+private const val BOOTSTRAP_TIMEOUT_MILLIS = 4_000L
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
@@ -39,8 +43,14 @@ class SplashViewModel @Inject constructor(
             val startedAt = System.currentTimeMillis()
             val typing = launch { typeOut() }
 
-            val config = bootstrap()
-            val destination = resolveStartDestination()
+            val loadedConfig = async {
+                withTimeoutOrNull(BOOTSTRAP_TIMEOUT_MILLIS) { bootstrap() }
+            }
+            val resolvedDestination = async { resolveStartDestination() }
+
+            val config = loadedConfig.await()
+                ?: BootConfig(BootConfig.DEFAULT_NODE_COUNT, emptyList())
+            val destination = resolvedDestination.await()
 
             if (config.nodeCount != BootConfig.DEFAULT_NODE_COUNT) {
                 val log = buildLog(config.nodeCount)

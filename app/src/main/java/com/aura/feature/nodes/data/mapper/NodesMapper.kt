@@ -30,7 +30,8 @@ fun NodesSnapshotDto.toDomain(): NodesState = NodesState(
         sparkPercent = tierSparkPercent,
         withdrawalPercent = tierWithdrawalPercent,
     ),
-    nextTier = nextTier?.toTier() ?: (tier.toTier() ?: ReferralTier.IDLE).next(),
+    nextTier = if (nextTier == null) (tier.toTier() ?: ReferralTier.IDLE).next()
+    else nextTier.toTier(),
     friendsToNextTier = friendsToNextTier,
     rewards = ReferralRewards(spark = earnedSpark, ion = earnedIon),
     friends = friends.map(FriendDto::toDomain),

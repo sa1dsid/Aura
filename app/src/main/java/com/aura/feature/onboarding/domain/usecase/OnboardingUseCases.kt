@@ -82,7 +82,7 @@ class ApplyInviteCodeUseCase @Inject constructor(
     private val inviteRepository: InviteRepository,
 ) {
     suspend operator fun invoke(accountId: String, code: String): Result<Unit> =
-        inviteRepository.applyCode(accountId, code.trim().uppercase())
+        inviteRepository.applyCode(accountId, code.filterNot(Char::isWhitespace).uppercase())
 }
 
 class SkipInviteUseCase @Inject constructor(

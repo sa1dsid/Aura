@@ -1,5 +1,7 @@
 package com.aura.core.api.dto
 
+import com.aura.core.api.serialization.DecimalAsLongSerializer
+import com.aura.core.api.serialization.DecimalAsStringSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -34,7 +36,9 @@ data class NodesDto(
 
 @Serializable
 data class ReferralEarningsDto(
+    @Serializable(DecimalAsStringSerializer::class)
     val spark: String = "0",
+    @Serializable(DecimalAsLongSerializer::class)
     val ion: Long = 0,
 )
 
@@ -43,7 +47,9 @@ data class NodeFriendDto(
     val id: Int,
     @SerialName("display_name") val displayName: String,
     val status: String,
+    @Serializable(DecimalAsStringSerializer::class)
     @SerialName("own_spark") val ownSpark: String = "0",
+    @Serializable(DecimalAsLongSerializer::class)
     @SerialName("own_ion") val ownIon: Long = 0,
     @SerialName("tap_count") val tapCount: Int = 0,
 )
@@ -60,6 +66,7 @@ data class TransactionDto(
     val id: Int,
     val kind: String,
     val currency: String,
+    @Serializable(DecimalAsStringSerializer::class)
     val amount: String,
     @SerialName("created_at") val createdAt: String,
 )

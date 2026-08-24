@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -39,6 +40,8 @@ import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.nodes.domain.model.SocialLink
 import com.aura.feature.nodes.domain.model.SocialNetwork
 import com.aura.feature.nodes.presentation.format.socialPressShadows
+
+private const val DISABLED_ALPHA = 0.4f
 
 private val RowShape = RoundedCornerShape(16.dp)
 
@@ -76,7 +79,12 @@ fun SocialSection(
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             socials.forEach { link ->
-                SocialRow(link = link, handle = handle, onClick = { onSocialClick(link) })
+                SocialRow(
+                    link = link,
+                    handle = handle,
+                    enabled = link.isOpenable,
+                    onClick = { onSocialClick(link) },
+                )
             }
         }
     }
@@ -86,6 +94,7 @@ fun SocialSection(
 private fun SocialRow(
     link: SocialLink,
     handle: String,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -108,6 +117,7 @@ private fun SocialRow(
         modifier = modifier
             .fillMaxWidth()
             .height(RowHeight)
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .pressScale(pressed = pressed.value)
             .then(rememberSocialGlow(colors, glowAlpha))
             .clip(RowShape)
@@ -116,6 +126,7 @@ private fun SocialRow(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
+                enabled = enabled,
                 onClick = onClick,
             )
             .padding(16.dp),

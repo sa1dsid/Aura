@@ -52,7 +52,9 @@ data class SocialLink(
     val network: SocialNetwork,
     val webUrl: String,
     val appUrl: String?,
-)
+) {
+    val isOpenable: Boolean get() = webUrl.isNotBlank() || !appUrl.isNullOrBlank()
+}
 
 @Immutable
 data class NodesState(

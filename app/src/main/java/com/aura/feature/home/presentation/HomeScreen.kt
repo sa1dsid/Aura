@@ -46,8 +46,10 @@ import com.aura.core.system.isBatteryOptimizationIgnored
 import com.aura.core.system.openVpnSettings
 import com.aura.core.system.requestIgnoreBatteryOptimization
 import com.aura.core.system.shareText
+import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
+import com.aura.feature.home.presentation.components.BatteryOptimizationDialog
 import com.aura.feature.home.presentation.components.BalanceCardsRow
 import com.aura.feature.home.presentation.components.ConnectionBadge
 import com.aura.feature.home.presentation.components.HomeTopBar
@@ -72,6 +74,7 @@ fun HomeRoute(
     val context = LocalContext.current
     val content = uiState as? HomeUiState.Content
     var batteryRequestPending by rememberSaveable { mutableStateOf(false) }
+    var batteryDialogVisible by rememberSaveable { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (batteryRequestPending) {
@@ -88,10 +91,10 @@ fun HomeRoute(
     LaunchedEffect(content?.home?.batteryOptimization?.shouldShow) {
         if (content?.home?.batteryOptimization?.shouldShow != true) return@LaunchedEffect
         if (context.isBatteryOptimizationIgnored()) {
-            viewModel.onBatteryOptimizationConfirmed()
+            viewModel.onBatteryOptimizationSatisfied()
             return@LaunchedEffect
         }
-        batteryRequestPending = context.requestIgnoreBatteryOptimization()
+        batteryDialogVisible = true
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -110,6 +113,19 @@ fun HomeRoute(
             )
         }
     }
+
+    BatteryOptimizationDialog(
+        visible = batteryDialogVisible,
+        onDismiss = {
+            batteryDialogVisible = false
+            viewModel.onBatteryOptimizationDeclined()
+        },
+        onAllowClick = {
+            batteryDialogVisible = false
+            batteryRequestPending = context.requestIgnoreBatteryOptimization()
+            if (!batteryRequestPending) viewModel.onBatteryOptimizationDeclined()
+        },
+    )
 
     HomeScreen(
         uiState = uiState,
@@ -261,14 +277,16 @@ private fun HomeContent(
                     onClick = actions.onMainButtonClick,
                 )
 
-                Spacer(Modifier.height(18.dp))
+                if (home.session is TestSessionState.Running) {
+                    Spacer(Modifier.height(18.dp))
 
-                Text(
-                    text = stringResource(R.string.timer_stay_hint),
-                    style = AuraTheme.typography.caption,
-                    color = colors.textSecondary,
-                    textAlign = TextAlign.Center,
-                )
+                    Text(
+                        text = stringResource(R.string.timer_stay_hint),
+                        style = AuraTheme.typography.caption,
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))

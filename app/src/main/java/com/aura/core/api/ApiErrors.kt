@@ -24,11 +24,18 @@ private const val CONFLICT = 409
 
 private const val UNPROCESSABLE = 422
 
+private const val TOO_LONG = "too_long"
+
 private const val SERVICE_UNAVAILABLE = 503
 
 private val errorJson = Json { ignoreUnknownKeys = true }
 
-private class ApiError(val code: Int, val detail: String?, val fields: List<String>)
+private class ApiError(
+    val code: Int,
+    val detail: String?,
+    val fields: List<String>,
+    val types: List<String>,
+)
 
 private fun Throwable.apiError(): ApiError? {
     val http = this as? HttpException ?: return null
@@ -47,7 +54,13 @@ private fun Throwable.apiError(): ApiError? {
         }
         .orEmpty()
 
-    return ApiError(code = http.code(), detail = text, fields = fields)
+    val types = (detail as? JsonArray)
+        ?.mapNotNull { entry ->
+            runCatching { entry.jsonObject["type"]?.jsonPrimitive?.content }.getOrNull()
+        }
+        .orEmpty()
+
+    return ApiError(code = http.code(), detail = text, fields = fields, types = types)
 }
 
 fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
@@ -64,8 +77,9 @@ fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
 
             CONFLICT -> AuthFailure.EMAIL_ALREADY_REGISTERED
             UNPROCESSABLE -> when {
-                "password" in error.fields -> AuthFailure.PASSWORD_TOO_SHORT
-                else -> AuthFailure.EMAIL_INVALID
+                "password" !in error.fields -> AuthFailure.EMAIL_INVALID
+                error.types.any { it.contains(TOO_LONG) } -> AuthFailure.PASSWORD_TOO_LONG
+                else -> AuthFailure.PASSWORD_TOO_SHORT
             }
 
             SERVICE_UNAVAILABLE -> AuthFailure.GOOGLE_UNAVAILABLE

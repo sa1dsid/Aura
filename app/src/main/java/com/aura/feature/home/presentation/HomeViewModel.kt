@@ -6,6 +6,7 @@ import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.session.TestSessionEngine
 import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
+import com.aura.feature.home.domain.model.testStartRejection
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
@@ -105,7 +106,17 @@ class HomeViewModel @Inject constructor(
     fun onMainButtonClick() {
         val state = uiState.value
         if (state !is HomeUiState.Content) return
-        if (state.home.session !is TestSessionState.Ready) return
+        if (state.home.session is TestSessionState.Running) return
+
+        val rejection = testStartRejection(
+            session = state.home.session,
+            isVpnActive = state.home.connection.isVpnActive,
+        )
+
+        if (rejection != null) {
+            eventChannel.trySend(HomeEvent.TestRejected(rejection))
+            return
+        }
 
         sessionEngine.start()
     }
@@ -119,6 +130,10 @@ class HomeViewModel @Inject constructor(
             confirmBatteryOptimizationDisabled()
             announce(HomeEvent.BatteryOptimizationDisabled)
         }
+    }
+
+    fun onBatteryOptimizationSatisfied() {
+        viewModelScope.launch { confirmBatteryOptimizationDisabled() }
     }
 
     fun onBonusTeaserOpened() {

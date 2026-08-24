@@ -70,7 +70,7 @@ fun WelcomeBonusRoute(
 
 @Composable
 fun WelcomeBonusSheet(
-    bonusIon: Int,
+    bonusIon: Long,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -224,7 +224,7 @@ private fun CloseButton(
 
 @Composable
 private fun BonusBadge(
-    bonusIon: Int,
+    bonusIon: Long,
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors

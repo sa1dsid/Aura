@@ -113,18 +113,10 @@ class ApiOnboardingRemoteDataSource @Inject constructor(
         tokenStore.save(token = accessToken, expiresInSeconds = expiresIn)
 
         return AuthSessionDto(
-            account = user.toAccount(inviteLink = personalUrl()),
+            account = user.toAccount(inviteLink = null),
             accountCreated = isNewAccount,
             invitePending = user.inviteDecision == INVITE_DECISION_PENDING,
         )
-    }
-
-    private suspend fun personalUrl(): String? = try {
-        api.inviteState().personalUrl
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (error: Throwable) {
-        null
     }
 
     private fun UserDto.toAccount(inviteLink: String?) = AccountDto(

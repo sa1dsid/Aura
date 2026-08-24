@@ -37,10 +37,10 @@ class TerminalViewModel @Inject constructor(
     }
 
     fun onTransactionsOpened() {
-        viewModelScope.launch { terminalRepository.openTransactions() }
+        terminalRepository.clearTransactionsCounter()
     }
 
     fun onPromoCodesOpened() {
-        viewModelScope.launch { terminalRepository.openPromoCodes() }
+        terminalRepository.clearPromoCodesCounter()
     }
 }

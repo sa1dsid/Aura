@@ -14,6 +14,10 @@ interface TerminalRepository {
 
     suspend fun refreshCounters()
 
+    fun clearTransactionsCounter()
+
+    fun clearPromoCodesCounter()
+
     suspend fun openTransactions()
 
     suspend fun openPromoCodes()

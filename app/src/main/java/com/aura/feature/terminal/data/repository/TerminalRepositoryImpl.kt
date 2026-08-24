@@ -53,9 +53,17 @@ class TerminalRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun clearTransactionsCounter() {
+        _counters.update { it.copy(unreadTransactions = 0) }
+    }
+
+    override fun clearPromoCodesCounter() {
+        _counters.update { it.copy(unreadPromoCodes = 0) }
+    }
+
     override suspend fun openTransactions() {
         withContext(ioDispatcher) {
-            _counters.update { it.copy(unreadTransactions = 0) }
+            clearTransactionsCounter()
 
             val loaded = try {
                 remote.transactions()
@@ -73,7 +81,7 @@ class TerminalRepositoryImpl @Inject constructor(
 
     override suspend fun openPromoCodes() {
         withContext(ioDispatcher) {
-            _counters.update { it.copy(unreadPromoCodes = 0) }
+            clearPromoCodesCounter()
 
             val loaded = try {
                 remote.promoCodes()

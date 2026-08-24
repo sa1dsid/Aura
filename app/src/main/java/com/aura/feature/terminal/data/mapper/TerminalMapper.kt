@@ -4,6 +4,7 @@ import com.aura.core.api.dto.PromoDto
 import com.aura.core.api.dto.TransactionDto
 import com.aura.core.common.parseIsoMillis
 import com.aura.feature.home.presentation.format.formatGrouped
+import kotlin.math.abs
 import com.aura.feature.promo.domain.model.PromoCode
 import com.aura.feature.promo.domain.model.PromoCodeKind
 import com.aura.feature.transactions.domain.model.TransactionEvent
@@ -14,8 +15,6 @@ private const val CURRENCY_SPARK = "SPARK"
 private const val FIELD_SOURCE = "source"
 
 private const val CAMPAIGN_VPN = "vpn"
-
-private const val WORD_SEPARATOR = '_'
 
 fun TransactionDto.toDomain(): TransactionEvent? {
     val timestamp = createdAt.parseIsoMillis() ?: return null
@@ -60,12 +59,16 @@ private fun TransactionDto.resolveKind(): TransactionKind = when {
     else -> TransactionKind.ION
 }
 
-private fun TransactionKind.label(): String = name
-    .split(WORD_SEPARATOR)
-    .joinToString(" ") { word -> word.lowercase().replaceFirstChar(Char::uppercaseChar) }
+private fun TransactionKind.label(): String = when (this) {
+    TransactionKind.ION -> "ION"
+    TransactionKind.SPARK -> "Spark"
+    TransactionKind.DATA_SHARE -> "Data Share"
+    TransactionKind.REFERRAL -> "Referral"
+    TransactionKind.EXCHANGE -> "Exchange"
+}
 
 private fun Double.formatAmount(currency: String): String {
     val sign = if (this >= 0) "+" else "-"
-    val magnitude = kotlin.math.abs(this).toLong()
+    val magnitude = abs(this).toLong()
     return "$sign${magnitude.formatGrouped()} ${currency.uppercase()}"
 }

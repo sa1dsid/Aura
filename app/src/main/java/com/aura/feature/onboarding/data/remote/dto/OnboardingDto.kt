@@ -18,7 +18,7 @@ data class AuthSessionDto(
 data class OnboardingFlagsDto(
     val inviteScreenPassed: Boolean,
     val bonusPopupShown: Boolean,
-    val reservedBonusIon: Int,
+    val reservedBonusIon: Long,
 )
 
 data class BootConfigDto(

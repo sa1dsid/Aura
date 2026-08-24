@@ -17,7 +17,7 @@ enum class InviteFailure {
 data class OnboardingFlags(
     val inviteScreenPassed: Boolean,
     val bonusPopupShown: Boolean,
-    val reservedBonusIon: Int,
+    val reservedBonusIon: Long,
 )
 
 const val INVITE_CODE_LENGTH = 8

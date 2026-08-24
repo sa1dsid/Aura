@@ -1,5 +1,7 @@
 package com.aura.core.api.dto
 
+import com.aura.core.api.serialization.DecimalAsLongSerializer
+import com.aura.core.api.serialization.DecimalAsStringSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -50,9 +52,13 @@ data class UserDto(
     @SerialName("gift_popup_seen") val giftPopupSeen: Boolean = false,
     @SerialName("bonus_teaser_seen") val bonusTeaserSeen: Boolean = false,
     @SerialName("push_enabled") val pushEnabled: Boolean = true,
-    @SerialName("bonus_reserved_ion") val bonusReservedIon: Int = 0,
-    @SerialName("accrued_ion") val accruedIon: Int = 0,
-    @SerialName("withdrawable_ion") val withdrawableIon: Int = 0,
+    @Serializable(DecimalAsLongSerializer::class)
+    @SerialName("bonus_reserved_ion") val bonusReservedIon: Long = 0,
+    @Serializable(DecimalAsLongSerializer::class)
+    @SerialName("accrued_ion") val accruedIon: Long = 0,
+    @Serializable(DecimalAsLongSerializer::class)
+    @SerialName("withdrawable_ion") val withdrawableIon: Long = 0,
+    @Serializable(DecimalAsStringSerializer::class)
     @SerialName("spark_balance") val sparkBalance: String = "0",
     @SerialName("tap_count") val tapCount: Int = 0,
     val country: String? = null,

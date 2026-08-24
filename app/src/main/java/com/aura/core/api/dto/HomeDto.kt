@@ -1,13 +1,19 @@
 package com.aura.core.api.dto
 
+import com.aura.core.api.serialization.DecimalAsLongSerializer
+import com.aura.core.api.serialization.DecimalAsStringSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class DashboardDto(
+    @Serializable(DecimalAsLongSerializer::class)
     @SerialName("accrued_ion") val accruedIon: Long = 0,
+    @Serializable(DecimalAsLongSerializer::class)
     @SerialName("available_to_withdraw_ion") val availableToWithdrawIon: Long = 0,
+    @Serializable(DecimalAsLongSerializer::class)
     @SerialName("reserved_bonus_ion") val reservedBonusIon: Long = 0,
+    @Serializable(DecimalAsStringSerializer::class)
     @SerialName("spark_balance") val sparkBalance: String = "0",
     @SerialName("spark_coupon_campaign") val sparkCoupon: SparkCouponDto = SparkCouponDto(),
     @SerialName("tap_count") val tapCount: Int = 0,
@@ -78,7 +84,9 @@ data class TapStateDto(
     @SerialName("session_id") val sessionId: String? = null,
     val status: String,
     @SerialName("tap_count") val tapCount: Int = 0,
+    @Serializable(DecimalAsLongSerializer::class)
     @SerialName("accrued_ion") val accruedIon: Long = 0,
+    @Serializable(DecimalAsStringSerializer::class)
     @SerialName("spark_balance") val sparkBalance: String = "0",
     @SerialName("cooldown_available_at") val cooldownAvailableAt: String? = null,
     @SerialName("spark_window_rate") val sparkWindowRate: Int = 0,
@@ -100,6 +108,7 @@ data class EarningStateUpdateDto(
 data class EarningStateDto(
     val paused: Boolean = false,
     @SerialName("cooldown_available_at") val cooldownAvailableAt: String? = null,
+    @Serializable(DecimalAsStringSerializer::class)
     @SerialName("spark_balance") val sparkBalance: String = "0",
 )
 

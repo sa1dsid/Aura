@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val FALLBACK_BONUS_ION = 3_000
+private const val FALLBACK_BONUS_ION = 3_000L
 
 @HiltViewModel
 class WelcomeBonusViewModel @Inject constructor(
@@ -23,7 +23,7 @@ class WelcomeBonusViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _bonusIon = MutableStateFlow(FALLBACK_BONUS_ION)
-    val bonusIon: StateFlow<Int> = _bonusIon.asStateFlow()
+    val bonusIon: StateFlow<Long> = _bonusIon.asStateFlow()
 
     private val dismissChannel = Channel<Unit>(Channel.CONFLATED)
     val dismissed: Flow<Unit> = dismissChannel.receiveAsFlow()

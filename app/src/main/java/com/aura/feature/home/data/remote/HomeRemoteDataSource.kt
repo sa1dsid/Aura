@@ -20,6 +20,8 @@ interface HomeRemoteDataSource {
 
     suspend fun startTap(networkType: String, vpn: Boolean, emulator: Boolean): TapStateDto
 
+    suspend fun tapHeartbeat(sessionId: String): TapStateDto
+
     suspend fun finishTap(
         sessionId: String,
         interrupted: Boolean,
@@ -67,6 +69,9 @@ class ApiHomeRemoteDataSource @Inject constructor(
             )
         )
     }
+
+    override suspend fun tapHeartbeat(sessionId: String): TapStateDto =
+        api.tapHeartbeat(sessionId)
 
     override suspend fun finishTap(
         sessionId: String,

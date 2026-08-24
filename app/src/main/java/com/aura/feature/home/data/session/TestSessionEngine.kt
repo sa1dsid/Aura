@@ -20,6 +20,7 @@ import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.repository.PingHistoryRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
@@ -49,6 +51,8 @@ private const val REWARD_ION = 20
 private const val EVENT_BUFFER = 8
 
 private const val MILLIS_IN_SECOND = 1_000.0
+
+private const val STATUS_RUNNING = "running"
 
 @Singleton
 class TestSessionEngine @Inject constructor(
@@ -79,6 +83,7 @@ class TestSessionEngine @Inject constructor(
     private var sparkSyncedAt = 0L
     private var isStarting = false
     private var isFinishing = false
+    private var heartbeat: Job? = null
 
     init {
         scope.launch { releasePendingSession() }
@@ -94,14 +99,21 @@ class TestSessionEngine @Inject constructor(
     private suspend fun releasePendingSession(): Boolean {
         val pending = tapSessionStore.pendingSessionId() ?: return false
 
-        val released = runCatching {
+        val released = try {
             remote.finishTap(
                 sessionId = pending,
                 interrupted = true,
                 networkLost = false,
                 appBackgrounded = true,
             )
-        }.isSuccess
+            true
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: HttpException) {
+            true
+        } catch (error: Throwable) {
+            false
+        }
 
         if (released) tapSessionStore.clearPendingSessionId()
         return released
@@ -169,8 +181,46 @@ class TestSessionEngine @Inject constructor(
                 runningEndsAt = System.currentTimeMillis() + TEST_DURATION.inWholeMilliseconds
             }
 
+            startHeartbeat(id)
             tick()
         }
+    }
+
+    private fun startHeartbeat(sessionId: String) {
+        heartbeat?.cancel()
+        heartbeat = scope.launch {
+            while (isActive) {
+                val alive = try {
+                    remote.tapHeartbeat(sessionId).status == STATUS_RUNNING
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (error: Throwable) {
+                    delay(HEARTBEAT_RETRY)
+                    continue
+                }
+
+                if (!alive) {
+                    dropSession(sessionId)
+                    return@launch
+                }
+
+                delay(HEARTBEAT_INTERVAL)
+            }
+        }
+    }
+
+    private suspend fun dropSession(lostSessionId: String) {
+        val dropped = mutex.withLock {
+            if (sessionId != lostSessionId) return
+            sessionId = null
+            runningEndsAt = null
+            true
+        }
+
+        if (dropped) tapSessionStore.clearPendingSessionId()
+
+        _events.tryEmit(TestSessionEvent.Interrupted)
+        tick()
     }
 
     fun interrupt(networkLost: Boolean = false) {
@@ -182,6 +232,8 @@ class TestSessionEngine @Inject constructor(
                 runningEndsAt = null
                 current
             }
+
+            heartbeat?.cancel()
 
             val released = runCatching {
                 remote.finishTap(
@@ -250,6 +302,7 @@ class TestSessionEngine @Inject constructor(
 
             runningEndsAt = null
             isFinishing = true
+            heartbeat?.cancel()
             sessionId.also { sessionId = null }
         }
 
@@ -350,5 +403,7 @@ class TestSessionEngine @Inject constructor(
 
     private companion object {
         val TICK = 1.seconds
+        val HEARTBEAT_INTERVAL = 10.seconds
+        val HEARTBEAT_RETRY = 1.seconds
     }
 }

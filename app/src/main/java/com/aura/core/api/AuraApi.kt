@@ -96,6 +96,9 @@ interface AuraApi {
     @POST("api/v1/home/tap/integrity-challenge")
     suspend fun issueIntegrityChallenge(): IntegrityChallengeDto
 
+    @POST("api/v1/home/tap/{sessionId}/heartbeat")
+    suspend fun tapHeartbeat(@Path("sessionId") sessionId: String): TapStateDto
+
     @POST("api/v1/home/tap/{sessionId}/finish")
     suspend fun finishTap(
         @Path("sessionId") sessionId: String,

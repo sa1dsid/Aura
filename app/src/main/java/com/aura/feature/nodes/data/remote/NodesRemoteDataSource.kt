@@ -5,6 +5,7 @@ import com.aura.core.config.AppConfigRepository
 import com.aura.feature.nodes.data.remote.dto.FriendDto
 import com.aura.feature.nodes.data.remote.dto.NodesSnapshotDto
 import com.aura.feature.nodes.data.remote.dto.SocialLinkDto
+import com.aura.feature.nodes.domain.model.SocialNetwork
 import com.aura.feature.onboarding.data.local.SessionStore
 import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
@@ -34,9 +35,17 @@ class ApiNodesRemoteDataSource @Inject constructor(
         }
 
         val account = sessionStore.account.value
-        val socials = appConfigRepository.config.value.socialLinks
+        val configuredUrls = appConfigRepository.config.value.socialLinks
             .filter { it.url.isNotBlank() }
-            .map { SocialLinkDto(network = it.network.name, webUrl = it.url, appUrl = null) }
+            .associate { it.network.name to it.url }
+
+        val socials = SocialNetwork.entries.map { network ->
+            SocialLinkDto(
+                network = network.name,
+                webUrl = configuredUrls[network.name].orEmpty(),
+                appUrl = null,
+            )
+        }
 
         return NodesSnapshotDto(
             handle = account?.handle.orEmpty(),

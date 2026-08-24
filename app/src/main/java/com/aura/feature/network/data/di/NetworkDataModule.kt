@@ -1,6 +1,8 @@
 package com.aura.feature.network.data.di
 
+import com.aura.feature.network.data.diagnostics.HttpThroughputProbe
 import com.aura.feature.network.data.diagnostics.SocketPingProbe
+import com.aura.feature.network.data.diagnostics.ThroughputProbe
 import com.aura.feature.network.data.diagnostics.PingProbe
 import com.aura.feature.network.data.remote.ApiNetworkRemoteDataSource
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
@@ -25,6 +27,10 @@ interface NetworkDataModule {
     @Binds
     @Singleton
     fun bindPingProbe(impl: SocketPingProbe): PingProbe
+
+    @Binds
+    @Singleton
+    fun bindThroughputProbe(impl: HttpThroughputProbe): ThroughputProbe
 
     @Binds
     @Singleton

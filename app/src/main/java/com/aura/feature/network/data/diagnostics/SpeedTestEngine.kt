@@ -10,7 +10,7 @@ import com.aura.feature.network.domain.model.SpeedTestResult
 import com.aura.feature.network.domain.model.SpeedTestState
 import com.aura.feature.network.domain.repository.PingHistoryRepository
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -21,12 +21,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
-import kotlin.random.Random
+
+private const val PING_ATTEMPTS = 12
+
+private const val PING_PHASE_SHARE = 0.15f
+
+private const val DOWNLOAD_PHASE_SHARE = 0.6f
+
+private const val UPLOAD_PHASE_SHARE = 0.25f
+
+private const val DECIMALS = 10.0
 
 @Singleton
 class SpeedTestEngine @Inject constructor(
     @param:ApplicationScope private val scope: CoroutineScope,
     private val networkMonitor: NetworkMonitor,
+    private val pingProbe: PingProbe,
+    private val throughputProbe: ThroughputProbe,
     private val pingHistory: PingHistoryRepository,
 ) {
 
@@ -35,6 +46,8 @@ class SpeedTestEngine @Inject constructor(
 
     private val _failures = MutableSharedFlow<SpeedTestFailure>(extraBufferCapacity = 1)
     val failures: SharedFlow<SpeedTestFailure> = _failures.asSharedFlow()
+
+    private var running: Job? = null
 
     fun start() {
         if (_state.value is SpeedTestState.Running) return
@@ -45,73 +58,68 @@ class SpeedTestEngine @Inject constructor(
             return
         }
 
-        scope.launch {
+        running = scope.launch {
             _state.value = SpeedTestState.Running(0f)
 
-            repeat(PROGRESS_STEPS) { step ->
-                delay(STEP_MILLIS)
-                if (!networkMonitor.current().isOnline) {
-                    _state.value = SpeedTestState.Idle
-                    _failures.tryEmit(SpeedTestFailure.INTERRUPTED)
-                    return@launch
-                }
-                _state.value = SpeedTestState.Running((step + 1).toFloat() / PROGRESS_STEPS)
+            val sample = pingProbe.sample(PING_ATTEMPTS)
+            val pingMs = sample.pingMs
+            if (pingMs == null) {
+                fail(SpeedTestFailure.INTERRUPTED)
+                return@launch
+            }
+            _state.value = SpeedTestState.Running(PING_PHASE_SHARE)
+
+            val download = throughputProbe.download { progress ->
+                _state.value = SpeedTestState.Running(
+                    PING_PHASE_SHARE + DOWNLOAD_PHASE_SHARE * progress
+                )
+            }
+            if (download == null) {
+                fail(SpeedTestFailure.INTERRUPTED)
+                return@launch
             }
 
-            val result = measure()
+            val upload = throughputProbe.upload { progress ->
+                _state.value = SpeedTestState.Running(
+                    PING_PHASE_SHARE + DOWNLOAD_PHASE_SHARE + UPLOAD_PHASE_SHARE * progress
+                )
+            }
+            if (upload == null) {
+                fail(SpeedTestFailure.INTERRUPTED)
+                return@launch
+            }
+
+            val result = SpeedTestResult(
+                downloadMbps = download.megabitsPerSecond.round(),
+                uploadMbps = upload.megabitsPerSecond.round(),
+                pingMs = pingMs,
+                jitterMs = sample.jitterMs ?: 0,
+                packetLossPercent = sample.packetLossPercent.round(),
+                grade = ConnectionScoring.gradeOf(
+                    pingMs = pingMs,
+                    jitterMs = sample.jitterMs ?: 0,
+                    packetLossPercent = sample.packetLossPercent,
+                    downloadMbps = download.megabitsPerSecond,
+                ),
+            )
+
             _state.value = SpeedTestState.Done(result)
             pingHistory.record(result, PingSource.DIAGNOSTIC)
         }
     }
 
-    private fun measure(): SpeedTestResult {
-        val random = Random(System.nanoTime())
-        val vpnPenalty = if (networkMonitor.current().isVpnActive) VPN_PING_PENALTY_MS else 0
+    fun cancel() {
+        running?.cancel()
+        running = null
+        _state.value = SpeedTestState.Idle
+    }
 
-        val downloadMbps = round(random.nextDouble(MIN_DOWNLOAD_MBPS, MAX_DOWNLOAD_MBPS))
-        val uploadMbps = round(downloadMbps * random.nextDouble(MIN_UPLOAD_SHARE, MAX_UPLOAD_SHARE))
-        val pingMs = random.nextInt(MIN_PING_MS, MAX_PING_MS) + vpnPenalty
-        val jitterMs = random.nextInt(MIN_JITTER_MS, MAX_JITTER_MS)
-        val packetLossPercent = round(random.nextDouble(MAX_PACKET_LOSS_PERCENT))
-
-        return SpeedTestResult(
-            downloadMbps = downloadMbps,
-            uploadMbps = uploadMbps,
-            pingMs = pingMs,
-            jitterMs = jitterMs,
-            packetLossPercent = packetLossPercent,
-            grade = grade(pingMs, jitterMs, packetLossPercent, downloadMbps),
+    private fun fail(failure: SpeedTestFailure) {
+        _state.value = SpeedTestState.Idle
+        _failures.tryEmit(
+            if (networkMonitor.current().isOnline) failure else SpeedTestFailure.NO_CONNECTION
         )
     }
 
-    private fun grade(
-        pingMs: Int,
-        jitterMs: Int,
-        packetLossPercent: Double,
-        downloadMbps: Double,
-    ): ConnectionGrade = ConnectionScoring.gradeOf(
-        pingMs = pingMs,
-        jitterMs = jitterMs,
-        packetLossPercent = packetLossPercent,
-        downloadMbps = downloadMbps,
-    )
-
-    private fun round(value: Double): Double = (value * DECIMALS).roundToInt() / DECIMALS
-
-    private companion object {
-        const val PROGRESS_STEPS = 40
-        const val STEP_MILLIS = 160L
-        const val DECIMALS = 10.0
-
-        const val MIN_DOWNLOAD_MBPS = 4.0
-        const val MAX_DOWNLOAD_MBPS = 120.0
-        const val MIN_UPLOAD_SHARE = 0.2
-        const val MAX_UPLOAD_SHARE = 0.6
-        const val MIN_PING_MS = 12
-        const val MAX_PING_MS = 70
-        const val MIN_JITTER_MS = 1
-        const val MAX_JITTER_MS = 28
-        const val MAX_PACKET_LOSS_PERCENT = 3.0
-        const val VPN_PING_PENALTY_MS = 24
-    }
+    private fun Double.round(): Double = (this * DECIMALS).roundToInt() / DECIMALS
 }

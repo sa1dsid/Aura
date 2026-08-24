@@ -323,6 +323,8 @@ private fun Context.rejectionText(rejection: TestStartRejection): String = when 
     TestStartRejection.DataShareDisabled -> getString(R.string.toast_datashare_off)
     TestStartRejection.VpnDetected -> getString(R.string.toast_vpn_block)
     TestStartRejection.UnsupportedDevice -> getString(R.string.toast_device_unsupported)
+    TestStartRejection.NoConnection -> getString(R.string.toast_no_connection)
+    TestStartRejection.SessionStuck,
     TestStartRejection.Unavailable -> getString(R.string.toast_test_unavailable)
     is TestStartRejection.CooldownNotFinished ->
         getString(R.string.toast_cooldown, rejection.remaining.formatHoursMinutes())

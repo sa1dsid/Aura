@@ -6,7 +6,7 @@ import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
 import com.aura.core.system.EmulatorDetector
-import com.aura.feature.home.data.local.SparkWindowStore
+import com.aura.feature.home.data.local.TapSessionStore
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
 import com.aura.feature.home.domain.model.COOLDOWN_DURATION
 import com.aura.feature.home.domain.model.SPARK_RATE_MOBILE
@@ -54,7 +54,7 @@ private const val MILLIS_IN_SECOND = 1_000.0
 class TestSessionEngine @Inject constructor(
     @param:ApplicationScope private val scope: CoroutineScope,
     private val remote: HomeRemoteDataSource,
-    private val sparkWindowStore: SparkWindowStore,
+    private val tapSessionStore: TapSessionStore,
     private val networkMonitor: NetworkMonitor,
     private val emulatorDetector: EmulatorDetector,
     private val pingHistory: PingHistoryRepository,
@@ -81,6 +81,8 @@ class TestSessionEngine @Inject constructor(
     private var isFinishing = false
 
     init {
+        scope.launch { releasePendingSession() }
+
         scope.launch {
             while (isActive) {
                 delay(TICK)
@@ -89,8 +91,24 @@ class TestSessionEngine @Inject constructor(
         }
     }
 
+    private suspend fun releasePendingSession(): Boolean {
+        val pending = tapSessionStore.pendingSessionId() ?: return false
+
+        val released = runCatching {
+            remote.finishTap(
+                sessionId = pending,
+                interrupted = true,
+                networkLost = false,
+                appBackgrounded = true,
+            )
+        }.isSuccess
+
+        if (released) tapSessionStore.clearPendingSessionId()
+        return released
+    }
+
     suspend fun syncFromDashboard(cooldownAvailableAt: String?, sparkBalance: String) {
-        val rate = sparkWindowStore.rate()
+        val rate = tapSessionStore.rate()
 
         mutex.withLock {
             if (runningEndsAt != null || isFinishing) return@withLock
@@ -124,8 +142,14 @@ class TestSessionEngine @Inject constructor(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: Throwable) {
+                val retried = error.toTapRejection() == TestStartRejection.SessionStuck &&
+                    releasePendingSession()
+
                 mutex.withLock { isStarting = false }
-                _events.tryEmit(TestSessionEvent.Rejected(error.toTapRejection()))
+
+                if (retried) start() else {
+                    _events.tryEmit(TestSessionEvent.Rejected(error.toTapRejection()))
+                }
                 return@launch
             }
 
@@ -136,7 +160,8 @@ class TestSessionEngine @Inject constructor(
                 return@launch
             }
 
-            sparkWindowStore.saveRate(started.sparkWindowRate.orDefaultFor(status.type))
+            tapSessionStore.saveRate(started.sparkWindowRate.orDefaultFor(status.type))
+            tapSessionStore.savePendingSessionId(id)
 
             mutex.withLock {
                 isStarting = false
@@ -158,14 +183,16 @@ class TestSessionEngine @Inject constructor(
                 current
             }
 
-            runCatching {
+            val released = runCatching {
                 remote.finishTap(
                     sessionId = id,
                     interrupted = true,
                     networkLost = networkLost,
                     appBackgrounded = !networkLost,
                 )
-            }
+            }.isSuccess
+
+            if (released) tapSessionStore.clearPendingSessionId()
 
             _events.tryEmit(TestSessionEvent.Interrupted)
             tick()
@@ -288,7 +315,7 @@ class TestSessionEngine @Inject constructor(
             return
         }
 
-        sparkWindowStore.saveRate(finished.sparkWindowRate)
+        tapSessionStore.saveRate(finished.sparkWindowRate)
 
         mutex.withLock {
             isFinishing = false

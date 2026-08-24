@@ -54,6 +54,8 @@ sealed interface TestStartRejection {
     data object DataShareDisabled : TestStartRejection
     data object VpnDetected : TestStartRejection
     data object UnsupportedDevice : TestStartRejection
+    data object SessionStuck : TestStartRejection
+    data object NoConnection : TestStartRejection
     data object Unavailable : TestStartRejection
     data class CooldownNotFinished(val remaining: Duration) : TestStartRejection
 }

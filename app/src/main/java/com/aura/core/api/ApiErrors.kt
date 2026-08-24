@@ -94,11 +94,15 @@ private const val DETAIL_UNSUPPORTED_DEVICE = "unsupported device"
 
 private const val DETAIL_COOLDOWN = "come back at"
 
+private const val DETAIL_ALREADY_RUNNING = "already running"
+
 fun Throwable.toTapRejection(): TestStartRejection {
-    val error = apiError() ?: return TestStartRejection.Unavailable
+    val error = apiError() ?: return TestStartRejection.NoConnection
     val detail = error.detail.orEmpty()
 
     return when {
+        detail.contains(DETAIL_ALREADY_RUNNING) -> TestStartRejection.SessionStuck
+
         detail.contains(DETAIL_VPN) -> TestStartRejection.VpnDetected
 
         detail.contains(DETAIL_UNSUPPORTED_DEVICE) -> TestStartRejection.UnsupportedDevice

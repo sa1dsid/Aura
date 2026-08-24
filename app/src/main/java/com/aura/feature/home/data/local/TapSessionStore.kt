@@ -19,24 +19,37 @@ private val Context.tapSessionDataStore: DataStore<Preferences> by preferencesDa
     name = "spark_window",
 )
 
+interface TapSessionStore {
+
+    suspend fun rate(): Int
+
+    suspend fun saveRate(rate: Int)
+
+    suspend fun pendingSessionId(): String?
+
+    suspend fun savePendingSessionId(sessionId: String)
+
+    suspend fun clearPendingSessionId()
+}
+
 @Singleton
-class TapSessionStore @Inject constructor(
+class DataStoreTapSessionStore @Inject constructor(
     @param:ApplicationContext private val context: Context,
-) {
+) : TapSessionStore {
 
-    suspend fun rate(): Int = read()[RATE] ?: 0
+    override suspend fun rate(): Int = read()[RATE] ?: 0
 
-    suspend fun saveRate(rate: Int) {
+    override suspend fun saveRate(rate: Int) {
         context.tapSessionDataStore.edit { stored -> stored[RATE] = rate }
     }
 
-    suspend fun pendingSessionId(): String? = read()[SESSION_ID]
+    override suspend fun pendingSessionId(): String? = read()[SESSION_ID]
 
-    suspend fun savePendingSessionId(sessionId: String) {
+    override suspend fun savePendingSessionId(sessionId: String) {
         context.tapSessionDataStore.edit { stored -> stored[SESSION_ID] = sessionId }
     }
 
-    suspend fun clearPendingSessionId() {
+    override suspend fun clearPendingSessionId() {
         context.tapSessionDataStore.edit { stored -> stored.remove(SESSION_ID) }
     }
 

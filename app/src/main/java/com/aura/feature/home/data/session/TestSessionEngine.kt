@@ -2,6 +2,7 @@ package com.aura.feature.home.data.session
 
 import com.aura.core.api.toTapRejection
 import com.aura.core.common.ApplicationScope
+import com.aura.core.common.TimeSource
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
@@ -33,6 +34,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicLong
 import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,6 +64,7 @@ class TestSessionEngine @Inject constructor(
     private val networkMonitor: NetworkMonitor,
     private val emulatorDetector: EmulatorDetector,
     private val pingHistory: PingHistoryRepository,
+    private val timeSource: TimeSource,
 ) {
 
     private val _state = MutableStateFlow<TestSessionState>(TestSessionState.Ready(REWARD_ION))
@@ -85,7 +88,7 @@ class TestSessionEngine @Inject constructor(
     private var isFinishing = false
     private var heartbeat: Job? = null
     private var release: Job? = null
-    private var interruptEpoch = 0L
+    private val interruptEpoch = AtomicLong()
 
     init {
         scope.launch { releasePendingSession() }
@@ -139,17 +142,20 @@ class TestSessionEngine @Inject constructor(
     }
 
     private fun start(retryOnStuck: Boolean) {
+        val epoch = interruptEpoch.get()
+
         scope.launch {
             release?.join()
 
-            val epoch = mutex.withLock {
+            val allowed = mutex.withLock {
                 if (isStarting || _state.value !is TestSessionState.Ready) {
-                    null
+                    false
                 } else {
                     isStarting = true
-                    interruptEpoch
+                    true
                 }
-            } ?: return@launch
+            }
+            if (!allowed) return@launch
 
             val status = networkMonitor.current()
             val started = try {
@@ -185,11 +191,11 @@ class TestSessionEngine @Inject constructor(
 
             val abandoned = mutex.withLock {
                 isStarting = false
-                if (interruptEpoch != epoch) {
+                if (interruptEpoch.get() != epoch) {
                     true
                 } else {
                     sessionId = id
-                    runningEndsAt = System.currentTimeMillis() +
+                    runningEndsAt = timeSource.nowMillis() +
                         TEST_DURATION.inWholeMilliseconds
                     false
                 }
@@ -244,9 +250,10 @@ class TestSessionEngine @Inject constructor(
     }
 
     fun interrupt(networkLost: Boolean = false) {
+        interruptEpoch.incrementAndGet()
+
         release = scope.launch {
             val id = mutex.withLock {
-                interruptEpoch++
                 val current = sessionId?.takeIf { runningEndsAt != null }
                 if (current != null) {
                     sessionId = null
@@ -314,7 +321,7 @@ class TestSessionEngine @Inject constructor(
     private suspend fun tick() {
         val completedSession = mutex.withLock {
             val runningUntil = runningEndsAt ?: return@withLock advanceIdle()
-            val left = (runningUntil - System.currentTimeMillis()).coerceAtLeast(0).milliseconds
+            val left = (runningUntil - timeSource.nowMillis()).coerceAtLeast(0).milliseconds
 
             if (left > Duration.ZERO) {
                 _state.value = TestSessionState.Running(
@@ -360,7 +367,7 @@ class TestSessionEngine @Inject constructor(
             return
         }
 
-        val now = System.currentTimeMillis()
+        val now = timeSource.nowMillis()
         val elapsedSeconds = (now - sparkSyncedAt).coerceAtLeast(0) / MILLIS_IN_SECOND
         sparkSyncedAt = now
 
@@ -398,7 +405,7 @@ class TestSessionEngine @Inject constructor(
         mutex.withLock {
             isFinishing = false
             cooldownEndsAt = finished.cooldownAvailableAt?.parseIsoMillis()
-                ?: System.currentTimeMillis() + COOLDOWN_DURATION.inWholeMilliseconds
+                ?: timeSource.nowMillis() + COOLDOWN_DURATION.inWholeMilliseconds
             pausedRemaining = if (isVpnPaused) cooldownEndsAt.remainingFromNow() else null
             applySpark(finished.sparkBalance, finished.sparkWindowRate)
         }
@@ -409,7 +416,7 @@ class TestSessionEngine @Inject constructor(
     }
 
     private fun applySpark(balance: String, rate: Int) {
-        sparkSyncedAt = System.currentTimeMillis()
+        sparkSyncedAt = timeSource.nowMillis()
         _spark.value = SparkWindow(
             balance = balance.toDoubleOrNull() ?: _spark.value.balance,
             ratePerWindow = rate,
@@ -418,7 +425,7 @@ class TestSessionEngine @Inject constructor(
     }
 
     private fun Long?.remainingFromNow(): Duration =
-        this?.minus(System.currentTimeMillis())?.coerceAtLeast(0)?.milliseconds ?: Duration.ZERO
+        this?.minus(timeSource.nowMillis())?.coerceAtLeast(0)?.milliseconds ?: Duration.ZERO
 
     private fun Int.orDefaultFor(type: NetworkType): Int =
         if (this > 0) this else if (type == NetworkType.WIFI) SPARK_RATE_WIFI else SPARK_RATE_MOBILE

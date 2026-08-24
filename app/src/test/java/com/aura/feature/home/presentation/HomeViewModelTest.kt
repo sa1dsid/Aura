@@ -8,13 +8,22 @@ import com.aura.feature.home.domain.model.MeshState
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.repository.HomeRepository
 import com.aura.feature.home.domain.repository.MeshRepository
-import com.aura.feature.home.domain.usecase.CreditTestRewardUseCase
+import com.aura.core.common.TimeSource
+import com.aura.core.system.EmulatorDetector
+import com.aura.feature.home.data.session.FakeHomeRemoteDataSource
+import com.aura.feature.home.data.session.FakeTapSessionStore
+import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
+import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
+import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
+import com.aura.feature.home.domain.usecase.RefreshBatteryOptimizationUseCase
 import com.aura.feature.home.domain.usecase.RefreshHomeUseCase
+import com.aura.feature.home.domain.usecase.SendHeartbeatUseCase
 import com.aura.feature.home.presentation.preview.HomePreviewData
 import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.network.domain.model.PingRecord
+import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.model.SpeedTestResult
 import com.aura.feature.network.domain.repository.PingHistoryRepository
 import kotlinx.coroutines.Dispatchers
@@ -67,7 +76,7 @@ class HomeViewModelTest {
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
-        engine.startTest(REWARD_ION)
+        engine.start()
 
         networkMonitor.set(NetworkStatus(isOnline = false, isVpnActive = false))
 
@@ -81,7 +90,7 @@ class HomeViewModelTest {
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
-        engine.startTest(REWARD_ION)
+        engine.start()
 
         viewModel.onScreenLeft()
 
@@ -95,7 +104,7 @@ class HomeViewModelTest {
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
-        engine.startTest(REWARD_ION)
+        engine.start()
         viewModel.onScreenLeft()
 
         viewModel.onScreenResumed()
@@ -104,16 +113,15 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `credits the reward when the session completes`() = runTest {
+    fun `reports the completed session`() = runTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
-        engine.startTest(REWARD_ION)
+        engine.start()
 
         advanceTimeBy(3.minutes + PAST_TICK)
 
-        assertEquals(REWARD_ION, homeRepository.creditedIon)
         assertEquals(listOf(HomeEvent.TestCompleted(REWARD_ION)), events)
     }
 
@@ -123,7 +131,7 @@ class HomeViewModelTest {
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
-        engine.startTest(REWARD_ION)
+        engine.start()
         advanceTimeBy(3.minutes + PAST_TICK)
 
         networkMonitor.set(NetworkStatus(isOnline = true, isVpnActive = true))
@@ -139,7 +147,15 @@ class HomeViewModelTest {
     }
 
     private fun TestScope.watchedEngine(): TestSessionEngine {
-        val engine = TestSessionEngine(backgroundScope, FakePingHistoryRepository())
+        val engine = TestSessionEngine(
+            scope = backgroundScope,
+            remote = FakeHomeRemoteDataSource(scheduler = testScheduler),
+            tapSessionStore = FakeTapSessionStore(),
+            networkMonitor = networkMonitor,
+            emulatorDetector = EmulatorDetector(),
+            pingHistory = FakePingHistoryRepository(),
+            timeSource = TimeSource { testScheduler.currentTime },
+        )
         backgroundScope.launch { engine.state.collect { } }
         return engine
     }
@@ -148,7 +164,12 @@ class HomeViewModelTest {
         observeHomeState = ObserveHomeStateUseCase(homeRepository),
         observeMeshState = ObserveMeshStateUseCase(meshRepository),
         refreshHome = RefreshHomeUseCase(homeRepository, meshRepository),
-        creditTestReward = CreditTestRewardUseCase(homeRepository),
+        sendHeartbeat = SendHeartbeatUseCase(homeRepository),
+        declineBatteryOptimization = DeclineBatteryOptimizationUseCase(homeRepository),
+        confirmBatteryOptimizationDisabled =
+            ConfirmBatteryOptimizationDisabledUseCase(homeRepository),
+        refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
+        markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
@@ -163,15 +184,20 @@ class HomeViewModelTest {
     }
 
     private class FakeHomeRepository : HomeRepository {
-        var creditedIon = 0
 
         override fun observeHome(): Flow<HomeState> = flowOf(HomePreviewData.content.home)
 
         override suspend fun refresh() = Unit
 
-        override suspend fun creditTestReward(amount: Int) {
-            creditedIon += amount
-        }
+        override suspend fun declineBatteryOptimization() = Unit
+
+        override suspend fun confirmBatteryOptimizationDisabled() = Unit
+
+        override suspend fun refreshBatteryOptimization() = Unit
+
+        override suspend fun sendHeartbeat() = Unit
+
+        override suspend fun markBonusTeaserSeen() = Unit
     }
 
     private class FakeMeshRepository : MeshRepository {
@@ -195,8 +221,10 @@ class HomeViewModelTest {
     private class FakePingHistoryRepository : PingHistoryRepository {
         override fun observeHistory(): Flow<List<PingRecord>> = flowOf(emptyList())
 
-        override suspend fun recordProbe() = Unit
+        override suspend fun refresh() = Unit
 
-        override suspend fun record(result: SpeedTestResult) = Unit
+        override suspend fun recordProbe(source: PingSource) = Unit
+
+        override suspend fun record(result: SpeedTestResult, source: PingSource) = Unit
     }
 }

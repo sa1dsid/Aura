@@ -1,5 +1,7 @@
 package com.aura.feature.home.data.di
 
+import com.aura.feature.home.data.local.DataStoreTapSessionStore
+import com.aura.feature.home.data.local.TapSessionStore
 import com.aura.feature.home.data.remote.ApiHomeRemoteDataSource
 import com.aura.feature.home.data.remote.ApiMeshRemoteDataSource
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
@@ -33,4 +35,8 @@ interface HomeDataModule {
     @Binds
     @Singleton
     fun bindHomeRepository(impl: HomeRepositoryImpl): HomeRepository
+
+    @Binds
+    @Singleton
+    fun bindTapSessionStore(impl: DataStoreTapSessionStore): TapSessionStore
 }

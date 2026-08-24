@@ -133,6 +133,7 @@ class MeshRepositoryImplTest {
                     MeshCityDto("london", "London", 51.51, -0.13, live = true),
                 ),
                 nodesOnline = 4210,
+                stale = false,
             )
         }
 

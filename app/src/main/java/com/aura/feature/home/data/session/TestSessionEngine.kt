@@ -34,6 +34,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicLong
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -145,7 +146,7 @@ class TestSessionEngine @Inject constructor(
         val epoch = interruptEpoch.get()
 
         scope.launch {
-            release?.join()
+            withTimeoutOrNull(RELEASE_WAIT) { release?.join() }
 
             val allowed = mutex.withLock {
                 if (isStarting || _state.value !is TestSessionState.Ready) {
@@ -165,6 +166,7 @@ class TestSessionEngine @Inject constructor(
                     emulator = emulatorDetector.isEmulator,
                 )
             } catch (cancellation: CancellationException) {
+                mutex.withLock { isStarting = false }
                 throw cancellation
             } catch (error: Throwable) {
                 val rejection = error.toTapRejection()
@@ -435,6 +437,7 @@ class TestSessionEngine @Inject constructor(
 
     private companion object {
         val TICK = 1.seconds
+        val RELEASE_WAIT = 2.seconds
         val HEARTBEAT_INTERVAL = 5.seconds
         val HEARTBEAT_RETRY = 1.seconds
     }

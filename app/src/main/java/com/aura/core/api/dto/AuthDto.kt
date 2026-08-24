@@ -55,5 +55,6 @@ data class UserDto(
     @SerialName("withdrawable_ion") val withdrawableIon: Int = 0,
     @SerialName("spark_balance") val sparkBalance: String = "0",
     @SerialName("tap_count") val tapCount: Int = 0,
+    val country: String? = null,
     @SerialName("created_at") val createdAt: String = "",
 )

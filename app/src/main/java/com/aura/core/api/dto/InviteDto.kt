@@ -24,3 +24,8 @@ data class GiftPopupSeenDto(
     @SerialName("gift_popup_seen") val giftPopupSeen: Boolean = true,
     @SerialName("bonus_teaser_should_blink") val bonusTeaserShouldBlink: Boolean = false,
 )
+
+@Serializable
+data class BonusTeaserSeenDto(
+    @SerialName("bonus_teaser_seen") val bonusTeaserSeen: Boolean = true,
+)

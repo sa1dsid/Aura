@@ -78,6 +78,7 @@ class TestSessionEngine @Inject constructor(
     private var isVpnPaused = false
     private var sparkSyncedAt = 0L
     private var isStarting = false
+    private var isFinishing = false
 
     init {
         scope.launch {
@@ -92,7 +93,7 @@ class TestSessionEngine @Inject constructor(
         val rate = sparkWindowStore.rate()
 
         mutex.withLock {
-            if (runningEndsAt != null) return@withLock
+            if (runningEndsAt != null || isFinishing) return@withLock
             cooldownEndsAt = cooldownAvailableAt?.parseIsoMillis()
             if (isVpnPaused) pausedRemaining = cooldownEndsAt.remainingFromNow()
             applySpark(sparkBalance, rate)
@@ -221,6 +222,7 @@ class TestSessionEngine @Inject constructor(
             }
 
             runningEndsAt = null
+            isFinishing = true
             sessionId.also { sessionId = null }
         }
 
@@ -228,6 +230,8 @@ class TestSessionEngine @Inject constructor(
     }
 
     private fun advanceIdle(): String? {
+        if (isFinishing) return null
+
         val remaining = pausedRemaining ?: cooldownEndsAt.remainingFromNow()
 
         if (remaining > Duration.ZERO) {
@@ -278,6 +282,7 @@ class TestSessionEngine @Inject constructor(
         }
 
         if (finished == null || finished.status != STATUS_COMPLETED) {
+            mutex.withLock { isFinishing = false }
             _events.tryEmit(TestSessionEvent.Interrupted)
             tick()
             return
@@ -286,6 +291,7 @@ class TestSessionEngine @Inject constructor(
         sparkWindowStore.saveRate(finished.sparkWindowRate)
 
         mutex.withLock {
+            isFinishing = false
             cooldownEndsAt = finished.cooldownAvailableAt?.parseIsoMillis()
                 ?: System.currentTimeMillis() + COOLDOWN_DURATION.inWholeMilliseconds
             pausedRemaining = if (isVpnPaused) cooldownEndsAt.remainingFromNow() else null

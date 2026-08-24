@@ -108,7 +108,7 @@ class AndroidNetworkMonitor @Inject constructor(
         val manager = telephony ?: return NetworkType.MOBILE_4G
 
         val dataNetworkType = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 manager.dataNetworkType
             } else {
                 TelephonyManager.NETWORK_TYPE_UNKNOWN

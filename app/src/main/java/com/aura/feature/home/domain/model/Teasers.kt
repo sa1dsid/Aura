@@ -1,13 +1,5 @@
 package com.aura.feature.home.domain.model
 
-const val BONUS_SIGNAL_LOCK_TAPS = 20
-
-const val BONUS_NETWORK_SYNC_FRIENDS = 4
-
-const val BONUS_FULL_UPLINK_DAYS = 10
-
-const val BONUS_DATA_SHARE_GB = 5
-
 const val SPARK_COUPON_THRESHOLD = 240_000L
 
 data class Teasers(
@@ -27,14 +19,6 @@ data class BonusWithdrawalTeaser(
     val isBlinking: Boolean = false,
 ) {
     val isComplete: Boolean get() = completedSteps >= totalSteps
-
-    val signalLockTarget: Int get() = BONUS_SIGNAL_LOCK_TAPS
-
-    val networkSyncTarget: Int get() = BONUS_NETWORK_SYNC_FRIENDS
-
-    val fullUplinkTarget: Int get() = BONUS_FULL_UPLINK_DAYS
-
-    val dataShareTarget: Int get() = BONUS_DATA_SHARE_GB
 }
 
 data class SparkTeaser(

@@ -19,12 +19,6 @@ class ObserveMeshStateUseCase @Inject constructor(
     operator fun invoke(): Flow<MeshState> = repository.observeMesh()
 }
 
-class CreditTestRewardUseCase @Inject constructor(
-    private val repository: HomeRepository,
-) {
-    suspend operator fun invoke(amount: Int) = repository.creditTestReward(amount)
-}
-
 class RefreshHomeUseCase @Inject constructor(
     private val homeRepository: HomeRepository,
     private val meshRepository: MeshRepository,
@@ -33,4 +27,34 @@ class RefreshHomeUseCase @Inject constructor(
         homeRepository.refresh()
         meshRepository.refresh(force)
     }
+}
+
+class SendHeartbeatUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.sendHeartbeat()
+}
+
+class DeclineBatteryOptimizationUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.declineBatteryOptimization()
+}
+
+class ConfirmBatteryOptimizationDisabledUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.confirmBatteryOptimizationDisabled()
+}
+
+class RefreshBatteryOptimizationUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.refreshBatteryOptimization()
+}
+
+class MarkBonusTeaserSeenUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.markBonusTeaserSeen()
 }

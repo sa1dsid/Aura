@@ -130,6 +130,7 @@ class NodesMapperTest {
         tierWithdrawalPercent = 5.0,
         nextTier = nextTier,
         friendsToNextTier = 1,
+        nextThreshold = null,
         earnedSpark = 3_260,
         earnedIon = 890,
         friends = friends,

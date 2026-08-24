@@ -9,7 +9,15 @@ interface HomeRepository {
 
     suspend fun refresh()
 
-    suspend fun creditTestReward(amount: Int)
+    suspend fun declineBatteryOptimization()
+
+    suspend fun confirmBatteryOptimizationDisabled()
+
+    suspend fun refreshBatteryOptimization()
+
+    suspend fun sendHeartbeat()
+
+    suspend fun markBonusTeaserSeen()
 }
 
 interface MeshRepository {

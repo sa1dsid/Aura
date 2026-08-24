@@ -19,13 +19,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.days
 
 @Singleton
 class MeshRepositoryImpl @Inject constructor(
     private val remote: MeshRemoteDataSource,
     private val networkMonitor: NetworkMonitor,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : MeshRepository {
 
     private val cities = MutableStateFlow<List<MeshCity>>(emptyList())
@@ -33,7 +33,7 @@ class MeshRepositoryImpl @Inject constructor(
     private val honestPresence = MutableStateFlow<UserPresence?>(null)
 
     private val refreshMutex = Mutex()
-    private var lastFetchAtMillis: Long = 0L
+    private var lastFetchAtMillis = 0L
 
     override fun observeMesh(): Flow<MeshState> =
         combine(
@@ -52,9 +52,7 @@ class MeshRepositoryImpl @Inject constructor(
     override suspend fun refresh(force: Boolean) {
         withContext(ioDispatcher) {
             refreshMutex.withLock {
-                if (force || isCacheStale()) {
-                    fetchSnapshot()
-                }
+                if (force || isCacheStale()) fetchSnapshot()
                 fetchUserLocation()
             }
         }
@@ -64,7 +62,7 @@ class MeshRepositoryImpl @Inject constructor(
         try {
             val snapshot = remote.fetchMeshSnapshot()
             cities.value = snapshot.cities.map { it.toDomain() }
-            nodesOnline.value = NodesOnline.Live(snapshot.nodesOnline)
+            nodesOnline.value = snapshot.nodesOnline.toNodesOnline(snapshot.stale)
             lastFetchAtMillis = System.currentTimeMillis()
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -77,11 +75,17 @@ class MeshRepositoryImpl @Inject constructor(
         try {
             val location = remote.fetchUserLocation()
             if (location.vpnActive || networkMonitor.current().isVpnActive) return
-            honestPresence.value = location.toDomain()
+            honestPresence.value = location.toDomain() ?: honestPresence.value
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Throwable) {
         }
+    }
+
+    private fun Int.toNodesOnline(stale: Boolean): NodesOnline = when {
+        this <= 0 -> nodesOnline.value.degradeToLastKnown()
+        stale -> NodesOnline.LastKnown(this)
+        else -> NodesOnline.Live(this)
     }
 
     private fun isCacheStale(): Boolean =
@@ -95,6 +99,6 @@ class MeshRepositoryImpl @Inject constructor(
     }
 
     private companion object {
-        val CACHE_TTL_MILLIS = 3.hours.inWholeMilliseconds
+        val CACHE_TTL_MILLIS = 7.days.inWholeMilliseconds
     }
 }

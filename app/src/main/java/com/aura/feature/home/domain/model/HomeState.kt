@@ -3,6 +3,7 @@ package com.aura.feature.home.domain.model
 data class IonBalances(
     val accrued: Long,
     val availableToWithdraw: Long,
+    val reservedBonus: Long,
 )
 
 data class InviteState(
@@ -12,6 +13,11 @@ data class InviteState(
     val inviteLink: String,
 )
 
+data class BatteryOptimizationState(
+    val shouldShow: Boolean = false,
+    val isDisabled: Boolean = false,
+)
+
 data class HomeState(
     val balances: IonBalances,
     val nodeStatus: NodeStatus,
@@ -19,4 +25,7 @@ data class HomeState(
     val connection: ConnectionState,
     val session: TestSessionState,
     val invite: InviteState,
+    val tapCount: Int,
+    val unreadNews: Int,
+    val batteryOptimization: BatteryOptimizationState,
 )

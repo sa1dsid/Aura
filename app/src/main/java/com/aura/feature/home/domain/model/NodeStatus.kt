@@ -14,4 +14,6 @@ data class NodeStatus(
     val progressToNext: Long,
     val progressTarget: Long?,
     val nextTier: NodeTier?,
+    val rateMultiplierPercent: Int = 100,
+    val sparkReferralPercent: Int = 0,
 )

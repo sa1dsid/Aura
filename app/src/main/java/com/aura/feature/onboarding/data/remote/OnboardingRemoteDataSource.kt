@@ -8,6 +8,7 @@ import com.aura.core.api.dto.PasswordResetRequestDto
 import com.aura.core.api.dto.TokenResponseDto
 import com.aura.core.api.dto.UserDto
 import com.aura.core.auth.TokenStore
+import com.aura.core.config.AppConfigRepository
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
 import com.aura.feature.onboarding.data.remote.dto.BootConfigDto
@@ -46,10 +47,24 @@ interface OnboardingRemoteDataSource {
 class ApiOnboardingRemoteDataSource @Inject constructor(
     private val api: AuraApi,
     private val tokenStore: TokenStore,
+    private val appConfigRepository: AppConfigRepository,
 ) : OnboardingRemoteDataSource {
 
-    override suspend fun bootstrap(): BootConfigDto =
-        BootConfigDto(nodeCount = null, hotCities = emptyList())
+    override suspend fun bootstrap(): BootConfigDto {
+        appConfigRepository.refresh()
+        val mesh = try {
+            api.mesh()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            null
+        }
+
+        return BootConfigDto(
+            nodeCount = mesh?.nodesOnline?.takeIf { it > 0 },
+            hotCities = mesh?.glowingCities.orEmpty(),
+        )
+    }
 
     override suspend fun signIn(email: String, password: String): AuthSessionDto =
         api.login(EmailCredentialsDto(email = email, password = password)).toSession()
@@ -63,7 +78,7 @@ class ApiOnboardingRemoteDataSource @Inject constructor(
     override suspend fun restore(): AuthSessionDto {
         val user = api.currentUser()
         return AuthSessionDto(
-            account = user.toAccount(inviteLink = personalUrl()),
+            account = user.toAccount(inviteLink = null),
             accountCreated = false,
             invitePending = user.inviteDecision == INVITE_DECISION_PENDING,
         )
@@ -98,18 +113,10 @@ class ApiOnboardingRemoteDataSource @Inject constructor(
         tokenStore.save(token = accessToken, expiresInSeconds = expiresIn)
 
         return AuthSessionDto(
-            account = user.toAccount(inviteLink = personalUrl()),
+            account = user.toAccount(inviteLink = null),
             accountCreated = isNewAccount,
             invitePending = user.inviteDecision == INVITE_DECISION_PENDING,
         )
-    }
-
-    private suspend fun personalUrl(): String? = try {
-        api.inviteState().personalUrl
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (error: Throwable) {
-        null
     }
 
     private fun UserDto.toAccount(inviteLink: String?) = AccountDto(

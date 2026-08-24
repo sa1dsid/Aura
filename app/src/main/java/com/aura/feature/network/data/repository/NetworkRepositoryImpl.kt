@@ -4,6 +4,7 @@ import com.aura.core.common.IoDispatcher
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.network.data.local.NetworkLocalStore
 import com.aura.feature.network.data.mapper.toDomain
+import com.aura.feature.network.data.mapper.toMetrics
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
 import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
 import com.aura.feature.network.domain.model.ConnectionDetails
@@ -31,26 +32,34 @@ class NetworkRepositoryImpl @Inject constructor(
 
     override fun observeConnection(): Flow<ConnectionDetails> =
         combine(snapshot.filterNotNull(), networkMonitor.status) { dto, status ->
-            dto.toDomain(isVpnActive = status.isVpnActive)
+            dto.copy(networkType = status.type.name)
+                .toDomain(isVpnActive = status.isVpnActive)
         }
 
     override fun observeMetrics(): Flow<NetworkMetrics> =
-        combine(localStore.history, localStore.quality) { history, quality ->
+        combine(snapshot, localStore.quality) { dto, quality ->
+            val remoteMetrics = dto?.toMetrics()
+
             NetworkMetrics(
-                pingMs = history.lastOrNull()?.pingMs,
-                jitterMs = quality?.jitterMs,
-                packetLossPercent = quality?.packetLossPercent,
+                pingMs = remoteMetrics?.pingMs,
+                jitterMs = remoteMetrics?.jitterMs ?: quality?.jitterMs,
+                packetLossPercent = remoteMetrics?.packetLossPercent ?: quality?.packetLossPercent,
             )
         }
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {
-            try {
-                snapshot.value = remote.fetchSnapshot()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-            }
+            load { remote.syncState() }
+            load { remote.summary() }
+        }
+    }
+
+    private suspend fun load(request: suspend () -> NetworkSnapshotDto) {
+        try {
+            snapshot.value = request()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
         }
     }
 }

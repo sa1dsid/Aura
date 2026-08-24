@@ -8,6 +8,12 @@ const val PING_GOOD_MS = 30
 
 const val PING_WARNING_MS = 45
 
+enum class PingSource(val wireName: String) {
+    HOME("home"),
+    DIAGNOSTIC("diagnostic"),
+    BACKGROUND("background"),
+}
+
 data class PingRecord(
     val timestamp: Long,
     val ipAddress: String?,

@@ -207,4 +207,17 @@
          подходит — сеть у пользователя рабочая, лежит именно проверка на сервере. -->
     <string name="toast_google_unavailable">Google sign-in is unavailable · try email</string>
 
+    <!-- ДЛИННАЯ: сервер отвечает 409 «ION paused - unsupported device» на запуск
+         теста с эмулятора. Антифрод по ТЗ Home п.12 — та же пауза, что и VPN,
+         но ключа под неё в поставке заказчика нет. -->
+    <string name="toast_device_unsupported">ION paused · unsupported device</string>
+
+    <!-- ДЛИННАЯ: сервер отклонил запуск теста по неизвестной причине либо запрос
+         не дошёл. В поставке ключа нет, toast_test_failed относится к диагностике. -->
+    <string name="toast_test_unavailable">Test unavailable · try again</string>
+
+    <!-- ДЛИННАЯ: зелёный тост по ТЗ Home п.12 после того, как пользователь снял
+         оптимизацию батареи. В поставке заказчика ключа нет. -->
+    <string name="toast_battery_optimization_off">Battery optimization off · background tests will run</string>
+
 </resources>

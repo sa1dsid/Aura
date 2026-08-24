@@ -1,54 +1,111 @@
 package com.aura.feature.home.data.remote
 
-import com.aura.feature.home.data.remote.dto.HomeSnapshotDto
-import kotlinx.coroutines.delay
-import java.util.concurrent.atomic.AtomicLong
+import com.aura.core.api.AuraApi
+import com.aura.core.api.dto.BatteryOptimizationDto
+import com.aura.core.api.dto.DashboardDto
+import com.aura.core.api.dto.EarningStateDto
+import com.aura.core.api.dto.EarningStateUpdateDto
+import com.aura.core.api.dto.HeartbeatDto
+import com.aura.core.api.dto.LocationUpdateDto
+import com.aura.core.api.dto.MeshDto
+import com.aura.core.api.dto.TapFinishDto
+import com.aura.core.api.dto.TapStartDto
+import com.aura.core.api.dto.TapStateDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface HomeRemoteDataSource {
-    suspend fun fetchHome(): HomeSnapshotDto
 
-    suspend fun creditTestReward(amount: Int)
+    suspend fun dashboard(): DashboardDto
+
+    suspend fun startTap(networkType: String, vpn: Boolean, emulator: Boolean): TapStateDto
+
+    suspend fun tapHeartbeat(sessionId: String): TapStateDto
+
+    suspend fun finishTap(
+        sessionId: String,
+        interrupted: Boolean,
+        networkLost: Boolean,
+        appBackgrounded: Boolean,
+    ): TapStateDto
+
+    suspend fun updateEarningState(vpn: Boolean?, emulator: Boolean?): EarningStateDto
+
+    suspend fun batteryOptimization(): BatteryOptimizationDto
+
+    suspend fun declineBatteryOptimization(): BatteryOptimizationDto
+
+    suspend fun confirmBatteryOptimizationDisabled(): BatteryOptimizationDto
+
+    suspend fun heartbeat(): HeartbeatDto
+
+    suspend fun updateLocation(vpn: Boolean): String?
+
+    suspend fun mesh(): MeshDto
+
+    suspend fun markBonusTeaserSeen()
 }
 
 @Singleton
-class MockHomeRemoteDataSource @Inject constructor() : HomeRemoteDataSource {
+class ApiHomeRemoteDataSource @Inject constructor(
+    private val api: AuraApi,
+) : HomeRemoteDataSource {
 
-    private val creditedIon = AtomicLong(0)
+    override suspend fun dashboard(): DashboardDto = api.dashboard()
 
-    override suspend fun creditTestReward(amount: Int) {
-        creditedIon.addAndGet(amount.toLong())
-    }
+    override suspend fun startTap(
+        networkType: String,
+        vpn: Boolean,
+        emulator: Boolean,
+    ): TapStateDto {
+        val integrityToken = runCatching { api.issueIntegrityChallenge().requestHash }.getOrNull()
 
-    override suspend fun fetchHome(): HomeSnapshotDto {
-        delay(NETWORK_DELAY_MILLIS)
-        return HomeSnapshotDto(
-            accruedIon = 4_210 + creditedIon.get(),
-            availableToWithdrawIon = 3_000,
-            tier = "CORE_NODE",
-            referralRate = 2.5,
-            tierProgress = 12_090,
-            tierTarget = 20_000,
-            nextTier = "IONIC_PRIME",
-            bonusStepsComplete = 2,
-            bonusStepsTotal = 3,
-            sparkCollected = 142_800,
-            sparkTarget = 240_000,
-            vpnSaleEnabled = true,
-            vpnTierGaugePercent = 100,
-            vpnContributionPercent = 62,
-            networkType = "MOBILE_4G",
-            vpnActive = false,
-            testRewardIon = 20,
-            friendsJoined = 3,
-            friendsTarget = 4,
-            referralRatePercent = 10,
-            inviteLink = "https://ioaura.app/i/syrex",
+        return api.startTap(
+            TapStartDto(
+                networkType = networkType,
+                vpn = vpn,
+                emulator = emulator,
+                integrityToken = integrityToken,
+            )
         )
     }
 
-    private companion object {
-        const val NETWORK_DELAY_MILLIS = 300L
+    override suspend fun tapHeartbeat(sessionId: String): TapStateDto =
+        api.tapHeartbeat(sessionId)
+
+    override suspend fun finishTap(
+        sessionId: String,
+        interrupted: Boolean,
+        networkLost: Boolean,
+        appBackgrounded: Boolean,
+    ): TapStateDto = api.finishTap(
+        sessionId = sessionId,
+        request = TapFinishDto(
+            interrupted = interrupted,
+            networkLost = networkLost,
+            appBackgrounded = appBackgrounded,
+        ),
+    )
+
+    override suspend fun updateEarningState(vpn: Boolean?, emulator: Boolean?): EarningStateDto =
+        api.updateEarningState(EarningStateUpdateDto(vpn = vpn, emulator = emulator))
+
+    override suspend fun batteryOptimization(): BatteryOptimizationDto = api.batteryOptimization()
+
+    override suspend fun declineBatteryOptimization(): BatteryOptimizationDto =
+        api.declineBatteryOptimization()
+
+    override suspend fun confirmBatteryOptimizationDisabled(): BatteryOptimizationDto =
+        api.confirmBatteryOptimizationDisabled()
+
+    override suspend fun heartbeat(): HeartbeatDto = api.heartbeat()
+
+    override suspend fun updateLocation(vpn: Boolean): String? =
+        api.updateLocation(LocationUpdateDto(vpn = vpn)).city
+
+    override suspend fun mesh(): MeshDto = api.mesh()
+
+    override suspend fun markBonusTeaserSeen() {
+        api.markBonusTeaserSeen()
     }
 }

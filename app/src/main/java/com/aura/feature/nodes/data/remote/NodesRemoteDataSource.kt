@@ -1,9 +1,13 @@
 package com.aura.feature.nodes.data.remote
 
+import com.aura.core.api.AuraApi
+import com.aura.core.config.AppConfigRepository
 import com.aura.feature.nodes.data.remote.dto.FriendDto
 import com.aura.feature.nodes.data.remote.dto.NodesSnapshotDto
 import com.aura.feature.nodes.data.remote.dto.SocialLinkDto
-import kotlinx.coroutines.delay
+import com.aura.feature.nodes.domain.model.SocialNetwork
+import com.aura.feature.onboarding.data.local.SessionStore
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -12,53 +16,66 @@ interface NodesRemoteDataSource {
 }
 
 @Singleton
-class MockNodesRemoteDataSource @Inject constructor() : NodesRemoteDataSource {
+class ApiNodesRemoteDataSource @Inject constructor(
+    private val api: AuraApi,
+    private val sessionStore: SessionStore,
+    private val appConfigRepository: AppConfigRepository,
+) : NodesRemoteDataSource {
 
     override suspend fun fetchNodes(): NodesSnapshotDto {
-        delay(NETWORK_DELAY_MILLIS)
-        return NodesSnapshotDto(
-            handle = "syrex",
-            inviteCode = "SYREX482",
-            inviteLink = "https://ioaura.app/i/syrex",
-            inviteQuote = null,
-            inviteShareText = null,
-            friendsJoined = 6,
-            activeFriends = 2,
-            tier = "CORE_NODE",
-            tierSparkPercent = 15,
-            tierWithdrawalPercent = 5.0,
-            nextTier = "IONIC_PRIME",
-            friendsToNextTier = 1,
-            earnedSpark = 3_260,
-            earnedIon = 890,
-            friends = FRIENDS,
-            socials = SOCIALS,
-        )
-    }
+        appConfigRepository.refresh()
 
-    private companion object {
-        const val NETWORK_DELAY_MILLIS = 300L
+        val nodes = api.nodes()
+        val invite = try {
+            api.inviteState()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            null
+        }
 
-        val FRIENDS = listOf(
-            FriendDto("f1", "Alex K.", "alexk", 12_400, 1_840, "EARNING"),
-            FriendDto("f2", "Maria T.", "mariat", 8_900, 640, "EARNING"),
-            FriendDto("f3", "Daniel R.", "danr", 54_200, 0, "SPARK_ONLY"),
-            FriendDto("f4", "Jenna L.", "jennal", 3_100, 0, "SPARK_ONLY"),
-            FriendDto("f5", "Peter V.", "peterv", 0, 0, "INACTIVE"),
-            FriendDto("f6", "Rachel S.", "rashels", 0, 0, "INACTIVE"),
-        )
+        val account = sessionStore.account.value
+        val configuredUrls = appConfigRepository.config.value.socialLinks
+            .filter { it.url.isNotBlank() }
+            .associate { it.network.name to it.url }
 
-        val SOCIALS = listOf(
-            SocialLinkDto("DISCORD", "https://discord.gg/ioaura", null),
-            SocialLinkDto("TELEGRAM", "https://t.me/ioaura", "tg://resolve?domain=ioaura"),
-            SocialLinkDto("X", "https://x.com/ioaura", "twitter://user?screen_name=ioaura"),
-            SocialLinkDto("REDDIT", "https://reddit.com/r/ioaura", null),
+        val socials = SocialNetwork.entries.map { network ->
             SocialLinkDto(
-                "INSTAGRAM",
-                "https://instagram.com/ioaura",
-                "instagram://user?username=ioaura",
-            ),
-            SocialLinkDto("SNAPCHAT", "https://snapchat.com/add/ioaura", null),
+                network = network.name,
+                webUrl = configuredUrls[network.name].orEmpty(),
+                appUrl = null,
+            )
+        }
+
+        return NodesSnapshotDto(
+            handle = account?.handle.orEmpty(),
+            inviteCode = invite?.personalCode.orEmpty(),
+            inviteLink = invite?.personalUrl ?: account?.inviteLink.orEmpty(),
+            inviteQuote = null,
+            inviteShareText = invite?.shareText,
+            friendsJoined = nodes.friendsJoined,
+            activeFriends = nodes.activeFriends,
+            tier = nodes.tier,
+            tierSparkPercent = nodes.sparkReferralPercent,
+            tierWithdrawalPercent = nodes.ionReferralPercentStage2.toDouble(),
+            nextTier = null,
+            friendsToNextTier = nodes.moreForNextTier
+                ?: nodes.nextThreshold?.minus(nodes.activeFriends)?.coerceAtLeast(0)
+                ?: 0,
+            nextThreshold = nodes.nextThreshold,
+            earnedSpark = nodes.earnedFromReferrals.spark.toDoubleOrNull()?.toLong() ?: 0,
+            earnedIon = nodes.earnedFromReferrals.ion,
+            friends = nodes.friends.map { friend ->
+                FriendDto(
+                    id = friend.id.toString(),
+                    name = friend.displayName,
+                    handle = friend.displayName,
+                    spark = friend.ownSpark.toDoubleOrNull()?.toLong() ?: 0,
+                    ion = friend.ownIon,
+                    status = friend.status,
+                )
+            },
+            socials = socials,
         )
     }
 }

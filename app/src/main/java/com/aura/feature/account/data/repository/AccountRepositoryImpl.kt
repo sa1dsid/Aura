@@ -2,6 +2,7 @@ package com.aura.feature.account.data.repository
 
 import com.aura.core.auth.TokenStore
 import com.aura.core.common.IoDispatcher
+import com.aura.core.push.PushTokenRepository
 import com.aura.feature.account.data.mapper.toDomain
 import com.aura.feature.account.data.mapper.toProfile
 import com.aura.feature.account.data.remote.AccountRemoteDataSource
@@ -24,6 +25,7 @@ class AccountRepositoryImpl @Inject constructor(
     private val remote: AccountRemoteDataSource,
     private val sessionStore: SessionStore,
     private val tokenStore: TokenStore,
+    private val pushTokenRepository: PushTokenRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AccountRepository {
 
@@ -34,7 +36,10 @@ class AccountRepositoryImpl @Inject constructor(
         request { accountId -> remote.settings(accountId).pushNotifications }
 
     override suspend fun setPushNotifications(enabled: Boolean): Result<Unit> =
-        request { accountId -> remote.updatePushNotifications(accountId, enabled) }
+        request { accountId ->
+            remote.updatePushNotifications(accountId, enabled)
+            pushTokenRepository.sync(enabled)
+        }
 
     override suspend fun legalLinks(): LegalLinks = withContext(ioDispatcher) {
         try {
@@ -47,6 +52,7 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logOut() {
+        runCatching { pushTokenRepository.remove() }
         sessionStore.close()
         tokenStore.clear()
     }

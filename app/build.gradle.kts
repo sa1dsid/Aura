@@ -50,9 +50,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ALLOW_EMULATOR", "true")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            buildConfigField("boolean", "ALLOW_EMULATOR", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -100,7 +104,10 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.runtime)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

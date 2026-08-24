@@ -1,5 +1,7 @@
 package com.aura.core.api
 
+import com.aura.core.common.parseIsoMillis
+import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.InviteException
@@ -10,6 +12,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import retrofit2.HttpException
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val BAD_REQUEST = 400
 
@@ -88,4 +91,35 @@ fun Throwable.toInviteFailure(): InviteException {
             else -> InviteFailure.NETWORK
         }
     )
+}
+
+private const val DETAIL_VPN = "VPN detected"
+
+private const val DETAIL_UNSUPPORTED_DEVICE = "unsupported device"
+
+private const val DETAIL_COOLDOWN = "come back at"
+
+private const val DETAIL_ALREADY_RUNNING = "already running"
+
+fun Throwable.toTapRejection(): TestStartRejection {
+    val error = apiError() ?: return TestStartRejection.NoConnection
+    val detail = error.detail.orEmpty()
+
+    return when {
+        detail.contains(DETAIL_ALREADY_RUNNING) -> TestStartRejection.SessionStuck
+
+        detail.contains(DETAIL_VPN) -> TestStartRejection.VpnDetected
+
+        detail.contains(DETAIL_UNSUPPORTED_DEVICE) -> TestStartRejection.UnsupportedDevice
+
+        detail.contains(DETAIL_COOLDOWN) -> {
+            val availableAt = detail.substringAfter(DETAIL_COOLDOWN).trim().parseIsoMillis()
+            val remaining = availableAt?.minus(System.currentTimeMillis())?.coerceAtLeast(0)
+            TestStartRejection.CooldownNotFinished(
+                remaining = (remaining ?: 0).milliseconds,
+            )
+        }
+
+        else -> TestStartRejection.Unavailable
+    }
 }

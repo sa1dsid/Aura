@@ -1,29 +1,133 @@
 package com.aura.feature.network.data.remote
 
-import com.aura.core.geo.IpInfoSource
+import com.aura.core.api.AuraApi
+import com.aura.core.api.dto.NetworkStateUpdateDto
+import com.aura.core.api.dto.PingCreateDto
+import com.aura.core.api.dto.PingDto
+import com.aura.core.geo.UserLocationSource
+import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
 import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
+import com.aura.feature.network.domain.model.PingSource
+import com.aura.feature.network.domain.model.SpeedTestResult
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface NetworkRemoteDataSource {
-    suspend fun fetchSnapshot(): NetworkSnapshotDto
+    suspend fun syncState(): NetworkSnapshotDto
+
+    suspend fun summary(): NetworkSnapshotDto
+
+    suspend fun measurements(): List<PingDto>
+
+    suspend fun addPing(pingMs: Int, source: PingSource): PingDto
+
+    suspend fun addSpeedTest(result: SpeedTestResult, source: PingSource): PingDto
 }
 
 @Singleton
-class MockNetworkRemoteDataSource @Inject constructor(
-    private val ipInfoSource: IpInfoSource,
+class ApiNetworkRemoteDataSource @Inject constructor(
+    private val api: AuraApi,
+    private val networkMonitor: NetworkMonitor,
+    private val userLocationSource: UserLocationSource,
 ) : NetworkRemoteDataSource {
 
-    override suspend fun fetchSnapshot(): NetworkSnapshotDto {
-        val info = ipInfoSource.fetch()
-        return NetworkSnapshotDto(
-            networkType = NetworkType.MOBILE_4G.name,
-            operator = info.operator,
-            ipAddress = info.ipAddress,
-            ipV6 = info.isIpV6,
-            city = info.city,
-            countryCode = info.countryCode,
+    @Volatile
+    private var lastProtocol: String? = null
+
+    override suspend fun syncState(): NetworkSnapshotDto {
+        val status = networkMonitor.current()
+        val state = api.updateNetworkState(
+            NetworkStateUpdateDto(
+                operator = status.operator,
+                connection = status.type.wireName(),
+                protocol = lastProtocol,
+                vpn = status.isVpnActive,
+            )
         )
+
+        lastProtocol = state.ip.protocolName()
+        userLocationSource.remember(state.location)
+
+        return NetworkSnapshotDto(
+            networkType = status.type.name,
+            operator = state.operator ?: status.operator,
+            ipAddress = state.ip,
+            protocol = lastProtocol,
+            location = state.location,
+            lastTestedAt = null,
+            pingMs = null,
+            jitterMs = null,
+            packetLossPercent = null,
+        )
+    }
+
+    override suspend fun summary(): NetworkSnapshotDto {
+        val status = networkMonitor.current()
+        val summary = api.networkSummary()
+        lastProtocol = summary.ip.protocolName() ?: summary.protocol
+        userLocationSource.remember(summary.location)
+
+        return NetworkSnapshotDto(
+            networkType = status.type.name,
+            operator = summary.operator ?: status.operator,
+            ipAddress = summary.ip,
+            protocol = lastProtocol,
+            location = summary.location,
+            lastTestedAt = summary.lastTestedAt,
+            pingMs = summary.pingMs,
+            jitterMs = summary.jitterMs,
+            packetLossPercent = summary.packetLossPct,
+        )
+    }
+
+    override suspend fun measurements(): List<PingDto> = api.measurements()
+
+    override suspend fun addPing(pingMs: Int, source: PingSource): PingDto {
+        val status = networkMonitor.current()
+
+        return api.addMeasurement(
+            PingCreateDto(
+                source = source.wireName,
+                operator = status.operator,
+                connection = status.type.wireName(),
+                protocol = lastProtocol,
+                vpn = status.isVpnActive,
+                pingMs = pingMs.toDouble(),
+            )
+        )
+    }
+
+    override suspend fun addSpeedTest(result: SpeedTestResult, source: PingSource): PingDto {
+        val status = networkMonitor.current()
+
+        return api.addMeasurement(
+            PingCreateDto(
+                source = source.wireName,
+                operator = status.operator,
+                connection = status.type.wireName(),
+                protocol = lastProtocol,
+                vpn = status.isVpnActive,
+                pingMs = result.pingMs.toDouble(),
+                jitterMs = result.jitterMs.toDouble(),
+                packetLossPct = result.packetLossPercent,
+                downloadMbps = result.downloadMbps,
+                uploadMbps = result.uploadMbps,
+            )
+        )
+    }
+
+    private fun NetworkType.wireName(): String? =
+        if (this == NetworkType.NONE) null else name
+
+    private fun String?.protocolName(): String? = when {
+        this == null -> null
+        contains(':') -> PROTOCOL_IPV6
+        else -> PROTOCOL_IPV4
+    }
+
+    private companion object {
+        const val PROTOCOL_IPV4 = "IPv4"
+        const val PROTOCOL_IPV6 = "IPv6"
     }
 }

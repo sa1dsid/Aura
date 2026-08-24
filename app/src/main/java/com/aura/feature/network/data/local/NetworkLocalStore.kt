@@ -51,6 +51,12 @@ class NetworkLocalStore @Inject constructor(
         }
     }
 
+    suspend fun replaceAll(records: List<PingRecord>) {
+        context.networkDataStore.edit { stored ->
+            stored[RECORDS] = records.encodeRecords()
+        }
+    }
+
     suspend fun saveQuality(quality: MeasuredQuality) {
         context.networkDataStore.edit { stored ->
             stored[JITTER_MS] = quality.jitterMs

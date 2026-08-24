@@ -39,6 +39,13 @@ import com.aura.core.designsystem.component.AuraToastKind
 import com.aura.core.designsystem.component.AuraToastState
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.aura.core.system.isBatteryOptimizationIgnored
+import com.aura.core.system.openVpnSettings
+import com.aura.core.system.requestIgnoreBatteryOptimization
+import com.aura.core.system.shareText
 import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
 import com.aura.feature.home.presentation.components.BalanceCardsRow
@@ -63,9 +70,28 @@ fun HomeRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val toastState = rememberAuraToastState()
     val context = LocalContext.current
+    val content = uiState as? HomeUiState.Content
+    var batteryRequestPending by rememberSaveable { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (batteryRequestPending) {
+            batteryRequestPending = false
+            if (context.isBatteryOptimizationIgnored()) {
+                viewModel.onBatteryOptimizationConfirmed()
+            } else {
+                viewModel.onBatteryOptimizationDeclined()
+            }
+        }
         viewModel.onScreenResumed()
+    }
+
+    LaunchedEffect(content?.home?.batteryOptimization?.shouldShow) {
+        if (content?.home?.batteryOptimization?.shouldShow != true) return@LaunchedEffect
+        if (context.isBatteryOptimizationIgnored()) {
+            viewModel.onBatteryOptimizationConfirmed()
+            return@LaunchedEffect
+        }
+        batteryRequestPending = context.requestIgnoreBatteryOptimization()
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -91,6 +117,16 @@ fun HomeRoute(
             onMenuClick = onMenuClick,
             onNewsClick = onNewsClick,
             onMainButtonClick = viewModel::onMainButtonClick,
+            onBonusWithdrawalClick = viewModel::onBonusTeaserOpened,
+            onConnectionBadgeClick = {
+                if (content?.home?.connection?.isVpnActive == true) context.openVpnSettings()
+            },
+            onInviteClick = {
+                val link = content?.home?.invite?.inviteLink.orEmpty()
+                if (link.isNotBlank()) {
+                    context.shareText(context.getString(R.string.nodes_share_text, link))
+                }
+            },
             onTabSelected = onTabSelected,
         ),
         toastState = toastState,
@@ -271,16 +307,25 @@ private fun Context.toastText(event: HomeEvent): String = when (event) {
     is HomeEvent.TestCompleted -> getString(R.string.toast_session_done, event.rewardIon)
     HomeEvent.TestInterrupted -> getString(R.string.toast_session_interrupted)
     HomeEvent.CooldownResumed -> getString(R.string.toast_vpn_resumed)
+    HomeEvent.BatteryOptimizationDisabled ->
+        getString(R.string.toast_battery_optimization_off)
 }
 
 private fun HomeEvent.toastKind(): AuraToastKind = when (this) {
-    is HomeEvent.TestCompleted, HomeEvent.CooldownResumed -> AuraToastKind.SUCCESS
+    is HomeEvent.TestCompleted,
+    HomeEvent.CooldownResumed,
+    HomeEvent.BatteryOptimizationDisabled -> AuraToastKind.SUCCESS
+
     else -> AuraToastKind.ERROR
 }
 
 private fun Context.rejectionText(rejection: TestStartRejection): String = when (rejection) {
     TestStartRejection.DataShareDisabled -> getString(R.string.toast_datashare_off)
     TestStartRejection.VpnDetected -> getString(R.string.toast_vpn_block)
+    TestStartRejection.UnsupportedDevice -> getString(R.string.toast_device_unsupported)
+    TestStartRejection.NoConnection -> getString(R.string.toast_no_connection)
+    TestStartRejection.SessionStuck,
+    TestStartRejection.Unavailable -> getString(R.string.toast_test_unavailable)
     is TestStartRejection.CooldownNotFinished ->
         getString(R.string.toast_cooldown, rejection.remaining.formatHoursMinutes())
 }

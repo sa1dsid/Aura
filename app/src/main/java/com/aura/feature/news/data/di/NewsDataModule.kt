@@ -1,6 +1,6 @@
 package com.aura.feature.news.data.di
 
-import com.aura.feature.news.data.remote.MockNewsRemoteDataSource
+import com.aura.feature.news.data.remote.ApiNewsRemoteDataSource
 import com.aura.feature.news.data.remote.NewsRemoteDataSource
 import com.aura.feature.news.data.repository.NewsRepositoryImpl
 import com.aura.feature.news.domain.repository.NewsRepository
@@ -16,7 +16,7 @@ interface NewsDataModule {
 
     @Binds
     @Singleton
-    fun bindNewsRemoteDataSource(impl: MockNewsRemoteDataSource): NewsRemoteDataSource
+    fun bindNewsRemoteDataSource(impl: ApiNewsRemoteDataSource): NewsRemoteDataSource
 
     @Binds
     @Singleton

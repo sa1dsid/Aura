@@ -5,7 +5,6 @@ import com.aura.core.network.NetworkMonitor
 import com.aura.feature.home.data.remote.dto.MeshCityDto
 import com.aura.feature.home.data.remote.dto.MeshSnapshotDto
 import com.aura.feature.home.data.remote.dto.UserLocationDto
-import com.aura.core.geo.normalizeCityKey
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,16 +23,15 @@ class ApiMeshRemoteDataSource @Inject constructor(
 
     override suspend fun fetchMeshSnapshot(): MeshSnapshotDto {
         val mesh = home.mesh()
-        val glowing = gazetteer.findAll(mesh.glowingCities).map { it.name.normalizeCityKey() }.toSet()
 
         return MeshSnapshotDto(
-            cities = gazetteer.all.map { city ->
+            cities = gazetteer.findAll(mesh.glowingCities).map { city ->
                 MeshCityDto(
-                    id = city.name.normalizeCityKey(),
+                    id = city.name,
                     name = city.name,
                     lat = city.latitude,
                     lon = city.longitude,
-                    live = city.name.normalizeCityKey() in glowing,
+                    live = true,
                 )
             },
             nodesOnline = mesh.nodesOnline,

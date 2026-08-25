@@ -1,5 +1,6 @@
 package com.aura.feature.home.data.session
 
+import com.aura.core.api.dto.TapStateDto
 import com.aura.core.api.toTapRejection
 import com.aura.core.common.ApplicationScope
 import com.aura.core.common.TimeSource
@@ -239,24 +240,30 @@ class TestSessionEngine @Inject constructor(
         heartbeat?.cancel()
         heartbeat = scope.launch {
             while (isActive) {
-                val alive = try {
-                    remote.tapHeartbeat(sessionId).status == STATUS_RUNNING
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (error: Throwable) {
-                    delay(HEARTBEAT_RETRY)
-                    continue
-                }
+                when (beat(sessionId)) {
+                    STATUS_RUNNING -> delay(HEARTBEAT_INTERVAL)
 
-                if (!alive) {
-                    dropSession(sessionId)
-                    return@launch
-                }
+                    null -> delay(HEARTBEAT_RETRY)
 
-                delay(HEARTBEAT_INTERVAL)
+                    else -> {
+                        dropSession(sessionId)
+                        return@launch
+                    }
+                }
             }
         }
     }
+
+    private suspend fun beat(sessionId: String): String? =
+        withTimeoutOrNull(HEARTBEAT_TIMEOUT) {
+            try {
+                remote.tapHeartbeat(sessionId).status
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                null
+            }
+        }
 
     private suspend fun dropSession(lostSessionId: String) {
         val dropped = mutex.withLock {
@@ -357,7 +364,15 @@ class TestSessionEngine @Inject constructor(
 
             runningEndsAt = null
             isFinishing = true
-            heartbeat?.cancel()
+            cooldownEndsAt = timeSource.nowMillis() + COOLDOWN_DURATION.inWholeMilliseconds
+            pausedRemaining = if (isVpnPaused) cooldownEndsAt.remainingFromNow() else null
+
+            _state.value = TestSessionState.Cooldown(
+                remaining = COOLDOWN_DURATION,
+                total = COOLDOWN_DURATION,
+                isPausedByVpn = isVpnPaused,
+            )
+
             sessionId.also { sessionId = null }
         }
 
@@ -365,8 +380,6 @@ class TestSessionEngine @Inject constructor(
     }
 
     private fun advanceIdle(): String? {
-        if (isFinishing) return null
-
         val remaining = pausedRemaining ?: cooldownEndsAt.remainingFromNow()
 
         if (remaining > Duration.ZERO) {
@@ -403,21 +416,15 @@ class TestSessionEngine @Inject constructor(
     }
 
     private suspend fun complete(finishedSessionId: String) {
-        val finished = try {
-            remote.finishTap(
-                sessionId = finishedSessionId,
-                interrupted = false,
-                networkLost = false,
-                appBackgrounded = false,
-            )
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            null
-        }
+        val finished = finishCompleted(finishedSessionId)
+        heartbeat?.cancel()
 
         if (finished == null || finished.status != STATUS_COMPLETED) {
-            mutex.withLock { isFinishing = false }
+            mutex.withLock {
+                isFinishing = false
+                cooldownEndsAt = null
+                pausedRemaining = null
+            }
             _events.tryEmit(TestSessionEvent.Interrupted)
             tick()
             return
@@ -436,6 +443,35 @@ class TestSessionEngine @Inject constructor(
         scope.launch { pingHistory.recordProbe(PingSource.HOME) }
         _events.tryEmit(TestSessionEvent.Completed(REWARD_ION))
         tick()
+    }
+
+    private suspend fun finishCompleted(sessionId: String): TapStateDto? {
+        repeat(FINISH_ATTEMPTS) {
+            var answered = false
+
+            val finished = withTimeoutOrNull(FINISH_TIMEOUT) {
+                try {
+                    remote.finishTap(
+                        sessionId = sessionId,
+                        interrupted = false,
+                        networkLost = false,
+                        appBackgrounded = false,
+                    )
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (error: HttpException) {
+                    answered = true
+                    null
+                } catch (error: Throwable) {
+                    null
+                }
+            }
+
+            if (finished != null) return finished
+            if (answered) return null
+        }
+
+        return null
     }
 
     private fun applySpark(balance: String, rate: Int) {
@@ -457,9 +493,12 @@ class TestSessionEngine @Inject constructor(
         if (this == NetworkType.WIFI) NETWORK_TYPE_WIFI else NETWORK_TYPE_MOBILE
 
     private companion object {
+        const val FINISH_ATTEMPTS = 3
         val TICK = 1.seconds
         val RELEASE_WAIT = 2.seconds
         val HEARTBEAT_INTERVAL = 5.seconds
         val HEARTBEAT_RETRY = 1.seconds
+        val HEARTBEAT_TIMEOUT = 4.seconds
+        val FINISH_TIMEOUT = 6.seconds
     }
 }

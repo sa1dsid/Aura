@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -66,6 +67,40 @@ class WelcomeBonusViewModelTest {
         viewModel.onScreenResumed()
 
         assertEquals(5_000L, viewModel.bonusIon.value)
+    }
+
+    @Test
+    fun `shows the three thousand of the layout before anything is read`() = runTest {
+        val viewModel = WelcomeBonusViewModel(authRepository, flagsRepository)
+
+        assertEquals(3_000L, viewModel.bonusIon.value)
+        assertEquals(3_000L, OnboardingFlags.DEFAULT_RESERVED_BONUS_ION)
+    }
+
+    @Test
+    fun `a signed out popup asks the server for nothing`() = runTest {
+        authRepository.account = null
+        val viewModel = WelcomeBonusViewModel(authRepository, flagsRepository)
+        val dismissals = dismissals(viewModel)
+
+        viewModel.onScreenResumed()
+        viewModel.onDismiss()
+
+        assertEquals(1, dismissals.size)
+        assertTrue(flagsRepository.markedAccounts.isEmpty())
+        assertEquals(3_000L, viewModel.bonusIon.value)
+    }
+
+    @Test
+    fun `every close of the popup is reported to the server again`() = runTest {
+        val viewModel = WelcomeBonusViewModel(authRepository, flagsRepository)
+        val dismissals = dismissals(viewModel)
+
+        viewModel.onDismiss()
+        viewModel.onDismiss()
+
+        assertEquals(2, dismissals.size)
+        assertEquals(listOf("1", "1"), flagsRepository.markedAccounts)
     }
 
     private fun TestScope.dismissals(viewModel: WelcomeBonusViewModel): List<Unit> {

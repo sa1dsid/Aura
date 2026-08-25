@@ -49,6 +49,8 @@ internal class FakeHomeRemoteDataSource(
 
     val interruptedSessions = mutableListOf<String>()
 
+    val startedSessions = mutableListOf<String>()
+
     private var sessions = 0
     private var cooldownEndsAt: Long? = null
 
@@ -63,6 +65,7 @@ internal class FakeHomeRemoteDataSource(
     ): TapStateDto {
         if (startDelay > Duration.ZERO) delay(startDelay)
         sessions++
+        startedSessions += "session-$sessions"
 
         return TapStateDto(
             sessionId = "session-$sessions",

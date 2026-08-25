@@ -48,4 +48,18 @@ class PushTokenRepository @Inject constructor(
     suspend fun sync(enabled: Boolean) {
         if (enabled) register() else remove()
     }
+
+    suspend fun refresh() {
+        val enabled = withContext(ioDispatcher) {
+            try {
+                api.currentUser().pushEnabled
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+                null
+            }
+        } ?: return
+
+        sync(enabled)
+    }
 }

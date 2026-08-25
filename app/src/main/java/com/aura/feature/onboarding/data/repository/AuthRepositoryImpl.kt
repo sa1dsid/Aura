@@ -2,7 +2,9 @@ package com.aura.feature.onboarding.data.repository
 
 import com.aura.core.api.toAuthFailure
 import com.aura.core.auth.TokenStore
+import com.aura.core.common.ApplicationScope
 import com.aura.core.common.IoDispatcher
+import com.aura.core.push.PushTokenRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.onboarding.data.mapper.toDomain
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
@@ -12,7 +14,9 @@ import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
@@ -29,6 +33,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val remote: OnboardingRemoteDataSource,
     private val sessionStore: SessionStore,
     private val tokenStore: TokenStore,
+    private val pushTokenRepository: PushTokenRepository,
+    @ApplicationScope private val applicationScope: CoroutineScope,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AuthRepository {
 
@@ -39,7 +45,7 @@ class AuthRepositoryImpl @Inject constructor(
 
         try {
             val session = remote.restore().toDomain()
-            sessionStore.open(session.account)
+            openSession(session)
             if (session.invitePending) StartDestination.INVITE else StartDestination.HOME
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -74,13 +80,18 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
 
+    private fun openSession(session: AuthSession) {
+        sessionStore.open(session.account)
+        applicationScope.launch { pushTokenRepository.refresh() }
+    }
+
     private suspend fun authenticate(
         googleSignIn: Boolean = false,
         request: suspend () -> AuthSession,
     ): Result<AuthSession> = withContext(ioDispatcher) {
         try {
             val session = request()
-            sessionStore.open(session.account)
+            openSession(session)
             Result.success(session)
         } catch (cancellation: CancellationException) {
             throw cancellation

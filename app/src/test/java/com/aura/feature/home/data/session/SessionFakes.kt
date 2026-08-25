@@ -26,6 +26,7 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal const val SPARK_RATE_ON_WIFI = 20_000
@@ -35,15 +36,20 @@ internal fun isoAt(millis: Long): String = SimpleDateFormat(
     Locale.US,
 ).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date(millis))
 
+internal val STALLED_BEAT = 1.minutes
+
 internal class FakeHomeRemoteDataSource(
     private val scheduler: TestCoroutineScheduler,
     private val startDelay: Duration = Duration.ZERO,
+    private val finishDelay: Duration = Duration.ZERO,
 ) : HomeRemoteDataSource {
 
     var heartbeats = 0
         private set
 
     var heartbeatStatus = "running"
+
+    var stalledBeats = 0
 
     var cooldownShift = 0L
 
@@ -75,6 +81,11 @@ internal class FakeHomeRemoteDataSource(
     }
 
     override suspend fun tapHeartbeat(sessionId: String): TapStateDto {
+        if (stalledBeats > 0) {
+            stalledBeats--
+            delay(STALLED_BEAT)
+        }
+
         heartbeats++
         return TapStateDto(sessionId = sessionId, status = heartbeatStatus)
     }
@@ -85,6 +96,8 @@ internal class FakeHomeRemoteDataSource(
         networkLost: Boolean,
         appBackgrounded: Boolean,
     ): TapStateDto {
+        if (!interrupted && finishDelay > Duration.ZERO) delay(finishDelay)
+
         if (interrupted) {
             interruptedSessions += sessionId
             return TapStateDto(sessionId = sessionId, status = "interrupted")

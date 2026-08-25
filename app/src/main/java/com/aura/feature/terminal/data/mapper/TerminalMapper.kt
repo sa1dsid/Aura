@@ -50,12 +50,12 @@ fun PromoDto.toDomain(): PromoCode? {
 }
 
 private fun TransactionDto.resolveKind(): TransactionKind = when {
-    currency.equals(CURRENCY_SPARK, ignoreCase = true) -> TransactionKind.SPARK
     kind.contains("referral", ignoreCase = true) -> TransactionKind.REFERRAL
     kind.contains("data_share", ignoreCase = true) -> TransactionKind.DATA_SHARE
     kind.contains("traffic", ignoreCase = true) -> TransactionKind.DATA_SHARE
     kind.contains("exchange", ignoreCase = true) -> TransactionKind.EXCHANGE
     kind.contains("withdraw", ignoreCase = true) -> TransactionKind.EXCHANGE
+    currency.equals(CURRENCY_SPARK, ignoreCase = true) -> TransactionKind.SPARK
     else -> TransactionKind.ION
 }
 

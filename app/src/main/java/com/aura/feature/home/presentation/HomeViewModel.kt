@@ -143,8 +143,8 @@ class HomeViewModel @Inject constructor(
     private suspend fun onSessionEvent(event: TestSessionEvent) {
         when (event) {
             is TestSessionEvent.Completed -> {
-                refreshHome()
                 announce(HomeEvent.TestCompleted(event.rewardIon))
+                refreshHome()
             }
 
             TestSessionEvent.Interrupted -> announce(HomeEvent.TestInterrupted)

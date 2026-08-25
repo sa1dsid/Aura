@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.aura.core.common.ApplicationScope
+import com.aura.core.push.PushNotifier
 import com.aura.feature.home.presentation.components.mesh.MeshMapDefaults
 import com.aura.feature.home.presentation.components.mesh.WorldLandmass
 import com.aura.feature.network.data.background.BackgroundProbeScheduler
@@ -25,6 +26,9 @@ class AuraApp : Application(), Configuration.Provider {
     @Inject
     lateinit var backgroundProbeScheduler: BackgroundProbeScheduler
 
+    @Inject
+    lateinit var pushNotifier: PushNotifier
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
@@ -32,6 +36,7 @@ class AuraApp : Application(), Configuration.Provider {
         super.onCreate()
 
         backgroundProbeScheduler.schedule()
+        pushNotifier.createChannel()
 
         applicationScope.launch {
             WorldLandmass.dotGrid(

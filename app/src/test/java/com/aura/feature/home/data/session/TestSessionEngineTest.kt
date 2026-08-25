@@ -231,6 +231,34 @@ class TestSessionEngineTest {
         assertNull(store.pendingSessionId())
     }
 
+    @Test
+    fun `a hung heartbeat does not burn the session`() = runTest {
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler)
+        val engine = watchedEngine(remote)
+        val events = collectedEvents(engine)
+        engine.start()
+        advanceTimeBy(10.seconds)
+        val delivered = remote.heartbeats
+
+        remote.stalledBeats = 1
+        advanceTimeBy(20.seconds)
+
+        assertTrue(engine.state.value is TestSessionState.Running)
+        assertTrue(TestSessionEvent.Interrupted !in events)
+        assertTrue(remote.heartbeats > delivered)
+    }
+
+    @Test
+    fun `starts the cooldown while the finish call is still in flight`() = runTest {
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler, finishDelay = 3.seconds)
+        val engine = watchedEngine(remote)
+        engine.start()
+
+        advanceTimeBy(3.minutes + PAST_TICK)
+
+        assertTrue(engine.state.value is TestSessionState.Cooldown)
+    }
+
     private fun TestScope.collectedEvents(engine: TestSessionEngine): List<TestSessionEvent> {
         val events = mutableListOf<TestSessionEvent>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {

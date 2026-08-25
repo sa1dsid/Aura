@@ -18,6 +18,16 @@ data class OnboardingFlags(
     val inviteScreenPassed: Boolean,
     val bonusPopupShown: Boolean,
     val reservedBonusIon: Long,
-)
+) {
+    companion object {
+        const val DEFAULT_RESERVED_BONUS_ION = 3_000L
+
+        val FALLBACK = OnboardingFlags(
+            inviteScreenPassed = true,
+            bonusPopupShown = false,
+            reservedBonusIon = DEFAULT_RESERVED_BONUS_ION,
+        )
+    }
+}
 
 const val INVITE_CODE_LENGTH = 8

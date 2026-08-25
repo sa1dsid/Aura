@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <provider
+            android:name="com.aura.probe.PushTokenProbe"
+            android:authorities="${applicationId}.push-probe"
+            android:exported="false" />
+
+        <receiver
+            android:name="com.aura.probe.PushProbeReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+    </application>
+
+</manifest>

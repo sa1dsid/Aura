@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.aura.core.push.RequestNotificationPermission
 import com.aura.feature.account.presentation.menu.AccountMenuRoute
 import com.aura.feature.home.presentation.HomeRoute
 import com.aura.feature.home.presentation.HomeTab
@@ -94,6 +95,8 @@ private fun MainTabs(
         isMenuOpen = false
         isNewsOpen = true
     }
+
+    RequestNotificationPermission()
 
     Box(modifier) {
         when (tab) {

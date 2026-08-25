@@ -238,4 +238,11 @@
     <string name="battery_dialog_allow">Turn it off</string>
     <string name="battery_dialog_later">Later</string>
 
+    <!-- Пуши. push_channel_id — системный идентификатор канала, не переводится и не
+         меняется: смена значения создаёт новый канал и сбрасывает настройки звука.
+         Имя и описание канала видны в системных настройках уведомлений. -->
+    <string name="push_channel_id" translatable="false">aura_alerts</string>
+    <string name="push_channel_name">Aura alerts</string>
+    <string name="push_channel_description">Node status, rewards and mesh events</string>
+
 </resources>

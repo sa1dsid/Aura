@@ -19,11 +19,25 @@ class OnboardingFlagsRepositoryImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : OnboardingFlagsRepository {
 
-    override suspend fun flags(accountId: String): OnboardingFlags =
-        withContext(ioDispatcher) { remote.flags(accountId).toDomain() }
+    override suspend fun flags(accountId: String): OnboardingFlags = withContext(ioDispatcher) {
+        try {
+            remote.flags(accountId).toDomain()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            OnboardingFlags.FALLBACK
+        }
+    }
 
     override suspend fun markBonusPopupShown(accountId: String) {
-        withContext(ioDispatcher) { remote.markBonusPopupShown(accountId) }
+        withContext(ioDispatcher) {
+            try {
+                remote.markBonusPopupShown(accountId)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Throwable) {
+            }
+        }
     }
 }
 

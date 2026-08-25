@@ -60,6 +60,9 @@ class ApiNodesRemoteDataSource @Inject constructor(
             tierWithdrawalPercent = nodes.ionReferralPercentStage2.toDouble(),
             nextTier = null,
             friendsToNextTier = nodes.moreForNextTier
+                ?: nodes.nodeStatus.progressTarget
+                    ?.minus(nodes.nodeStatus.progressCurrent)
+                    ?.coerceAtLeast(0)
                 ?: nodes.nextThreshold?.minus(nodes.activeFriends)?.coerceAtLeast(0)
                 ?: 0,
             nextThreshold = nodes.nextThreshold,

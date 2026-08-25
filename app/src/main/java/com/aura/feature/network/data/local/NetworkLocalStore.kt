@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.aura.core.session.SessionCache
 import com.aura.feature.network.domain.model.PingRecord
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +31,7 @@ data class MeasuredQuality(
 @Singleton
 class NetworkLocalStore @Inject constructor(
     @param:ApplicationContext private val context: Context,
-) {
+) : SessionCache {
 
     private val preferences: Flow<Preferences> = context.networkDataStore.data
         .catch { error ->
@@ -43,6 +44,14 @@ class NetworkLocalStore @Inject constructor(
         val jitter = stored[JITTER_MS]
         val loss = stored[PACKET_LOSS]
         if (jitter == null || loss == null) null else MeasuredQuality(jitter, loss)
+    }
+
+    override suspend fun clearSession() {
+        context.networkDataStore.edit { stored ->
+            stored.remove(RECORDS)
+            stored.remove(JITTER_MS)
+            stored.remove(PACKET_LOSS)
+        }
     }
 
     suspend fun append(record: PingRecord) {

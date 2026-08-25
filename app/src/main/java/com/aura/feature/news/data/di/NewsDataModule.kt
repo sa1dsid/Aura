@@ -1,5 +1,6 @@
 package com.aura.feature.news.data.di
 
+import com.aura.core.session.SessionCache
 import com.aura.feature.news.data.remote.ApiNewsRemoteDataSource
 import com.aura.feature.news.data.remote.NewsRemoteDataSource
 import com.aura.feature.news.data.repository.NewsRepositoryImpl
@@ -8,6 +9,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -21,4 +23,8 @@ interface NewsDataModule {
     @Binds
     @Singleton
     fun bindNewsRepository(impl: NewsRepositoryImpl): NewsRepository
+
+    @Binds
+    @IntoSet
+    fun bindNewsSessionCache(impl: NewsRepositoryImpl): SessionCache
 }

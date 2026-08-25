@@ -1,6 +1,7 @@
 package com.aura.feature.nodes.data.repository
 
 import com.aura.core.common.IoDispatcher
+import com.aura.core.session.SessionCache
 import com.aura.feature.nodes.data.mapper.toDomain
 import com.aura.feature.nodes.data.remote.NodesRemoteDataSource
 import com.aura.feature.nodes.data.remote.dto.NodesSnapshotDto
@@ -20,9 +21,13 @@ import javax.inject.Singleton
 class NodesRepositoryImpl @Inject constructor(
     private val remote: NodesRemoteDataSource,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : NodesRepository {
+) : NodesRepository, SessionCache {
 
     private val snapshot = MutableStateFlow<NodesSnapshotDto?>(null)
+
+    override suspend fun clearSession() {
+        snapshot.value = null
+    }
 
     override fun observeNodes(): Flow<NodesState> =
         snapshot.filterNotNull().map(NodesSnapshotDto::toDomain)

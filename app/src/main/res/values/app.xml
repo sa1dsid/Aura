@@ -104,6 +104,13 @@
     <string name="terminal_card_promo_hint">tap to check</string>
     <string name="terminal_card_counter">+%1$d</string>
 
+    <!-- ДЛИННАЯ: списки Терминала приходят с сервера, и пока ответа нет или
+         запрос сорвался, пустое состояние показывать нельзя — это враньё.
+         В поставке заказчика ключей под загрузку и обрыв запроса нет. -->
+    <string name="terminal_loading">LOADING</string>
+    <string name="terminal_failed_title">Couldn\'t load</string>
+    <string name="terminal_failed_text">Check your connection and tap to try again</string>
+
     <string name="tx_title">Transactions</string>
     <!-- ДЛИННАЯ: подзаголовок экрана, в макете переносится на две строки. -->
     <string name="tx_subtitle">Every ION and Spark event — coupons live separately in Promo Codes</string>

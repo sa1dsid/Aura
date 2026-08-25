@@ -3,6 +3,7 @@ package com.aura.feature.account.data.repository
 import com.aura.core.auth.TokenStore
 import com.aura.core.common.IoDispatcher
 import com.aura.core.push.PushTokenRepository
+import com.aura.core.session.SessionCache
 import com.aura.feature.account.data.mapper.toDomain
 import com.aura.feature.account.data.mapper.toProfile
 import com.aura.feature.account.data.remote.AccountRemoteDataSource
@@ -26,6 +27,7 @@ class AccountRepositoryImpl @Inject constructor(
     private val sessionStore: SessionStore,
     private val tokenStore: TokenStore,
     private val pushTokenRepository: PushTokenRepository,
+    private val sessionCaches: Set<@JvmSuppressWildcards SessionCache>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : AccountRepository {
 
@@ -53,6 +55,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun logOut() {
         runCatching { pushTokenRepository.remove() }
+        sessionCaches.forEach { cache -> cache.clearSession() }
         sessionStore.close()
         tokenStore.clear()
     }

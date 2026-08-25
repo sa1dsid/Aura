@@ -2,6 +2,7 @@ package com.aura.feature.home.data.repository
 
 import com.aura.core.common.IoDispatcher
 import com.aura.core.network.NetworkMonitor
+import com.aura.core.session.SessionCache
 import com.aura.feature.home.data.mapper.toDomain
 import com.aura.feature.home.data.remote.MeshRemoteDataSource
 import com.aura.feature.home.domain.model.MeshCity
@@ -26,7 +27,7 @@ class MeshRepositoryImpl @Inject constructor(
     private val remote: MeshRemoteDataSource,
     private val networkMonitor: NetworkMonitor,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : MeshRepository {
+) : MeshRepository, SessionCache {
 
     private val cities = MutableStateFlow<List<MeshCity>>(emptyList())
     private val nodesOnline = MutableStateFlow<NodesOnline>(NodesOnline.Unknown)
@@ -34,6 +35,10 @@ class MeshRepositoryImpl @Inject constructor(
 
     private val refreshMutex = Mutex()
     private var lastFetchAtMillis = 0L
+
+    override suspend fun clearSession() {
+        honestPresence.value = null
+    }
 
     override fun observeMesh(): Flow<MeshState> =
         combine(

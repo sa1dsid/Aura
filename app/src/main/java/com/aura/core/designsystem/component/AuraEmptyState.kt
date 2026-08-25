@@ -3,6 +3,8 @@ package com.aura.core.designsystem.component
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +30,8 @@ private val CircleSize = 64.dp
 
 private val IconSize = 24.dp
 
+private val LoadingPadding = 24.dp
+
 @Composable
 fun AuraEmptyState(
     @DrawableRes iconRes: Int,
@@ -34,12 +39,25 @@ fun AuraEmptyState(
     text: String,
     modifier: Modifier = Modifier,
     textWidth: Dp? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val colors = AuraTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = onClick,
+                    )
+                }
+            )
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -78,5 +96,21 @@ fun AuraEmptyState(
                 modifier = if (textWidth == null) Modifier else Modifier.width(textWidth),
             )
         }
+    }
+}
+
+@Composable
+fun AuraLoadingState(text: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = LoadingPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = text,
+            style = AuraTheme.typography.cardLabel,
+            color = AuraTheme.colors.textSecondary,
+        )
     }
 }

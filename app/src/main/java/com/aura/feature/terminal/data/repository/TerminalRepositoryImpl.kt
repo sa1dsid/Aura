@@ -3,6 +3,7 @@ package com.aura.feature.terminal.data.repository
 import com.aura.core.api.dto.PromoDto
 import com.aura.core.api.dto.TransactionDto
 import com.aura.core.common.IoDispatcher
+import com.aura.core.session.SessionCache
 import com.aura.feature.promo.domain.model.PromoCode
 import com.aura.feature.terminal.data.mapper.toDomain
 import com.aura.feature.terminal.data.remote.TerminalRemoteDataSource
@@ -24,7 +25,7 @@ import javax.inject.Singleton
 class TerminalRepositoryImpl @Inject constructor(
     private val remote: TerminalRemoteDataSource,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : TerminalRepository {
+) : TerminalRepository, SessionCache {
 
     private val _counters = MutableStateFlow(TerminalCounters())
     private val _transactions = MutableStateFlow(emptyList<TransactionEvent>())
@@ -61,37 +62,39 @@ class TerminalRepositoryImpl @Inject constructor(
         _counters.update { it.copy(unreadPromoCodes = 0) }
     }
 
-    override suspend fun openTransactions() {
-        withContext(ioDispatcher) {
-            clearTransactionsCounter()
-
-            val loaded = try {
-                remote.transactions()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                return@withContext
-            }
-
-            _transactions.value = loaded.mapNotNull(TransactionDto::toDomain)
-                .sortedByDescending(TransactionEvent::timestamp)
-                .take(TRANSACTIONS_LIMIT)
-        }
+    override suspend fun clearSession() {
+        _counters.value = TerminalCounters()
+        _transactions.value = emptyList()
+        _promoCodes.value = emptyList()
     }
 
-    override suspend fun openPromoCodes() {
-        withContext(ioDispatcher) {
-            clearPromoCodesCounter()
-
-            val loaded = try {
-                remote.promoCodes()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                return@withContext
-            }
-
-            _promoCodes.value = loaded.mapNotNull(PromoDto::toDomain)
+    override suspend fun openTransactions(): Boolean = withContext(ioDispatcher) {
+        val loaded = try {
+            remote.transactions()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            return@withContext false
         }
+
+        _transactions.value = loaded.mapNotNull(TransactionDto::toDomain)
+            .sortedByDescending(TransactionEvent::timestamp)
+            .take(TRANSACTIONS_LIMIT)
+        clearTransactionsCounter()
+        true
+    }
+
+    override suspend fun openPromoCodes(): Boolean = withContext(ioDispatcher) {
+        val loaded = try {
+            remote.promoCodes()
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            return@withContext false
+        }
+
+        _promoCodes.value = loaded.mapNotNull(PromoDto::toDomain)
+        clearPromoCodesCounter()
+        true
     }
 }

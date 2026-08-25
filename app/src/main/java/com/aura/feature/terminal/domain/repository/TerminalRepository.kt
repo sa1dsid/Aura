@@ -18,7 +18,7 @@ interface TerminalRepository {
 
     fun clearPromoCodesCounter()
 
-    suspend fun openTransactions()
+    suspend fun openTransactions(): Boolean
 
-    suspend fun openPromoCodes()
+    suspend fun openPromoCodes(): Boolean
 }

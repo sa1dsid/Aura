@@ -81,6 +81,7 @@ class HomeViewModelTest {
         viewModel.onScreenResumed()
         engine.start()
         runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         networkMonitor.set(NetworkStatus(isOnline = false, isVpnActive = false))
         runCurrent()
@@ -97,6 +98,7 @@ class HomeViewModelTest {
         viewModel.onScreenResumed()
         engine.start()
         runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         viewModel.onScreenLeft()
         runCurrent()
@@ -113,6 +115,7 @@ class HomeViewModelTest {
         viewModel.onScreenResumed()
         engine.start()
         runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
         viewModel.onScreenLeft()
         runCurrent()
 
@@ -129,6 +132,8 @@ class HomeViewModelTest {
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         advanceTimeBy(3.minutes + PAST_TICK)
 
@@ -142,6 +147,7 @@ class HomeViewModelTest {
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
         advanceTimeBy(3.minutes + PAST_TICK)
 
         networkMonitor.set(NetworkStatus(isOnline = true, isVpnActive = true))

@@ -2,11 +2,13 @@ package com.aura.feature.transactions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.core.common.LoadStatus
 import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.terminal.domain.repository.TerminalRepository
 import com.aura.feature.transactions.domain.model.TransactionFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,17 +28,23 @@ class TransactionsViewModel @Inject constructor(
 
     private val filter = MutableStateFlow(TransactionFilter.ALL)
 
+    private val status = MutableStateFlow(LoadStatus.LOADING)
+
+    private var loadJob: Job? = null
+
     val uiState: StateFlow<TransactionsUiState> = combine(
         sessionStore.account,
         terminalRepository.transactions,
         filter,
         newsRepository.hasUnread,
-    ) { account, loaded, selected, hasUnreadNews ->
+        status,
+    ) { account, loaded, selected, hasUnreadNews, loadStatus ->
         TransactionsUiState(
             handle = account?.handle,
             hasUnreadNews = hasUnreadNews,
             events = loaded,
             filter = selected,
+            status = loadStatus,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -44,11 +52,24 @@ class TransactionsViewModel @Inject constructor(
         initialValue = TransactionsUiState(),
     )
 
-    init {
-        viewModelScope.launch { terminalRepository.openTransactions() }
-    }
+    fun onScreenResumed() = load()
+
+    fun onRetryClick() = load()
 
     fun onFilterClick(selected: TransactionFilter) {
         filter.value = selected
+    }
+
+    private fun load() {
+        if (loadJob?.isActive == true) return
+
+        loadJob = viewModelScope.launch {
+            status.value = LoadStatus.LOADING
+            status.value = if (terminalRepository.openTransactions()) {
+                LoadStatus.READY
+            } else {
+                LoadStatus.FAILED
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.aura.feature.transactions.presentation.preview
 
+import com.aura.core.common.LoadStatus
 import com.aura.feature.transactions.domain.model.TransactionEvent
 import com.aura.feature.transactions.domain.model.TransactionKind
 import com.aura.feature.transactions.presentation.TransactionsUiState
@@ -399,7 +400,8 @@ object TransactionsPreviewData {
     val content = TransactionsUiState(
         handle = "syrex",
         events = events,
+        status = LoadStatus.READY,
     )
 
-    val empty = TransactionsUiState(handle = "syrex")
+    val empty = TransactionsUiState(handle = "syrex", status = LoadStatus.READY)
 }

@@ -6,6 +6,7 @@ import com.aura.core.common.TimeSource
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
+import com.aura.core.session.SessionCache
 import com.aura.core.system.EmulatorDetector
 import com.aura.feature.home.data.local.TapSessionStore
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
@@ -34,6 +35,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.atomic.AtomicLong
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -65,7 +67,7 @@ class TestSessionEngine @Inject constructor(
     private val emulatorDetector: EmulatorDetector,
     private val pingHistory: PingHistoryRepository,
     private val timeSource: TimeSource,
-) {
+) : SessionCache {
 
     private val _state = MutableStateFlow<TestSessionState>(TestSessionState.Ready(REWARD_ION))
     val state: StateFlow<TestSessionState> = _state.asStateFlow()
@@ -98,6 +100,26 @@ class TestSessionEngine @Inject constructor(
                 delay(TICK)
                 tick()
             }
+        }
+    }
+
+    override suspend fun clearSession() {
+        interruptEpoch.incrementAndGet()
+        heartbeat?.cancel()
+        release?.cancel()
+        releasePendingSession()
+
+        mutex.withLock {
+            sessionId = null
+            runningEndsAt = null
+            cooldownEndsAt = null
+            pausedRemaining = null
+            isVpnPaused = false
+            sparkSyncedAt = 0L
+            isStarting = false
+            isFinishing = false
+            _spark.value = SparkWindow()
+            _state.value = TestSessionState.Ready(REWARD_ION)
         }
     }
 
@@ -145,7 +167,7 @@ class TestSessionEngine @Inject constructor(
         val epoch = interruptEpoch.get()
 
         scope.launch {
-            release?.join()
+            withTimeoutOrNull(RELEASE_WAIT) { release?.join() }
 
             val allowed = mutex.withLock {
                 if (isStarting || _state.value !is TestSessionState.Ready) {
@@ -165,6 +187,7 @@ class TestSessionEngine @Inject constructor(
                     emulator = emulatorDetector.isEmulator,
                 )
             } catch (cancellation: CancellationException) {
+                mutex.withLock { isStarting = false }
                 throw cancellation
             } catch (error: Throwable) {
                 val rejection = error.toTapRejection()
@@ -435,6 +458,7 @@ class TestSessionEngine @Inject constructor(
 
     private companion object {
         val TICK = 1.seconds
+        val RELEASE_WAIT = 2.seconds
         val HEARTBEAT_INTERVAL = 5.seconds
         val HEARTBEAT_RETRY = 1.seconds
     }

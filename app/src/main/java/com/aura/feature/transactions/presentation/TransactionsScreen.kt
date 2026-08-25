@@ -18,9 +18,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aura.R
+import com.aura.core.common.LoadStatus
 import com.aura.core.designsystem.component.AuraEmptyState
+import com.aura.core.designsystem.component.AuraLoadingState
 import com.aura.core.designsystem.component.AuraNestedTopBar
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.HomeTab
@@ -46,12 +50,17 @@ fun TransactionsRoute(
 
     BackHandler(onBack = onBack)
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onScreenResumed()
+    }
+
     TransactionsScreen(
         uiState = uiState,
         actions = TransactionsActions(
             onBackClick = onBack,
             onNewsClick = onNewsClick,
             onFilterClick = viewModel::onFilterClick,
+            onRetryClick = viewModel::onRetryClick,
         ),
         onTabSelected = onTabSelected,
         modifier = modifier,
@@ -137,26 +146,39 @@ private fun TransactionsContent(
 
             Spacer(Modifier.height(12.dp))
 
-            if (uiState.events.isEmpty()) {
-                AuraEmptyState(
+            when {
+                uiState.events.isNotEmpty() -> {
+                    TransactionFilterRow(
+                        selected = uiState.filter,
+                        onFilterClick = actions.onFilterClick,
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    TransactionsLogCard(
+                        events = visibleEvents,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                uiState.status == LoadStatus.LOADING -> AuraLoadingState(
+                    text = stringResource(R.string.terminal_loading),
+                )
+
+                uiState.status == LoadStatus.FAILED -> AuraEmptyState(
+                    iconRes = R.drawable.ic_wifi,
+                    title = stringResource(R.string.terminal_failed_title),
+                    text = stringResource(R.string.terminal_failed_text),
+                    onClick = actions.onRetryClick,
+                )
+
+                else -> AuraEmptyState(
                     iconRes = R.drawable.ic_transaction_minus,
                     title = stringResource(R.string.tx_empty_title),
                     text = stringResource(R.string.tx_empty_text),
                 )
-            } else {
-                TransactionFilterRow(
-                    selected = uiState.filter,
-                    onFilterClick = actions.onFilterClick,
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                TransactionsLogCard(
-                    events = visibleEvents,
-                    modifier = Modifier.weight(1f),
-                )
-
-                Spacer(Modifier.height(16.dp))
             }
         }
     }

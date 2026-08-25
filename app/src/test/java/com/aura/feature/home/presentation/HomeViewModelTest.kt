@@ -1,5 +1,6 @@
 package com.aura.feature.home.presentation
 
+import androidx.lifecycle.ViewModelStore
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkStatus
 import com.aura.feature.home.data.session.TestSessionEngine
@@ -37,6 +38,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -52,6 +54,8 @@ private const val REWARD_ION = 20
 
 private val PAST_TICK = 1.milliseconds
 
+private const val VIEW_MODEL_KEY = "home"
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
@@ -59,6 +63,7 @@ class HomeViewModelTest {
     private val homeRepository = FakeHomeRepository()
     private val meshRepository = FakeMeshRepository()
     private val networkMonitor = FakeNetworkMonitor()
+    private val viewModelStore = ViewModelStore()
 
     @Before
     fun setUp() {
@@ -70,55 +75,75 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun homeTest(body: suspend TestScope.() -> Unit) = runTest {
+        try {
+            body()
+        } finally {
+            viewModelStore.clear()
+        }
+    }
+
     @Test
-    fun `burns the session when the network drops`() = runTest {
+    fun `burns the session when the network drops`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         networkMonitor.set(NetworkStatus(isOnline = false, isVpnActive = false))
+        runCurrent()
 
         assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
         assertEquals(listOf(HomeEvent.TestInterrupted), events)
     }
 
     @Test
-    fun `burns the session when the screen is left`() = runTest {
+    fun `burns the session when the screen is left`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         viewModel.onScreenLeft()
+        runCurrent()
 
         assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
         assertTrue(events.isEmpty())
     }
 
     @Test
-    fun `shows the interruption toast once the screen is back`() = runTest {
+    fun `shows the interruption toast once the screen is back`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
         viewModel.onScreenLeft()
+        runCurrent()
 
         viewModel.onScreenResumed()
+        runCurrent()
 
         assertEquals(listOf(HomeEvent.TestInterrupted), events)
     }
 
     @Test
-    fun `reports the completed session`() = runTest {
+    fun `reports the completed session`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
 
         advanceTimeBy(3.minutes + PAST_TICK)
 
@@ -126,12 +151,13 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `pauses the cooldown while a vpn is on and reports the resume`() = runTest {
+    fun `pauses the cooldown while a vpn is on and reports the resume`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
         val events = collectedEvents(viewModel)
         viewModel.onScreenResumed()
         engine.start()
+        runCurrent()
         advanceTimeBy(3.minutes + PAST_TICK)
 
         networkMonitor.set(NetworkStatus(isOnline = true, isVpnActive = true))
@@ -139,9 +165,10 @@ class HomeViewModelTest {
 
         val paused = engine.state.value as TestSessionState.Cooldown
         assertTrue(paused.isPausedByVpn)
-        assertEquals(12.hours, paused.remaining)
+        assertEquals(12.hours - PAST_TICK, paused.remaining)
 
         networkMonitor.set(NetworkStatus(isOnline = true, isVpnActive = false))
+        runCurrent()
 
         assertTrue(HomeEvent.CooldownResumed in events)
     }
@@ -160,7 +187,7 @@ class HomeViewModelTest {
         return engine
     }
 
-    private fun viewModel(engine: TestSessionEngine) = HomeViewModel(
+    private fun viewModel(engine: TestSessionEngine): HomeViewModel = HomeViewModel(
         observeHomeState = ObserveHomeStateUseCase(homeRepository),
         observeMeshState = ObserveMeshStateUseCase(meshRepository),
         refreshHome = RefreshHomeUseCase(homeRepository, meshRepository),
@@ -173,7 +200,7 @@ class HomeViewModelTest {
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
-    )
+    ).also { created -> viewModelStore.put(VIEW_MODEL_KEY, created) }
 
     private fun TestScope.collectedEvents(viewModel: HomeViewModel): List<HomeEvent> {
         val events = mutableListOf<HomeEvent>()

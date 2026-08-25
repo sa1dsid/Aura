@@ -12,6 +12,7 @@ import com.aura.feature.onboarding.domain.usecase.ApplyInviteCodeUseCase
 import com.aura.feature.onboarding.domain.usecase.ObserveInviteAttributionUseCase
 import com.aura.feature.onboarding.domain.usecase.SkipInviteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,13 +38,23 @@ class InviteViewModel @Inject constructor(
     private val eventChannel = Channel<InviteEvent>(Channel.BUFFERED)
     val events: Flow<InviteEvent> = eventChannel.receiveAsFlow()
 
-    init {
-        viewModelScope.launch {
-            when (val attribution = observeInviteAttribution()) {
-                is InviteAttribution.FromLink ->
-                    _uiState.update { it.copy(code = attribution.code, locked = true) }
+    private var loadJob: Job? = null
 
-                InviteAttribution.None -> Unit
+    private var preparedAccountId: String? = null
+
+    fun onScreenResumed() {
+        if (loadJob?.isActive == true) return
+
+        loadJob = viewModelScope.launch {
+            val accountId = authRepository.currentAccount()?.id ?: return@launch
+            if (accountId == preparedAccountId) return@launch
+            preparedAccountId = accountId
+
+            _uiState.value = when (val attribution = observeInviteAttribution()) {
+                is InviteAttribution.FromLink ->
+                    InviteUiState(code = attribution.code, locked = true)
+
+                InviteAttribution.None -> InviteUiState()
             }
         }
     }

@@ -38,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aura.R
 import com.aura.core.designsystem.component.auraDropShadow
@@ -56,6 +58,10 @@ fun WelcomeBonusRoute(
     viewModel: WelcomeBonusViewModel = hiltViewModel(),
 ) {
     val bonusIon by viewModel.bonusIon.collectAsStateWithLifecycle()
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onScreenResumed()
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.dismissed.collect { onFinished() }

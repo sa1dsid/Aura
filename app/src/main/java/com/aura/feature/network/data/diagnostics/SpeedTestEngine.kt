@@ -2,6 +2,7 @@ package com.aura.feature.network.data.diagnostics
 
 import com.aura.core.common.ApplicationScope
 import com.aura.core.network.NetworkMonitor
+import com.aura.core.session.SessionCache
 import com.aura.feature.network.domain.model.ConnectionGrade
 import com.aura.feature.network.domain.model.ConnectionScoring
 import com.aura.feature.network.domain.model.PingSource
@@ -39,7 +40,7 @@ class SpeedTestEngine @Inject constructor(
     private val pingProbe: PingProbe,
     private val throughputProbe: ThroughputProbe,
     private val pingHistory: PingHistoryRepository,
-) {
+) : SessionCache {
 
     private val _state = MutableStateFlow<SpeedTestState>(SpeedTestState.Idle)
     val state: StateFlow<SpeedTestState> = _state.asStateFlow()
@@ -107,6 +108,8 @@ class SpeedTestEngine @Inject constructor(
             pingHistory.record(result, PingSource.DIAGNOSTIC)
         }
     }
+
+    override suspend fun clearSession() = cancel()
 
     fun cancel() {
         running?.cancel()

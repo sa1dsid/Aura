@@ -1,6 +1,7 @@
 package com.aura.feature.transactions.presentation
 
 import androidx.compose.runtime.Immutable
+import com.aura.core.common.LoadStatus
 import com.aura.feature.transactions.domain.model.TransactionEvent
 import com.aura.feature.transactions.domain.model.TransactionFilter
 
@@ -10,6 +11,7 @@ data class TransactionsUiState(
     val hasUnreadNews: Boolean = false,
     val events: List<TransactionEvent> = emptyList(),
     val filter: TransactionFilter = TransactionFilter.ALL,
+    val status: LoadStatus = LoadStatus.LOADING,
 )
 
 @Immutable
@@ -17,4 +19,5 @@ data class TransactionsActions(
     val onBackClick: () -> Unit = {},
     val onNewsClick: () -> Unit = {},
     val onFilterClick: (TransactionFilter) -> Unit = {},
+    val onRetryClick: () -> Unit = {},
 )

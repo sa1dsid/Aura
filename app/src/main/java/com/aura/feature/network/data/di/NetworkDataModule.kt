@@ -1,9 +1,12 @@
 package com.aura.feature.network.data.di
 
+import com.aura.core.session.SessionCache
 import com.aura.feature.network.data.diagnostics.HttpThroughputProbe
 import com.aura.feature.network.data.diagnostics.SocketPingProbe
+import com.aura.feature.network.data.diagnostics.SpeedTestEngine
 import com.aura.feature.network.data.diagnostics.ThroughputProbe
 import com.aura.feature.network.data.diagnostics.PingProbe
+import com.aura.feature.network.data.local.NetworkLocalStore
 import com.aura.feature.network.data.remote.ApiNetworkRemoteDataSource
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
 import com.aura.feature.network.data.repository.NetworkRepositoryImpl
@@ -14,6 +17,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -39,4 +43,16 @@ interface NetworkDataModule {
     @Binds
     @Singleton
     fun bindPingHistoryRepository(impl: PingHistoryRepositoryImpl): PingHistoryRepository
+
+    @Binds
+    @IntoSet
+    fun bindNetworkSessionCache(impl: NetworkRepositoryImpl): SessionCache
+
+    @Binds
+    @IntoSet
+    fun bindNetworkLogSessionCache(impl: NetworkLocalStore): SessionCache
+
+    @Binds
+    @IntoSet
+    fun bindSpeedTestSessionCache(impl: SpeedTestEngine): SessionCache
 }

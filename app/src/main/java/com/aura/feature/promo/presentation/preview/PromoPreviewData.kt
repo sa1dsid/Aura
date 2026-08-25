@@ -1,5 +1,6 @@
 package com.aura.feature.promo.presentation.preview
 
+import com.aura.core.common.LoadStatus
 import com.aura.feature.promo.domain.model.PromoCode
 import com.aura.feature.promo.domain.model.PromoCodeKind
 import com.aura.feature.promo.presentation.PromoCodesUiState
@@ -39,7 +40,8 @@ object PromoPreviewData {
     val content = PromoCodesUiState(
         handle = "syrex",
         codes = codes,
+        status = LoadStatus.READY,
     )
 
-    val empty = PromoCodesUiState(handle = "syrex")
+    val empty = PromoCodesUiState(handle = "syrex", status = LoadStatus.READY)
 }

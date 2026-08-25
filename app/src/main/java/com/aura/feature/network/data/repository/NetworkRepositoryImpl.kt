@@ -2,6 +2,7 @@ package com.aura.feature.network.data.repository
 
 import com.aura.core.common.IoDispatcher
 import com.aura.core.network.NetworkMonitor
+import com.aura.core.session.SessionCache
 import com.aura.feature.network.data.local.NetworkLocalStore
 import com.aura.feature.network.data.mapper.toDomain
 import com.aura.feature.network.data.mapper.toMetrics
@@ -26,9 +27,13 @@ class NetworkRepositoryImpl @Inject constructor(
     private val localStore: NetworkLocalStore,
     private val networkMonitor: NetworkMonitor,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : NetworkRepository {
+) : NetworkRepository, SessionCache {
 
     private val snapshot = MutableStateFlow<NetworkSnapshotDto?>(null)
+
+    override suspend fun clearSession() {
+        snapshot.value = null
+    }
 
     override fun observeConnection(): Flow<ConnectionDetails> =
         combine(snapshot.filterNotNull(), networkMonitor.status) { dto, status ->

@@ -6,6 +6,7 @@ import com.aura.core.common.TimeSource
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
+import com.aura.core.session.SessionCache
 import com.aura.core.system.EmulatorDetector
 import com.aura.feature.home.data.local.TapSessionStore
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
@@ -66,7 +67,7 @@ class TestSessionEngine @Inject constructor(
     private val emulatorDetector: EmulatorDetector,
     private val pingHistory: PingHistoryRepository,
     private val timeSource: TimeSource,
-) {
+) : SessionCache {
 
     private val _state = MutableStateFlow<TestSessionState>(TestSessionState.Ready(REWARD_ION))
     val state: StateFlow<TestSessionState> = _state.asStateFlow()
@@ -99,6 +100,26 @@ class TestSessionEngine @Inject constructor(
                 delay(TICK)
                 tick()
             }
+        }
+    }
+
+    override suspend fun clearSession() {
+        interruptEpoch.incrementAndGet()
+        heartbeat?.cancel()
+        release?.cancel()
+        releasePendingSession()
+
+        mutex.withLock {
+            sessionId = null
+            runningEndsAt = null
+            cooldownEndsAt = null
+            pausedRemaining = null
+            isVpnPaused = false
+            sparkSyncedAt = 0L
+            isStarting = false
+            isFinishing = false
+            _spark.value = SparkWindow()
+            _state.value = TestSessionState.Ready(REWARD_ION)
         }
     }
 

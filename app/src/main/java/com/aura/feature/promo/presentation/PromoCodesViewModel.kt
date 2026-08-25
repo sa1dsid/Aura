@@ -2,10 +2,13 @@ package com.aura.feature.promo.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aura.core.common.LoadStatus
 import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.terminal.domain.repository.TerminalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,15 +25,21 @@ class PromoCodesViewModel @Inject constructor(
     sessionStore: SessionStore,
 ) : ViewModel() {
 
+    private val status = MutableStateFlow(LoadStatus.LOADING)
+
+    private var loadJob: Job? = null
+
     val uiState: StateFlow<PromoCodesUiState> = combine(
         sessionStore.account,
         terminalRepository.promoCodes,
         newsRepository.hasUnread,
-    ) { account, loaded, hasUnreadNews ->
+        status,
+    ) { account, loaded, hasUnreadNews, loadStatus ->
         PromoCodesUiState(
             handle = account?.handle,
             hasUnreadNews = hasUnreadNews,
             codes = loaded,
+            status = loadStatus,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -38,7 +47,20 @@ class PromoCodesViewModel @Inject constructor(
         initialValue = PromoCodesUiState(),
     )
 
-    init {
-        viewModelScope.launch { terminalRepository.openPromoCodes() }
+    fun onScreenResumed() = load()
+
+    fun onRetryClick() = load()
+
+    private fun load() {
+        if (loadJob?.isActive == true) return
+
+        loadJob = viewModelScope.launch {
+            status.value = LoadStatus.LOADING
+            status.value = if (terminalRepository.openPromoCodes()) {
+                LoadStatus.READY
+            } else {
+                LoadStatus.FAILED
+            }
+        }
     }
 }

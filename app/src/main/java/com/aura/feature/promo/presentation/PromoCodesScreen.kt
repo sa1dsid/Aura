@@ -35,9 +35,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aura.R
+import com.aura.core.common.LoadStatus
 import com.aura.core.designsystem.component.AuraEmptyState
+import com.aura.core.designsystem.component.AuraLoadingState
 import com.aura.core.designsystem.component.AuraNestedTopBar
 import com.aura.core.designsystem.component.AuraToastHost
 import com.aura.core.designsystem.component.AuraToastKind
@@ -85,6 +89,10 @@ fun PromoCodesRoute(
 
     BackHandler(onBack = onBack)
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onScreenResumed()
+    }
+
     PromoCodesScreen(
         uiState = uiState,
         actions = PromoCodesActions(
@@ -97,6 +105,7 @@ fun PromoCodesRoute(
                     kind = AuraToastKind.SUCCESS,
                 )
             },
+            onRetryClick = viewModel::onRetryClick,
         ),
         onTabSelected = onTabSelected,
         toastState = toastState,
@@ -183,25 +192,38 @@ private fun PromoCodesContent(
 
             Spacer(Modifier.height(16.dp))
 
-            if (uiState.codes.isEmpty()) {
-                AuraEmptyState(
+            when {
+                uiState.codes.isNotEmpty() -> {
+                    PromoSection(
+                        labelRes = R.string.promo_section_spark,
+                        codes = sparkCodes,
+                        onCodeClick = actions.onCodeClick,
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    PromoSection(
+                        labelRes = R.string.promo_section_vpn,
+                        codes = vpnCodes,
+                        onCodeClick = actions.onCodeClick,
+                    )
+                }
+
+                uiState.status == LoadStatus.LOADING -> AuraLoadingState(
+                    text = stringResource(R.string.terminal_loading),
+                )
+
+                uiState.status == LoadStatus.FAILED -> AuraEmptyState(
+                    iconRes = R.drawable.ic_wifi,
+                    title = stringResource(R.string.terminal_failed_title),
+                    text = stringResource(R.string.terminal_failed_text),
+                    onClick = actions.onRetryClick,
+                )
+
+                else -> AuraEmptyState(
                     iconRes = R.drawable.ic_ticket_expired,
                     title = stringResource(R.string.promo_empty_title),
                     text = stringResource(R.string.promo_empty_text),
-                )
-            } else {
-                PromoSection(
-                    labelRes = R.string.promo_section_spark,
-                    codes = sparkCodes,
-                    onCodeClick = actions.onCodeClick,
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                PromoSection(
-                    labelRes = R.string.promo_section_vpn,
-                    codes = vpnCodes,
-                    onCodeClick = actions.onCodeClick,
                 )
             }
 

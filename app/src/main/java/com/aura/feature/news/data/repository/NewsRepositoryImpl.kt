@@ -2,6 +2,7 @@ package com.aura.feature.news.data.repository
 
 import com.aura.core.common.ApplicationScope
 import com.aura.core.common.IoDispatcher
+import com.aura.core.session.SessionCache
 import com.aura.feature.news.data.mapper.toDomain
 import com.aura.feature.news.data.remote.NewsRemoteDataSource
 import com.aura.feature.news.domain.model.NewsItem
@@ -22,7 +23,7 @@ class NewsRepositoryImpl @Inject constructor(
     private val remote: NewsRemoteDataSource,
     @param:ApplicationScope scope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : NewsRepository {
+) : NewsRepository, SessionCache {
 
     private val feed = MutableStateFlow(emptyList<NewsItem>())
 
@@ -34,6 +35,11 @@ class NewsRepositoryImpl @Inject constructor(
 
     init {
         scope.launch { refresh() }
+    }
+
+    override suspend fun clearSession() {
+        feed.value = emptyList()
+        unread.value = false
     }
 
     override suspend fun refresh() {

@@ -214,6 +214,23 @@ class TestSessionEngineTest {
         assertTrue(TestSessionEvent.CooldownResumed in events)
     }
 
+    @Test
+    fun `closing the session burns the running test and unlocks the button`() = runTest {
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler)
+        val store = FakeTapSessionStore()
+        val engine = watchedEngine(remote, store)
+        engine.start()
+        runCurrent()
+        assertTrue(engine.state.value is TestSessionState.Running)
+
+        engine.clearSession()
+        runCurrent()
+
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+        assertEquals(listOf("session-1"), remote.interruptedSessions)
+        assertNull(store.pendingSessionId())
+    }
+
     private fun TestScope.collectedEvents(engine: TestSessionEngine): List<TestSessionEvent> {
         val events = mutableListOf<TestSessionEvent>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {

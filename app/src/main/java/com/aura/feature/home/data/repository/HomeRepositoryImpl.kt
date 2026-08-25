@@ -4,6 +4,7 @@ import com.aura.core.api.dto.DashboardDto
 import com.aura.core.common.IoDispatcher
 import com.aura.core.config.AppConfigRepository
 import com.aura.core.network.NetworkMonitor
+import com.aura.core.session.SessionCache
 import com.aura.feature.home.data.mapper.toDomain
 import com.aura.feature.home.data.remote.HomeRemoteDataSource
 import com.aura.feature.home.data.session.TestSessionEngine
@@ -32,10 +33,15 @@ class HomeRepositoryImpl @Inject constructor(
     private val appConfigRepository: AppConfigRepository,
     private val nodesRepository: NodesRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : HomeRepository {
+) : HomeRepository, SessionCache {
 
     private val snapshot = MutableStateFlow<DashboardDto?>(null)
     private val battery = MutableStateFlow(BatteryOptimizationState())
+
+    override suspend fun clearSession() {
+        snapshot.value = null
+        battery.value = BatteryOptimizationState()
+    }
 
     override fun observeHome(): Flow<HomeState> =
         combine(

@@ -80,8 +80,14 @@ internal class MutableNetworkMonitor : NetworkMonitor {
         isOnline: Boolean = state.value.isOnline,
         isVpnActive: Boolean = state.value.isVpnActive,
         type: NetworkType = state.value.type,
+        operator: String? = state.value.operator,
     ) {
-        state.value = NetworkStatus(isOnline = isOnline, isVpnActive = isVpnActive, type = type)
+        state.value = NetworkStatus(
+            isOnline = isOnline,
+            isVpnActive = isVpnActive,
+            type = type,
+            operator = operator,
+        )
     }
 }
 

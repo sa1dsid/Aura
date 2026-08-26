@@ -16,26 +16,25 @@ object NodesPreviewData {
     private val invite = InviteOffer(
         code = "SYREX482",
         link = "https://ioaura.app/i/syrex",
-        quote = null,
         shareText = null,
     )
 
     private val socials = listOf(
-        SocialLink(SocialNetwork.DISCORD, "https://discord.gg/ioaura", null),
-        SocialLink(SocialNetwork.TELEGRAM, "https://t.me/ioaura", null),
-        SocialLink(SocialNetwork.X, "https://x.com/ioaura", null),
-        SocialLink(SocialNetwork.REDDIT, "https://reddit.com/r/ioaura", null),
-        SocialLink(SocialNetwork.INSTAGRAM, "https://instagram.com/ioaura", null),
-        SocialLink(SocialNetwork.SNAPCHAT, "https://snapchat.com/add/ioaura", null),
+        SocialLink(SocialNetwork.DISCORD, "https://discord.gg/ioaura"),
+        SocialLink(SocialNetwork.TELEGRAM, "https://t.me/ioaura"),
+        SocialLink(SocialNetwork.X, "https://x.com/ioaura"),
+        SocialLink(SocialNetwork.REDDIT, "https://reddit.com/r/ioaura"),
+        SocialLink(SocialNetwork.INSTAGRAM, "https://instagram.com/ioaura"),
+        SocialLink(SocialNetwork.SNAPCHAT, "https://snapchat.com/add/ioaura"),
     )
 
     private val friends = listOf(
-        Friend("f1", "Alex K.", "alexk", "AK", 12_400, 1_840, FriendStatus.EARNING),
-        Friend("f2", "Maria T.", "mariat", "MT", 8_900, 640, FriendStatus.EARNING),
-        Friend("f3", "Daniel R.", "danr", "DR", 54_200, 0, FriendStatus.SPARK_ONLY),
-        Friend("f4", "Jenna L.", "jennal", "JL", 3_100, 0, FriendStatus.SPARK_ONLY),
-        Friend("f5", "Peter V.", "peterv", "PV", 0, 0, FriendStatus.INACTIVE),
-        Friend("f6", "Rachel S.", "rashels", "RS", 0, 0, FriendStatus.INACTIVE),
+        Friend("f1", "Alex K.", "AK", 12_400, 1_840, FriendStatus.EARNING),
+        Friend("f2", "Maria T.", "MT", 8_900, 640, FriendStatus.EARNING),
+        Friend("f3", "Daniel R.", "DR", 54_200, 0, FriendStatus.SPARK_ONLY),
+        Friend("f4", "Jenna L.", "JL", 3_100, 0, FriendStatus.SPARK_ONLY),
+        Friend("f5", "Peter V.", "PV", 0, 0, FriendStatus.INACTIVE),
+        Friend("f6", "Rachel S.", "RS", 0, 0, FriendStatus.INACTIVE),
     )
 
     private val coreNode = NodesState(

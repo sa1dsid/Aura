@@ -46,6 +46,8 @@ abstract class NodesTestCase : IntegrationTestCase() {
 
     internal fun screenOf(stack: NodesStack): Pair<NodesViewModel, List<NodesUiState>> {
         val viewModel = stack.nodesViewModel()
-        return viewModel to stack.contentOf(viewModel)
+        val states = stack.contentOf(viewModel)
+        viewModel.onScreenResumed()
+        return viewModel to states
     }
 }

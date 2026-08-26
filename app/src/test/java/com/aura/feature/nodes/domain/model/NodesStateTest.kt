@@ -49,15 +49,14 @@ class NodesStateTest {
     }
 
     @Test
-    fun `a social row opens when it has any url`() {
-        assertTrue(socialOf(webUrl = "https://discord.gg/ioaura", appUrl = null).isOpenable)
-        assertTrue(socialOf(webUrl = "", appUrl = "discord://ioaura").isOpenable)
+    fun `a social row opens when the config gave it a url`() {
+        assertTrue(socialOf(webUrl = "https://discord.gg/ioaura").isOpenable)
     }
 
     @Test
     fun `a social row stays closed without a url`() {
-        assertFalse(socialOf(webUrl = "", appUrl = null).isOpenable)
-        assertFalse(socialOf(webUrl = "   ", appUrl = "   ").isOpenable)
+        assertFalse(socialOf(webUrl = "").isOpenable)
+        assertFalse(socialOf(webUrl = "   ").isOpenable)
     }
 
     @Test

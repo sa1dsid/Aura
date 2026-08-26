@@ -1,5 +1,6 @@
 package com.aura.core.api.dto
 
+import com.aura.core.api.serialization.DecimalAsDoubleSerializer
 import com.aura.core.api.serialization.DecimalAsLongSerializer
 import com.aura.core.api.serialization.DecimalAsStringSerializer
 import kotlinx.serialization.SerialName
@@ -28,7 +29,8 @@ data class NodesDto(
     @SerialName("more_for_next_tier") val moreForNextTier: Int? = null,
     @SerialName("node_status") val nodeStatus: NodeStatusDto = NodeStatusDto(),
     @SerialName("spark_referral_percent") val sparkReferralPercent: Int = 0,
-    @SerialName("ion_referral_percent_stage_2") val ionReferralPercentStage2: Int = 0,
+    @Serializable(DecimalAsDoubleSerializer::class)
+    @SerialName("ion_referral_percent_stage_2") val ionReferralPercentStage2: Double = 0.0,
     @SerialName("earned_from_referrals") val earnedFromReferrals: ReferralEarningsDto =
         ReferralEarningsDto(),
     val friends: List<NodeFriendDto> = emptyList(),

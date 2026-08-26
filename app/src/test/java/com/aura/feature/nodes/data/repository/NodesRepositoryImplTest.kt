@@ -1,8 +1,12 @@
 package com.aura.feature.nodes.data.repository
 
+import com.aura.core.config.AppConfigRepository
 import com.aura.feature.nodes.FakeNodesRemoteDataSource
+import com.aura.feature.nodes.accountOf
 import com.aura.feature.nodes.domain.model.NodesState
-import com.aura.feature.nodes.nodesSnapshot
+import com.aura.feature.nodes.nodesDto
+import com.aura.feature.onboarding.data.local.SessionStore
+import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +35,7 @@ class NodesRepositoryImplTest {
 
     @Test
     fun `a refresh publishes the mapped snapshot`() = runTest {
-        val remote = FakeNodesRemoteDataSource(nodesSnapshot(friendsJoined = 6, activeFriends = 2))
+        val remote = FakeNodesRemoteDataSource(nodesDto(friendsJoined = 6, activeFriends = 2))
         val repository = repositoryOf(remote)
         val states = collect(repository)
 
@@ -56,7 +60,7 @@ class NodesRepositoryImplTest {
 
     @Test
     fun `a failing refresh keeps the snapshot that is already there`() = runTest {
-        val remote = FakeNodesRemoteDataSource(nodesSnapshot(friendsJoined = 6))
+        val remote = FakeNodesRemoteDataSource(nodesDto(friendsJoined = 6))
         val repository = repositoryOf(remote)
         val states = collect(repository)
         repository.refresh()
@@ -90,7 +94,7 @@ class NodesRepositoryImplTest {
 
     @Test
     fun `a screen that arrives later still sees the cached snapshot`() = runTest {
-        val remote = FakeNodesRemoteDataSource(nodesSnapshot(friendsJoined = 4))
+        val remote = FakeNodesRemoteDataSource(nodesDto(friendsJoined = 4))
         val repository = repositoryOf(remote)
         repository.refresh()
 
@@ -103,7 +107,15 @@ class NodesRepositoryImplTest {
     fun `the fetch is handed to the io dispatcher`() = runTest {
         val io = CountingDispatcher(StandardTestDispatcher(testScheduler))
         val remote = FakeNodesRemoteDataSource()
-        val repository = NodesRepositoryImpl(remote = remote, ioDispatcher = io)
+        val repository = NodesRepositoryImpl(
+            remote = remote,
+            sessionStore = SessionStore(),
+            appConfigRepository = AppConfigRepository(
+                api = mockk(relaxed = true),
+                ioDispatcher = io,
+            ),
+            ioDispatcher = io,
+        )
 
         repository.refresh()
 
@@ -115,6 +127,11 @@ class NodesRepositoryImplTest {
         remote: FakeNodesRemoteDataSource,
     ) = NodesRepositoryImpl(
         remote = remote,
+        sessionStore = SessionStore().apply { open(accountOf()) },
+        appConfigRepository = AppConfigRepository(
+            api = mockk(relaxed = true),
+            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
+        ),
         ioDispatcher = UnconfinedTestDispatcher(testScheduler),
     )
 

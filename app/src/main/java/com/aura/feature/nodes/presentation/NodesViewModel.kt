@@ -31,10 +31,6 @@ class NodesViewModel @Inject constructor(
             initialValue = NodesUiState.Loading,
         )
 
-    init {
-        viewModelScope.launch { refreshNodes() }
-    }
-
     fun onScreenResumed() {
         viewModelScope.launch { refreshNodes() }
     }

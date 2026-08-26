@@ -47,12 +47,12 @@ class NodesInviteIntegrationTest : NodesTestCase() {
         }
 
     @Test
-    fun `an empty personal url wins over the account link`() = nodes { stack ->
+    fun `an empty personal url falls back to the account link`() = nodes { stack ->
         stack.signIn(inviteLink = Nodes.ACCOUNT_LINK)
         stack.server.always(NodesPaths.INVITE, body = Nodes.invite(personalUrl = ""))
         val (_, states) = screenOf(stack)
 
-        assertEquals("", awaitContent(states).nodes.invite.link)
+        assertEquals(Nodes.ACCOUNT_LINK, awaitContent(states).nodes.invite.link)
     }
 
     @Test
@@ -61,13 +61,6 @@ class NodesInviteIntegrationTest : NodesTestCase() {
         val (_, states) = screenOf(stack)
 
         assertNull(awaitContent(states).nodes.invite.shareText)
-    }
-
-    @Test
-    fun `the invite quote never arrives from the server`() = nodes { stack ->
-        val (_, states) = screenOf(stack)
-
-        assertNull(awaitContent(states).nodes.invite.quote)
     }
 
     @Test

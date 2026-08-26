@@ -10,6 +10,9 @@ enum class ReferralTier(@field:StringRes val labelRes: Int) {
     STABLE_LINK(R.string.tier_stable_link),
     CORE_NODE(R.string.tier_core_node),
     IONIC_PRIME(R.string.tier_ionic_prime),
+    ;
+
+    val next: ReferralTier? get() = entries.getOrNull(ordinal + 1)
 }
 
 enum class FriendStatus { EARNING, SPARK_ONLY, INACTIVE }
@@ -18,7 +21,6 @@ enum class FriendStatus { EARNING, SPARK_ONLY, INACTIVE }
 data class Friend(
     val id: String,
     val name: String,
-    val handle: String,
     val initials: String,
     val spark: Long,
     val ion: Long,
@@ -41,7 +43,6 @@ data class ReferralRewards(
 data class InviteOffer(
     val code: String,
     val link: String,
-    val quote: String?,
     val shareText: String?,
 )
 
@@ -51,9 +52,8 @@ enum class SocialNetwork { DISCORD, TELEGRAM, X, REDDIT, INSTAGRAM, SNAPCHAT }
 data class SocialLink(
     val network: SocialNetwork,
     val webUrl: String,
-    val appUrl: String?,
 ) {
-    val isOpenable: Boolean get() = webUrl.isNotBlank() || !appUrl.isNullOrBlank()
+    val isOpenable: Boolean get() = webUrl.isNotBlank()
 }
 
 @Immutable

@@ -50,20 +50,20 @@ class NodesViewModelTest {
     }
 
     @Test
-    fun `the view model refreshes as soon as it is created`() = runTest {
+    fun `the view model waits for the screen instead of fetching on its own`() = runTest {
         collected(viewModelOf())
 
-        assertEquals(1, repository.refreshes)
+        assertEquals(0, repository.refreshes)
     }
 
     @Test
-    fun `coming back to the screen refreshes again`() = runTest {
+    fun `every time the screen comes back it refreshes`() = runTest {
         val viewModel = collected(viewModelOf())
 
         viewModel.onScreenResumed()
         viewModel.onScreenResumed()
 
-        assertEquals(3, repository.refreshes)
+        assertEquals(2, repository.refreshes)
     }
 
     @Test

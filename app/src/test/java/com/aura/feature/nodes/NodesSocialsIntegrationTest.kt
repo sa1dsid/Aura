@@ -3,7 +3,6 @@ package com.aura.feature.nodes
 import com.aura.feature.nodes.domain.model.SocialNetwork
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -88,14 +87,6 @@ class NodesSocialsIntegrationTest : NodesTestCase() {
         val (_, states) = screenOf(stack)
 
         assertEquals(DESIGN_ORDER, awaitContent(states).nodes.socials.map { it.network })
-    }
-
-    @Test
-    fun `no social row ever carries an app link`() = nodes { stack ->
-        stack.server.always(NodesPaths.CONFIG, body = Nodes.config(Nodes.allSocials()))
-        val (_, states) = screenOf(stack)
-
-        awaitContent(states).nodes.socials.forEach { assertNull(it.appUrl) }
     }
 
     @Test

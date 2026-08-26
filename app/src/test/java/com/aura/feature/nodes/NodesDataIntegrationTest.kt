@@ -95,17 +95,14 @@ class NodesDataIntegrationTest : NodesTestCase() {
     }
 
     @Test
-    fun `a friend handle repeats the display name`() = nodes { stack ->
+    fun `a friend row carries the display name the server sent`() = nodes { stack ->
         stack.server.always(
             NodesPaths.NODES,
             body = Nodes.snapshot(friends = listOf(Nodes.friend(displayName = "Alex K."))),
         )
         val (_, states) = screenOf(stack)
 
-        val friend = awaitContent(states).nodes.friends.single()
-
-        assertEquals("Alex K.", friend.name)
-        assertEquals("Alex K.", friend.handle)
+        assertEquals("Alex K.", awaitContent(states).nodes.friends.single().name)
     }
 
     @Test

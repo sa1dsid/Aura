@@ -262,7 +262,6 @@ class HomeMapperTest {
         invite = InviteOffer(
             code = "SYREX482",
             link = "https://ioaura.app/i/SYREX482",
-            quote = null,
             shareText = null,
         ),
         friendsJoined = 3,

@@ -14,8 +14,6 @@ import com.aura.feature.nodes.domain.usecase.RefreshNodesUseCase
 import com.aura.feature.nodes.presentation.NodesUiState
 import com.aura.feature.nodes.presentation.NodesViewModel
 import com.aura.feature.onboarding.data.local.SessionStore
-import com.aura.feature.onboarding.domain.model.Account
-import com.aura.feature.onboarding.domain.model.AuthProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -60,24 +58,17 @@ internal class NodesStack(news: List<NewsItem> = emptyList()) {
 
     val appConfigRepository = AppConfigRepository(server.api, ioDispatcher)
 
-    val remote = ApiNodesRemoteDataSource(
-        api = server.api,
+    val remote = ApiNodesRemoteDataSource(server.api)
+
+    val repository = NodesRepositoryImpl(
+        remote = remote,
         sessionStore = sessionStore,
         appConfigRepository = appConfigRepository,
+        ioDispatcher = ioDispatcher,
     )
 
-    val repository = NodesRepositoryImpl(remote = remote, ioDispatcher = ioDispatcher)
-
     fun signIn(handle: String = "syrex", inviteLink: String = Nodes.ACCOUNT_LINK) {
-        sessionStore.open(
-            Account(
-                id = "39",
-                email = "smoke@auratest.dev",
-                handle = handle,
-                inviteLink = inviteLink,
-                authProvider = AuthProvider.EMAIL,
-            )
-        )
+        sessionStore.open(accountOf(handle = handle, inviteLink = inviteLink))
     }
 
     fun signOut() = sessionStore.close()

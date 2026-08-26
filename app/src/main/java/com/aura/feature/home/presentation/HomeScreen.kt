@@ -40,9 +40,13 @@ import com.aura.core.designsystem.component.AuraToastState
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.aura.core.system.isBatteryOptimizationIgnored
+import com.aura.core.system.isPackageInstalled
+import com.aura.core.system.openApp
+import com.aura.core.system.openStorePage
 import com.aura.core.system.openVpnSettings
 import com.aura.core.system.requestIgnoreBatteryOptimization
 import com.aura.core.system.shareText
@@ -51,9 +55,13 @@ import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
 import com.aura.feature.home.presentation.components.BatteryOptimizationDialog
 import com.aura.feature.home.presentation.components.BalanceCardsRow
+import com.aura.feature.home.presentation.components.CardGap
 import com.aura.feature.home.presentation.components.ConnectionBadge
 import com.aura.feature.home.presentation.components.HomeTopBar
 import com.aura.feature.home.presentation.components.InviteRow
+import com.aura.feature.home.presentation.components.IoniAiCard
+import com.aura.feature.home.presentation.components.IoniSheet
+import com.aura.feature.home.presentation.components.IoniSheetKind
 import com.aura.feature.home.presentation.components.MeshMapCard
 import com.aura.feature.home.presentation.components.NodeStatusCard
 import com.aura.feature.home.presentation.components.TeaserCards
@@ -75,6 +83,12 @@ fun HomeRoute(
     val content = uiState as? HomeUiState.Content
     var batteryRequestPending by rememberSaveable { mutableStateOf(false) }
     var batteryDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var batteryOptimizationDisabled by remember {
+        mutableStateOf(context.isBatteryOptimizationIgnored())
+    }
+    var ioniSheet by rememberSaveable { mutableStateOf<IoniSheetKind?>(null) }
+    var isIoniInstalled by remember { mutableStateOf(false) }
+    val ioniPackage = stringResource(R.string.ioni_app_package)
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (batteryRequestPending) {
@@ -84,6 +98,10 @@ fun HomeRoute(
             } else {
                 viewModel.onBatteryOptimizationDeclined()
             }
+        }
+        batteryOptimizationDisabled = context.isBatteryOptimizationIgnored()
+        if (ioniSheet == IoniSheetKind.LIVE) {
+            isIoniInstalled = context.isPackageInstalled(ioniPackage)
         }
         viewModel.onScreenResumed()
     }
@@ -143,10 +161,30 @@ fun HomeRoute(
                     context.shareText(context.getString(R.string.nodes_share_text, link))
                 }
             },
+            onIoniSheetRequest = { kind ->
+                if (kind == IoniSheetKind.LIVE) {
+                    isIoniInstalled = context.isPackageInstalled(ioniPackage)
+                }
+                ioniSheet = kind
+            },
+            onIoniSettingsClick = {
+                batteryRequestPending = context.requestIgnoreBatteryOptimization()
+            },
             onTabSelected = onTabSelected,
         ),
+        isBatteryOptimizationDisabled = batteryOptimizationDisabled,
         toastState = toastState,
         modifier = modifier,
+    )
+
+    IoniSheet(
+        kind = ioniSheet,
+        isAppInstalled = isIoniInstalled,
+        onDismissRequest = { ioniSheet = null },
+        onOpenIoniClick = {
+            val opened = isIoniInstalled && context.openApp(ioniPackage)
+            if (!opened) context.openStorePage(ioniPackage)
+        },
     )
 }
 
@@ -155,6 +193,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     actions: HomeActions,
     modifier: Modifier = Modifier,
+    isBatteryOptimizationDisabled: Boolean = true,
     toastState: AuraToastState = rememberAuraToastState(),
 ) {
     val colors = AuraTheme.colors
@@ -175,6 +214,7 @@ fun HomeScreen(
                 is HomeUiState.Content -> HomeContent(
                     state = uiState,
                     actions = actions,
+                    isBatteryOptimizationDisabled = isBatteryOptimizationDisabled,
                     contentPadding = innerPadding,
                 )
             }
@@ -194,6 +234,7 @@ fun HomeScreen(
 private fun HomeContent(
     state: HomeUiState.Content,
     actions: HomeActions,
+    isBatteryOptimizationDisabled: Boolean,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -237,6 +278,15 @@ private fun HomeContent(
                 onBonusWithdrawalClick = actions.onBonusWithdrawalClick,
                 onSparkClick = actions.onSparkClick,
                 onVpnCodeClick = actions.onVpnCodeClick,
+            )
+
+            Spacer(Modifier.height(CardGap))
+
+            IoniAiCard(
+                card = home.ioni,
+                isBatteryOptimizationDisabled = isBatteryOptimizationDisabled,
+                onOpenSheet = actions.onIoniSheetRequest,
+                onSettingsClick = actions.onIoniSettingsClick,
             )
 
             Spacer(Modifier.height(20.dp))

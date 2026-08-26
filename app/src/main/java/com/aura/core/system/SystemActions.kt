@@ -31,6 +31,20 @@ fun Context.requestIgnoreBatteryOptimization(): Boolean {
     return startSafely(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
 }
 
+fun Context.isPackageInstalled(packageName: String): Boolean =
+    packageManager.getLaunchIntentForPackage(packageName) != null
+
+fun Context.openApp(packageName: String): Boolean {
+    val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return false
+    return startSafely(launch)
+}
+
+fun Context.openStorePage(packageName: String): Boolean {
+    val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
+    if (startSafely(market)) return true
+    return openUrl("https://play.google.com/store/apps/details?id=$packageName")
+}
+
 fun Context.shareText(text: String) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"

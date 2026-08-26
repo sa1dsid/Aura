@@ -7,6 +7,8 @@ import com.aura.feature.home.domain.model.GeoPoint
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
+import com.aura.feature.home.domain.model.IoniCard
+import com.aura.feature.home.domain.model.IoniState
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.MeshState
 import com.aura.core.network.NetworkType
@@ -71,6 +73,10 @@ object HomePreviewData {
             ),
             tapCount = 14,
             batteryOptimization = BatteryOptimizationState(),
+            ioni = IoniCard(
+                state = IoniState.ACTIVE,
+                lastCompletedTapAt = System.currentTimeMillis() - PREVIEW_CHARGE_AGE,
+            ),
         ),
         mesh = MeshState(
             cities = listOf(
@@ -89,3 +95,5 @@ object HomePreviewData {
         ),
     )
 }
+
+private const val PREVIEW_CHARGE_AGE = 6L * 60 * 60 * 1000

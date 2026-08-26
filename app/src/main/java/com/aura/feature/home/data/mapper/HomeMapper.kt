@@ -3,6 +3,7 @@ package com.aura.feature.home.data.mapper
 import com.aura.core.api.dto.BatteryOptimizationDto
 import com.aura.core.api.dto.DashboardDto
 import com.aura.core.api.dto.NodeStatusDto
+import com.aura.core.common.parseIsoMillis
 import com.aura.core.config.FeatureFlags
 import com.aura.core.network.NetworkStatus
 import com.aura.feature.home.domain.model.BatteryOptimizationState
@@ -11,6 +12,8 @@ import com.aura.feature.home.domain.model.ConnectionState
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
+import com.aura.feature.home.domain.model.IoniCard
+import com.aura.feature.home.domain.model.IoniState
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SPARK_COUPON_THRESHOLD
@@ -82,6 +85,10 @@ fun DashboardDto.toDomain(
         inviteLink = nodes?.invite?.link.orEmpty(),
     ),
     tapCount = tapCount,
+    ioni = IoniCard(
+        state = ioniState.toIoniState(),
+        lastCompletedTapAt = ioniLastCompletedTap?.parseIsoMillis(),
+    ),
 )
 
 fun BatteryOptimizationDto.toDomain() = BatteryOptimizationState(
@@ -96,6 +103,11 @@ private fun NodeStatusDto.tierGaugePercent(): Int {
 }
 
 private fun NodeTier.next(): NodeTier? = NodeTier.entries.getOrNull(ordinal + 1)
+
+private fun String.toIoniState(): IoniState {
+    val name = uppercase()
+    return IoniState.entries.firstOrNull { it.name == name } ?: IoniState.COMING
+}
 
 private const val TIER_IDLE = "IDLE"
 

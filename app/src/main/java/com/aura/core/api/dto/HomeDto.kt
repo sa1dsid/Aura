@@ -25,6 +25,8 @@ data class DashboardDto(
     @SerialName("unread_news") val unreadNews: Int = 0,
     @SerialName("battery_optimization") val batteryOptimization: BatteryOptimizationDto =
         BatteryOptimizationDto(),
+    @SerialName("ioni_state") val ioniState: String = "coming",
+    @SerialName("ioni_last_completed_tap") val ioniLastCompletedTap: String? = null,
 )
 
 @Serializable

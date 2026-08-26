@@ -6,6 +6,7 @@ import com.aura.R
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.MeshState
 import com.aura.feature.home.domain.model.TestStartRejection
+import com.aura.feature.home.presentation.components.IoniSheetKind
 
 @Immutable
 sealed interface HomeUiState {
@@ -42,6 +43,8 @@ data class HomeActions(
     val onConnectionBadgeClick: () -> Unit = {},
     val onMainButtonClick: () -> Unit = {},
     val onInviteClick: () -> Unit = {},
+    val onIoniSheetRequest: (IoniSheetKind) -> Unit = {},
+    val onIoniSettingsClick: () -> Unit = {},
     val onTabSelected: (HomeTab) -> Unit = {},
 )
 

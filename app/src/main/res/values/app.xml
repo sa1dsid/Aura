@@ -255,4 +255,35 @@
     <string name="push_channel_name">Aura alerts</string>
     <string name="push_channel_description">Node status, rewards and mesh events</string>
 
+    <!-- Карточка IONI AI на Home и её попапы. Тексты — из «Вёрстка IONI (карточка
+         на Home)»; в поставку локализации ещё не вошли. Текст попапа GEO заказчик
+         обещал прислать позже — ioni_sheet_geo_text и заголовок на замену. -->
+    <!-- ЗАГЛУШКА: реальный applicationId приложения IONI AI заказчик ещё не дал.
+         Значение продублировано в <queries> манифеста — менять оба места разом. -->
+    <string name="ioni_app_package" translatable="false">com.ionica.ioni</string>
+    <string name="ioni_card_title">IONI AI</string>
+    <string name="ioni_badge_soon">SOON</string>
+    <string name="ioni_badge_settings">SETTINGS</string>
+    <string name="ioni_status_separator" translatable="false">·</string>
+    <string name="ioni_status_idle">Idle</string>
+    <string name="ioni_status_idle_charge">0h</string>
+    <string name="ioni_status_idle_hint">tap to power for 24h</string>
+    <string name="ioni_status_powered">Powered</string>
+    <string name="ioni_status_hours_left">%1$dh left</string>
+    <string name="ioni_status_keep_alive">tap keeps it alive</string>
+    <string name="ioni_status_blocked">blocked</string>
+    <string name="ioni_status_blocked_hint">disable battery optimization</string>
+    <string name="ioni_sheet_idle_title">Signal idle</string>
+    <string name="ioni_sheet_idle_text">Complete a tap on Home — and IONI powers up for 24 hours.</string>
+    <string name="ioni_sheet_live_title">IONI AI is live</string>
+    <string name="ioni_sheet_live_text">Your signal is powered — IONI is ready to work for you. Install the app to start.</string>
+    <string name="ioni_sheet_install">Install IONI AI ↗</string>
+    <string name="ioni_sheet_open">Open IONI AI ↗</string>
+    <string name="ioni_sheet_later">Later</string>
+    <string name="ioni_sheet_coming_title">IONI AI is coming</string>
+    <string name="ioni_sheet_coming_text">The AI assistant of the Ionika ecosystem — arriving as a separate app. Your activity in IO Aura will power it.</string>
+    <string name="ioni_sheet_geo_title">IONI AI is not available in your country yet</string>
+    <string name="ioni_sheet_geo_text">It launches region by region. Your activity in IO Aura keeps counting — IONI switches on here as soon as it arrives.</string>
+    <string name="ioni_sheet_got_it">Got it</string>
+
 </resources>

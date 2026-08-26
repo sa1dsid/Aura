@@ -4,6 +4,8 @@ import com.aura.core.api.toAuthFailure
 import com.aura.core.auth.TokenStore
 import com.aura.core.common.ApplicationScope
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.mapFailure
+import com.aura.core.common.runCatchingCancellable
 import com.aura.core.push.PushTokenRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.onboarding.data.mapper.toDomain
@@ -43,19 +45,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun restoreSession(): StartDestination = withContext(ioDispatcher) {
         if (tokenStore.token() == null) return@withContext StartDestination.AUTH
 
-        try {
-            val session = remote.restore().toDomain()
-            openSession(session)
-            if (session.invitePending) StartDestination.INVITE else StartDestination.HOME
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: HttpException) {
-            if (error.code() != UNAUTHORIZED) return@withContext StartDestination.HOME
-            tokenStore.clear()
-            StartDestination.AUTH
-        } catch (error: Throwable) {
-            StartDestination.HOME
-        }
+        runCatchingCancellable { remote.restore().toDomain() }.fold(
+            onSuccess = { session ->
+                openSession(session)
+                if (session.invitePending) StartDestination.INVITE else StartDestination.HOME
+            },
+            onFailure = { error ->
+                if (error.isUnauthorized) tokenStore.clear()
+                StartDestination.AUTH
+            },
+        )
     }
 
     override suspend fun signIn(email: String, password: String): Result<AuthSession> =
@@ -71,13 +70,8 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun requestPasswordReset(email: String): Result<Unit> =
         withContext(ioDispatcher) {
-            try {
-                Result.success(remote.requestPasswordReset(email))
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                Result.failure(error.toAuthFailure())
-            }
+            runCatchingCancellable { remote.requestPasswordReset(email) }
+                .mapFailure(Throwable::toAuthFailure)
         }
 
     private fun openSession(session: AuthSession) {
@@ -89,15 +83,9 @@ class AuthRepositoryImpl @Inject constructor(
         googleSignIn: Boolean = false,
         request: suspend () -> AuthSession,
     ): Result<AuthSession> = withContext(ioDispatcher) {
-        try {
-            val session = request()
-            openSession(session)
-            Result.success(session)
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            Result.failure(error.toAuthFailure(googleSignIn))
-        }
+        runCatchingCancellable { request() }
+            .onSuccess(::openSession)
+            .mapFailure { error -> error.toAuthFailure(googleSignIn) }
     }
 
     private suspend fun <T> retryOnceOnBrokenConnection(request: suspend () -> T): T = try {
@@ -111,3 +99,6 @@ class AuthRepositoryImpl @Inject constructor(
         request()
     }
 }
+
+private val Throwable.isUnauthorized: Boolean
+    get() = (this as? HttpException)?.code() == UNAUTHORIZED

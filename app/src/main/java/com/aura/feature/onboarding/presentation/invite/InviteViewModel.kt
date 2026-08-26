@@ -2,10 +2,11 @@ package com.aura.feature.onboarding.presentation.invite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
+import com.aura.feature.onboarding.domain.model.isWholeInviteCode
+import com.aura.feature.onboarding.domain.model.toInviteCode
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import com.aura.feature.onboarding.domain.repository.OnboardingFlagsRepository
 import com.aura.feature.onboarding.domain.usecase.ApplyInviteCodeUseCase
@@ -46,7 +47,7 @@ class InviteViewModel @Inject constructor(
         if (loadJob?.isActive == true) return
 
         loadJob = viewModelScope.launch {
-            val accountId = authRepository.currentAccount()?.id ?: return@launch
+            val accountId = signedInAccountId() ?: return@launch
             if (accountId == preparedAccountId) return@launch
             preparedAccountId = accountId
 
@@ -61,49 +62,53 @@ class InviteViewModel @Inject constructor(
 
     fun onCodeChange(code: String) {
         if (_uiState.value.locked) return
-        _uiState.update { it.copy(code = code, failure = null) }
+        _uiState.update { it.copy(code = code.toInviteCode(), failure = null) }
     }
 
     fun onPaste(clipboardText: String?) {
         if (clipboardText.isNullOrBlank()) return
-        onCodeChange(
-            clipboardText.trim().uppercase().filter { it.isLetterOrDigit() }
-        )
+        onCodeChange(clipboardText)
     }
 
     fun onApplyClick() {
         val state = _uiState.value
-        if (state.submitting || state.code.length < INVITE_CODE_LENGTH) return
+        if (state.submitting || !state.code.isWholeInviteCode) return
 
-        finish { accountId -> applyInviteCode(accountId, state.code) }
+        settle { applyInviteCode(state.code) }
     }
 
     fun onSkipClick() {
         if (_uiState.value.submitting) return
 
-        finish { accountId -> skipInvite(accountId) }
+        settle { skipInvite() }
     }
 
-    private fun finish(request: suspend (String) -> Result<Unit>) {
+    private fun settle(decision: suspend () -> Result<Unit>) {
         viewModelScope.launch {
-            val accountId = authRepository.currentAccount()?.id ?: return@launch
+            signedInAccountId() ?: return@launch
             _uiState.update { it.copy(submitting = true, failure = null) }
 
-            request(accountId).fold(
+            decision().fold(
                 onSuccess = {
-                    val flags = flagsRepository.flags(accountId)
+                    val bonusPopupPending = !flagsRepository.flags().bonusPopupShown
                     _uiState.update { it.copy(submitting = false) }
-                    eventChannel.send(InviteEvent.Finished(!flags.bonusPopupShown))
+                    eventChannel.send(InviteEvent.Finished(bonusPopupPending))
                 },
                 onFailure = { error ->
                     _uiState.update {
-                        it.copy(
-                            submitting = false,
-                            failure = (error as? InviteException)?.failure ?: InviteFailure.NETWORK,
-                        )
+                        it.copy(submitting = false, failure = error.toFailure())
                     }
                 },
             )
         }
     }
+
+    private suspend fun signedInAccountId(): String? {
+        val accountId = authRepository.currentAccount()?.id
+        if (accountId == null) eventChannel.send(InviteEvent.SessionLost)
+        return accountId
+    }
 }
+
+private fun Throwable.toFailure(): InviteFailure =
+    (this as? InviteException)?.failure ?: InviteFailure.NETWORK

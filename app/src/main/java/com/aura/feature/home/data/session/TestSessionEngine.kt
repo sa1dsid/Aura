@@ -4,6 +4,7 @@ import com.aura.core.api.dto.TapStateDto
 import com.aura.core.api.toTapRejection
 import com.aura.core.common.ApplicationScope
 import com.aura.core.common.TimeSource
+import com.aura.core.common.runCatchingCancellable
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.network.NetworkType
@@ -15,6 +16,7 @@ import com.aura.feature.home.domain.model.COOLDOWN_DURATION
 import com.aura.feature.home.domain.model.SPARK_RATE_MOBILE
 import com.aura.feature.home.domain.model.SPARK_RATE_WIFI
 import com.aura.feature.home.domain.model.SparkWindow
+import com.aura.feature.home.domain.model.TAP_REWARD_ION
 import com.aura.feature.home.domain.model.TEST_DURATION
 import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
@@ -51,8 +53,6 @@ private const val NETWORK_TYPE_MOBILE = "mobile"
 
 private const val STATUS_COMPLETED = "completed"
 
-private const val REWARD_ION = 20
-
 private const val EVENT_BUFFER = 8
 
 private const val MILLIS_IN_SECOND = 1_000.0
@@ -70,7 +70,7 @@ class TestSessionEngine @Inject constructor(
     private val timeSource: TimeSource,
 ) : SessionCache {
 
-    private val _state = MutableStateFlow<TestSessionState>(TestSessionState.Ready(REWARD_ION))
+    private val _state = MutableStateFlow<TestSessionState>(TestSessionState.Ready(TAP_REWARD_ION))
     val state: StateFlow<TestSessionState> = _state.asStateFlow()
 
     private val _spark = MutableStateFlow(SparkWindow())
@@ -120,28 +120,21 @@ class TestSessionEngine @Inject constructor(
             isStarting = false
             isFinishing = false
             _spark.value = SparkWindow()
-            _state.value = TestSessionState.Ready(REWARD_ION)
+            _state.value = TestSessionState.Ready(TAP_REWARD_ION)
         }
     }
 
     private suspend fun releasePendingSession(): Boolean {
         val pending = tapSessionStore.pendingSessionId() ?: return false
 
-        val released = try {
+        val released = runCatchingCancellable {
             remote.finishTap(
                 sessionId = pending,
                 interrupted = true,
                 networkLost = false,
                 appBackgrounded = true,
             )
-            true
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: HttpException) {
-            true
-        } catch (error: Throwable) {
-            false
-        }
+        }.fold(onSuccess = { true }, onFailure = { it is HttpException })
 
         if (released) tapSessionStore.clearPendingSessionId()
         return released
@@ -152,7 +145,7 @@ class TestSessionEngine @Inject constructor(
 
         mutex.withLock {
             if (runningEndsAt != null || isFinishing) return@withLock
-            cooldownEndsAt = cooldownAvailableAt?.parseIsoMillis()
+            cooldownEndsAt = cooldownEndsAt.laterOf(cooldownAvailableAt?.parseIsoMillis())
             if (isVpnPaused) pausedRemaining = cooldownEndsAt.remainingFromNow()
             applySpark(sparkBalance, rate)
         }
@@ -256,13 +249,7 @@ class TestSessionEngine @Inject constructor(
 
     private suspend fun beat(sessionId: String): String? =
         withTimeoutOrNull(HEARTBEAT_TIMEOUT) {
-            try {
-                remote.tapHeartbeat(sessionId).status
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                null
-            }
+            runCatchingCancellable { remote.tapHeartbeat(sessionId).status }.getOrNull()
         }
 
     private suspend fun dropSession(lostSessionId: String) {
@@ -324,13 +311,9 @@ class TestSessionEngine @Inject constructor(
             }
             if (!changed) return@launch
 
-            val earning = try {
+            val earning = runCatchingCancellable {
                 remote.updateEarningState(vpn = active, emulator = emulatorDetector.isEmulator)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                null
-            }
+            }.getOrNull()
 
             var resumedCooldown = false
 
@@ -357,7 +340,7 @@ class TestSessionEngine @Inject constructor(
                 _state.value = TestSessionState.Running(
                     remaining = left,
                     total = TEST_DURATION,
-                    rewardIon = REWARD_ION,
+                    rewardIon = TAP_REWARD_ION,
                 )
                 return@withLock null
             }
@@ -391,7 +374,7 @@ class TestSessionEngine @Inject constructor(
             )
         } else {
             _spark.update { it.copy(isPaused = true) }
-            _state.value = TestSessionState.Ready(REWARD_ION)
+            _state.value = TestSessionState.Ready(TAP_REWARD_ION)
         }
 
         return null
@@ -431,6 +414,7 @@ class TestSessionEngine @Inject constructor(
         }
 
         tapSessionStore.saveRate(finished.sparkWindowRate)
+        tapSessionStore.clearPendingSessionId()
 
         mutex.withLock {
             isFinishing = false
@@ -441,7 +425,7 @@ class TestSessionEngine @Inject constructor(
         }
 
         scope.launch { pingHistory.recordProbe(PingSource.HOME) }
-        _events.tryEmit(TestSessionEvent.Completed(REWARD_ION))
+        _events.tryEmit(TestSessionEvent.Completed(TAP_REWARD_ION))
         tick()
     }
 
@@ -485,6 +469,12 @@ class TestSessionEngine @Inject constructor(
 
     private fun Long?.remainingFromNow(): Duration =
         this?.minus(timeSource.nowMillis())?.coerceAtLeast(0)?.milliseconds ?: Duration.ZERO
+
+    private fun Long?.laterOf(other: Long?): Long? = when {
+        this == null -> other
+        other == null -> this
+        else -> maxOf(this, other)
+    }
 
     private fun Int.orDefaultFor(type: NetworkType): Int =
         if (this > 0) this else if (type == NetworkType.WIFI) SPARK_RATE_WIFI else SPARK_RATE_MOBILE

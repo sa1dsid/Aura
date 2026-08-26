@@ -6,6 +6,7 @@ import com.aura.feature.home.data.session.TestSessionEngine
 import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.model.MeshState
 import com.aura.feature.home.domain.model.TestSessionState
+import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.domain.repository.HomeRepository
 import com.aura.feature.home.domain.repository.MeshRepository
 import com.aura.core.common.TimeSource
@@ -33,6 +34,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -163,6 +165,191 @@ class HomeViewModelTest {
         assertTrue(HomeEvent.CooldownResumed in events)
     }
 
+    @Test
+    fun `beats as soon as the screen exists and keeps beating`() = homeTest {
+        viewModel(watchedEngine())
+        runCurrent()
+
+        assertEquals(1, homeRepository.heartbeats)
+
+        advanceTimeBy(5.minutes + PAST_TICK)
+
+        assertEquals(2, homeRepository.heartbeats)
+    }
+
+    @Test
+    fun `reloads the screen and the battery answer on every return`() = homeTest {
+        val viewModel = viewModel(watchedEngine())
+        runCurrent()
+
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        assertEquals(1, homeRepository.refreshes)
+        assertEquals(1, homeRepository.batteryRefreshes)
+        assertEquals(listOf(false), meshRepository.forces)
+    }
+
+    @Test
+    fun `the first network reading does not count as a change`() = homeTest {
+        viewModel(watchedEngine())
+        runCurrent()
+
+        assertEquals(0, homeRepository.refreshes)
+    }
+
+    @Test
+    fun `reloads the screen when the network changes underneath`() = homeTest {
+        viewModel(watchedEngine())
+        runCurrent()
+
+        networkMonitor.set(NetworkStatus(isOnline = true, isVpnActive = true))
+        runCurrent()
+
+        assertEquals(1, homeRepository.refreshes)
+    }
+
+    @Test
+    fun `ignores the main button while a session is already running`() = homeTest {
+        val engine = watchedEngine()
+        val viewModel = viewModel(engine)
+        watchedState(viewModel)
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        homeRepository.set(
+            homeRepository.current().copy(
+                session = TestSessionState.Running(
+                    remaining = 1.minutes,
+                    total = 3.minutes,
+                    rewardIon = REWARD_ION,
+                )
+            )
+        )
+        runCurrent()
+
+        viewModel.onMainButtonClick()
+        runCurrent()
+
+        assertTrue(events.isEmpty())
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+    }
+
+    @Test
+    fun `ignores the main button before the screen has anything on it`() = homeTest {
+        homeRepository.set(null)
+        val engine = watchedEngine()
+        val viewModel = viewModel(engine)
+        watchedState(viewModel)
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        viewModel.onMainButtonClick()
+        runCurrent()
+
+        assertTrue(events.isEmpty())
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+    }
+
+    @Test
+    fun `refuses the tap while a vpn is on and never asks the engine`() = homeTest {
+        val engine = watchedEngine()
+        val viewModel = viewModel(engine)
+        watchedState(viewModel)
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        val home = homeRepository.current()
+        homeRepository.set(
+            home.copy(
+                session = TestSessionState.Ready(REWARD_ION),
+                connection = home.connection.copy(isVpnActive = true),
+            )
+        )
+        runCurrent()
+
+        viewModel.onMainButtonClick()
+        runCurrent()
+
+        assertEquals(listOf(HomeEvent.TestRejected(TestStartRejection.VpnDetected)), events)
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+    }
+
+    @Test
+    fun `hands the battery answers to the repository`() = homeTest {
+        val viewModel = viewModel(watchedEngine())
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        viewModel.onBatteryOptimizationDeclined()
+        viewModel.onBatteryOptimizationSatisfied()
+        runCurrent()
+
+        assertEquals(1, homeRepository.declines)
+        assertEquals(1, homeRepository.confirms)
+        assertTrue(events.isEmpty())
+
+        viewModel.onBatteryOptimizationConfirmed()
+        runCurrent()
+
+        assertEquals(2, homeRepository.confirms)
+        assertEquals(listOf(HomeEvent.BatteryOptimizationDisabled), events)
+    }
+
+    @Test
+    fun `marks the bonus teaser the moment its popup opens`() = homeTest {
+        val viewModel = viewModel(watchedEngine())
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        viewModel.onBonusTeaserOpened()
+        runCurrent()
+
+        assertEquals(1, homeRepository.bonusTeaserSeen)
+    }
+
+    @Test
+    fun `a completed session reloads the screen behind the toast`() = homeTest {
+        val engine = watchedEngine()
+        val viewModel = viewModel(engine)
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        engine.start()
+        runCurrent()
+        val refreshes = homeRepository.refreshes
+
+        advanceTimeBy(3.minutes + PAST_TICK)
+
+        assertEquals(listOf(HomeEvent.TestCompleted(REWARD_ION)), events)
+        assertTrue(homeRepository.refreshes > refreshes)
+    }
+
+    @Test
+    fun `a running session is checked before the vpn is`() = homeTest {
+        val engine = watchedEngine()
+        val viewModel = viewModel(engine)
+        watchedState(viewModel)
+        val events = collectedEvents(viewModel)
+        viewModel.onScreenResumed()
+        val home = homeRepository.current()
+        homeRepository.set(
+            home.copy(
+                session = TestSessionState.Running(
+                    remaining = 1.minutes,
+                    total = 3.minutes,
+                    rewardIon = REWARD_ION,
+                ),
+                connection = home.connection.copy(isVpnActive = true),
+            )
+        )
+        runCurrent()
+
+        viewModel.onMainButtonClick()
+        runCurrent()
+
+        assertTrue(events.isEmpty())
+    }
+
     private fun TestScope.watchedEngine(): TestSessionEngine {
         val engine = TestSessionEngine(
             scope = backgroundScope,
@@ -203,6 +390,12 @@ class HomeViewModelTest {
         networkMonitor = networkMonitor,
     ).also { liveViewModels += it }
 
+    private fun TestScope.watchedState(viewModel: HomeViewModel) {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect { }
+        }
+    }
+
     private fun TestScope.collectedEvents(viewModel: HomeViewModel): List<HomeEvent> {
         val events = mutableListOf<HomeEvent>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -213,25 +406,62 @@ class HomeViewModelTest {
 
     private class FakeHomeRepository : HomeRepository {
 
-        override fun observeHome(): Flow<HomeState> = flowOf(HomePreviewData.content.home)
+        private val state = MutableStateFlow<HomeState?>(HomePreviewData.content.home)
 
-        override suspend fun refresh() = Unit
+        var refreshes = 0
+            private set
+        var declines = 0
+            private set
+        var confirms = 0
+            private set
+        var batteryRefreshes = 0
+            private set
+        var heartbeats = 0
+            private set
+        var bonusTeaserSeen = 0
+            private set
 
-        override suspend fun declineBatteryOptimization() = Unit
+        fun set(home: HomeState?) {
+            state.value = home
+        }
 
-        override suspend fun confirmBatteryOptimizationDisabled() = Unit
+        fun current(): HomeState = requireNotNull(state.value)
 
-        override suspend fun refreshBatteryOptimization() = Unit
+        override fun observeHome(): Flow<HomeState> = state.filterNotNull()
 
-        override suspend fun sendHeartbeat() = Unit
+        override suspend fun refresh() {
+            refreshes++
+        }
 
-        override suspend fun markBonusTeaserSeen() = Unit
+        override suspend fun declineBatteryOptimization() {
+            declines++
+        }
+
+        override suspend fun confirmBatteryOptimizationDisabled() {
+            confirms++
+        }
+
+        override suspend fun refreshBatteryOptimization() {
+            batteryRefreshes++
+        }
+
+        override suspend fun sendHeartbeat() {
+            heartbeats++
+        }
+
+        override suspend fun markBonusTeaserSeen() {
+            bonusTeaserSeen++
+        }
     }
 
     private class FakeMeshRepository : MeshRepository {
+        val forces = mutableListOf<Boolean>()
+
         override fun observeMesh(): Flow<MeshState> = flowOf(HomePreviewData.content.mesh)
 
-        override suspend fun refresh(force: Boolean) = Unit
+        override suspend fun refresh(force: Boolean) {
+            forces += force
+        }
     }
 
     private class FakeNetworkMonitor : NetworkMonitor {

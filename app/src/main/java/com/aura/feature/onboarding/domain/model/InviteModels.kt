@@ -9,13 +9,11 @@ sealed interface InviteAttribution {
 enum class InviteFailure {
     UNKNOWN_CODE,
     OWN_CODE,
-    OWNER_DELETED,
     ALREADY_APPLIED,
     NETWORK,
 }
 
 data class OnboardingFlags(
-    val inviteScreenPassed: Boolean,
     val bonusPopupShown: Boolean,
     val reservedBonusIon: Long,
 ) {
@@ -23,7 +21,6 @@ data class OnboardingFlags(
         const val DEFAULT_RESERVED_BONUS_ION = 3_000L
 
         val FALLBACK = OnboardingFlags(
-            inviteScreenPassed = true,
             bonusPopupShown = false,
             reservedBonusIon = DEFAULT_RESERVED_BONUS_ION,
         )
@@ -31,3 +28,11 @@ data class OnboardingFlags(
 }
 
 const val INVITE_CODE_LENGTH = 8
+
+fun String.toInviteCode(): String = trim()
+    .uppercase()
+    .filter(Char::isLetterOrDigit)
+    .take(INVITE_CODE_LENGTH)
+
+val String.isWholeInviteCode: Boolean
+    get() = length == INVITE_CODE_LENGTH

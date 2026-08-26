@@ -2,11 +2,11 @@ package com.aura.feature.onboarding.data.repository
 
 import com.aura.core.api.toInviteFailure
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.runCatchingCancellable
 import com.aura.feature.onboarding.data.attribution.InviteAttributionStore
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.repository.InviteRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -26,29 +26,19 @@ class InviteRepositoryImpl @Inject constructor(
         withContext(ioDispatcher) { attributionStore.rememberDeepLink(code) }
     }
 
-    override suspend fun applyCode(accountId: String, code: String): Result<Unit> =
-        withContext(ioDispatcher) {
-            try {
-                remote.applyInviteCode(accountId, code)
-                attributionStore.consume()
-                Result.success(Unit)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                Result.failure(error.toInviteFailure())
-            }
-        }
+    override suspend fun applyCode(code: String): Result<Unit> =
+        settle { remote.applyInviteCode(code) }
 
-    override suspend fun skipInvite(accountId: String): Result<Unit> =
+    override suspend fun skipInvite(): Result<Unit> = settle { remote.skipInvite() }
+
+    private suspend fun settle(decision: suspend () -> Unit): Result<Unit> =
         withContext(ioDispatcher) {
-            try {
-                remote.skipInvite(accountId)
-                attributionStore.consume()
-                Result.success(Unit)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                Result.failure(error.toInviteFailure())
-            }
+            runCatchingCancellable { decision() }.fold(
+                onSuccess = {
+                    attributionStore.consume()
+                    Result.success(Unit)
+                },
+                onFailure = { error -> Result.failure(error.toInviteFailure()) },
+            )
         }
 }

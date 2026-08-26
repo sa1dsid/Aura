@@ -20,20 +20,15 @@ fun AccountDto.toDomain() = Account(
 
 fun AuthSessionDto.toDomain() = AuthSession(
     account = account.toDomain(),
-    accountCreated = accountCreated,
     invitePending = invitePending,
 )
 
 fun OnboardingFlagsDto.toDomain() = OnboardingFlags(
-    inviteScreenPassed = inviteScreenPassed,
     bonusPopupShown = bonusPopupShown,
     reservedBonusIon = reservedBonusIon,
 )
 
-fun BootConfigDto.toDomain() = BootConfig(
-    nodeCount = nodeCount ?: BootConfig.DEFAULT_NODE_COUNT,
-    hotCities = hotCities,
-)
+fun BootConfigDto.toDomain() = BootConfig(nodeCount ?: BootConfig.DEFAULT_NODE_COUNT)
 
 private fun String.toAuthProvider(): AuthProvider =
     AuthProvider.entries.firstOrNull { it.name == this } ?: AuthProvider.EMAIL

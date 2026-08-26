@@ -16,6 +16,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed interface WelcomeBonusEvent {
+    data object Finished : WelcomeBonusEvent
+
+    data object SessionLost : WelcomeBonusEvent
+}
+
 @HiltViewModel
 class WelcomeBonusViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -25,19 +31,21 @@ class WelcomeBonusViewModel @Inject constructor(
     private val _bonusIon = MutableStateFlow(OnboardingFlags.DEFAULT_RESERVED_BONUS_ION)
     val bonusIon: StateFlow<Long> = _bonusIon.asStateFlow()
 
-    private val dismissChannel = Channel<Unit>(Channel.CONFLATED)
-    val dismissed: Flow<Unit> = dismissChannel.receiveAsFlow()
+    private val eventChannel = Channel<WelcomeBonusEvent>(Channel.BUFFERED)
+    val events: Flow<WelcomeBonusEvent> = eventChannel.receiveAsFlow()
 
     private var loadJob: Job? = null
 
     private var dismissJob: Job? = null
 
+    private var reportedAccountId: String? = null
+
     fun onScreenResumed() {
         if (loadJob?.isActive == true) return
 
         loadJob = viewModelScope.launch {
-            val accountId = authRepository.currentAccount()?.id ?: return@launch
-            _bonusIon.value = flagsRepository.flags(accountId).reservedBonusIon
+            signedInAccountId() ?: return@launch
+            _bonusIon.value = flagsRepository.flags().reservedBonusIon
         }
     }
 
@@ -45,8 +53,18 @@ class WelcomeBonusViewModel @Inject constructor(
         if (dismissJob?.isActive == true) return
 
         dismissJob = viewModelScope.launch {
-            dismissChannel.send(Unit)
-            authRepository.currentAccount()?.id?.let { flagsRepository.markBonusPopupShown(it) }
+            val accountId = signedInAccountId() ?: return@launch
+            eventChannel.send(WelcomeBonusEvent.Finished)
+
+            if (accountId == reportedAccountId) return@launch
+            reportedAccountId = accountId
+            flagsRepository.markBonusPopupShown()
         }
+    }
+
+    private suspend fun signedInAccountId(): String? {
+        val accountId = authRepository.currentAccount()?.id
+        if (accountId == null) eventChannel.send(WelcomeBonusEvent.SessionLost)
+        return accountId
     }
 }

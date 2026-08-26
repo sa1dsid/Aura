@@ -1,6 +1,8 @@
 package com.aura.feature.home.data.mapper
 
+import com.aura.core.api.dto.BatteryOptimizationDto
 import com.aura.core.api.dto.DashboardDto
+import com.aura.core.api.dto.NodeStatusDto
 import com.aura.core.config.FeatureFlags
 import com.aura.core.network.NetworkStatus
 import com.aura.feature.home.domain.model.BatteryOptimizationState
@@ -14,6 +16,7 @@ import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SPARK_COUPON_THRESHOLD
 import com.aura.feature.home.domain.model.SparkTeaser
 import com.aura.feature.home.domain.model.SparkWindow
+import com.aura.feature.home.domain.model.TAP_REWARD_ION
 import com.aura.feature.home.domain.model.Teasers
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.model.VpnCodeTeaser
@@ -69,7 +72,7 @@ fun DashboardDto.toDomain(
     connection = ConnectionState(
         networkType = network.type,
         isVpnActive = network.isVpnActive,
-        rewardIon = REWARD_ION,
+        rewardIon = TAP_REWARD_ION,
     ),
     session = session,
     invite = InviteState(
@@ -79,16 +82,14 @@ fun DashboardDto.toDomain(
         inviteLink = nodes?.invite?.link.orEmpty(),
     ),
     tapCount = tapCount,
-    unreadNews = unreadNews,
-    batteryOptimization = BatteryOptimizationState(
-        shouldShow = batteryOptimization.shouldShow,
-        isDisabled = batteryOptimization.optimizationDisabled,
-    ),
 )
 
-private const val REWARD_ION = 20
+fun BatteryOptimizationDto.toDomain() = BatteryOptimizationState(
+    shouldShow = shouldShow,
+    isDisabled = optimizationDisabled,
+)
 
-private fun com.aura.core.api.dto.NodeStatusDto.tierGaugePercent(): Int {
+private fun NodeStatusDto.tierGaugePercent(): Int {
     val target = progressTarget ?: return PERCENT_BASE
     if (target <= 0) return PERCENT_BASE
     return (progressCurrent * PERCENT_BASE / target).coerceIn(0, PERCENT_BASE)

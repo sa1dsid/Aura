@@ -52,12 +52,16 @@ fun AuraRoot(modifier: Modifier = Modifier) {
             onFinished = { bonusPopupPending ->
                 stage = if (bonusPopupPending) AuraStage.BONUS else AuraStage.HOME
             },
+            onSessionLost = { stage = AuraStage.AUTH },
             modifier = modifier,
         )
 
         AuraStage.BONUS -> Box(modifier = modifier) {
             HomeRoute(modifier = Modifier.fillMaxSize())
-            WelcomeBonusRoute(onFinished = { stage = AuraStage.HOME })
+            WelcomeBonusRoute(
+                onFinished = { stage = AuraStage.HOME },
+                onSessionLost = { stage = AuraStage.AUTH },
+            )
         }
 
         AuraStage.HOME -> MainTabs(

@@ -95,27 +95,29 @@ class AuthViewModel @Inject constructor(
         val state = _uiState.value
         if (state.submitting) return
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(submitting = true, invalidField = null) }
-            requestPasswordReset(state.email).fold(
-                onSuccess = {
-                    _uiState.update { it.copy(submitting = false) }
-                    eventChannel.send(AuthEvent.ShowToast(AuthToast.RESET_LINK_SENT))
-                },
-                onFailure = { error -> reportFailure(error.toFailure()) },
+        request({ requestPasswordReset(state.email) }) {
+            eventChannel.send(AuthEvent.ShowToast(AuthToast.RESET_LINK_SENT))
+        }
+    }
+
+    private fun submit(credentials: suspend () -> Result<AuthSession>) {
+        request(credentials) { session ->
+            eventChannel.send(
+                if (session.invitePending) AuthEvent.OpenInvite else AuthEvent.OpenHome
             )
         }
     }
 
-    private fun submit(request: suspend () -> Result<AuthSession>) {
+    private fun <T> request(
+        call: suspend () -> Result<T>,
+        onSuccess: suspend (T) -> Unit,
+    ) {
         viewModelScope.launch {
             _uiState.update { it.copy(submitting = true, invalidField = null) }
-            request().fold(
-                onSuccess = { session ->
+            call().fold(
+                onSuccess = { value ->
                     _uiState.update { it.copy(submitting = false) }
-                    eventChannel.send(
-                        if (session.invitePending) AuthEvent.OpenInvite else AuthEvent.OpenHome
-                    )
+                    onSuccess(value)
                 },
                 onFailure = { error -> reportFailure(error.toFailure()) },
             )

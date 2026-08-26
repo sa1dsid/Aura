@@ -14,6 +14,8 @@ const val SPARK_RATE_WIFI = 20_000
 
 const val SPARK_RATE_MOBILE = 40_000
 
+const val TAP_REWARD_ION = 20
+
 sealed interface TestSessionState {
 
     data class Ready(val rewardIon: Int) : TestSessionState

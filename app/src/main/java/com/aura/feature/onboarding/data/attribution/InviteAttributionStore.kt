@@ -1,7 +1,8 @@
 package com.aura.feature.onboarding.data.attribution
 
-import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteAttribution
+import com.aura.feature.onboarding.domain.model.isWholeInviteCode
+import com.aura.feature.onboarding.domain.model.toInviteCode
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -11,39 +12,69 @@ interface InstallReferrerSource {
     suspend fun inviteCode(): String?
 }
 
+data class InviteAttributionState(
+    val deepLinkCode: String? = null,
+    val referrerCode: String? = null,
+    val referrerRead: Boolean = false,
+    val consumed: Boolean = false,
+)
+
+interface InviteAttributionStorage {
+    suspend fun read(): InviteAttributionState
+
+    suspend fun write(state: InviteAttributionState)
+}
+
 @Singleton
 class InviteAttributionStore @Inject constructor(
     private val installReferrer: InstallReferrerSource,
+    private val storage: InviteAttributionStorage,
 ) {
 
     private val mutex = Mutex()
-    private var deepLinkCode: String? = null
-    private var referrerCode: String? = null
-    private var referrerRead = false
-    private var consumed = false
+
+    private var cached: InviteAttributionState? = null
 
     suspend fun pending(): InviteAttribution = mutex.withLock {
-        if (consumed) return@withLock InviteAttribution.None
-        if (!referrerRead) {
-            referrerRead = true
-            referrerCode = installReferrer.inviteCode()?.let(::normalize)
+        val known = state()
+        if (known.consumed) return@withLock InviteAttribution.None
+
+        val state = if (known.referrerRead) {
+            known
+        } else {
+            save(
+                known.copy(
+                    referrerRead = true,
+                    referrerCode = installReferrer.inviteCode()?.asInviteCode(),
+                )
+            )
         }
-        val code = deepLinkCode ?: referrerCode
+
+        val code = state.deepLinkCode ?: state.referrerCode
         if (code == null) InviteAttribution.None else InviteAttribution.FromLink(code)
     }
 
     suspend fun rememberDeepLink(rawCode: String) = mutex.withLock {
-        if (consumed) return@withLock
-        normalize(rawCode)?.let { deepLinkCode = it }
+        val state = state()
+        if (state.consumed) return@withLock
+        val code = rawCode.asInviteCode() ?: return@withLock
+        save(state.copy(deepLinkCode = code))
+        Unit
     }
 
     suspend fun consume() = mutex.withLock {
-        consumed = true
-        deepLinkCode = null
-        referrerCode = null
+        save(InviteAttributionState(referrerRead = true, consumed = true))
+        Unit
     }
 
-    private fun normalize(raw: String): String? = raw.trim().uppercase()
-        .filter { it.isLetterOrDigit() }
-        .takeIf { it.length == INVITE_CODE_LENGTH }
+    private suspend fun state(): InviteAttributionState =
+        cached ?: storage.read().also { cached = it }
+
+    private suspend fun save(state: InviteAttributionState): InviteAttributionState {
+        cached = state
+        storage.write(state)
+        return state
+    }
 }
+
+private fun String.asInviteCode(): String? = toInviteCode().takeIf { it.isWholeInviteCode }

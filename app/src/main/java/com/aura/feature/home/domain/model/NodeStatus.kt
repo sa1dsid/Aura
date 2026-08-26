@@ -1,11 +1,11 @@
 package com.aura.feature.home.domain.model
 
-enum class NodeTier(val referralRate: Double) {
-    IDLE_NODE(0.0),
-    ACTIVE_SIGNAL(2.5),
-    STABLE_LINK(2.5),
-    CORE_NODE(5.0),
-    IONIC_PRIME(10.0),
+enum class NodeTier {
+    IDLE_NODE,
+    ACTIVE_SIGNAL,
+    STABLE_LINK,
+    CORE_NODE,
+    IONIC_PRIME,
 }
 
 data class NodeStatus(

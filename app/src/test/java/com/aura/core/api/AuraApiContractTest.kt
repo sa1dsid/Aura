@@ -375,8 +375,8 @@ class AuraApiContractTest {
         assertEquals("/api/v1/terminal", server.take().path)
         assertEquals(0, terminal.transactionsNew)
 
-        val transactions = api.transactions()
-        assertEquals("/api/v1/terminal/transactions", server.take().path)
+        val transactions = api.transactions(limit = 100)
+        assertEquals("/api/v1/terminal/transactions?limit=100", server.take().path)
         assertEquals("tap_reward", transactions.first().kind)
         assertEquals("ION", transactions.first().currency)
         assertEquals("20.000000", transactions.first().amount)

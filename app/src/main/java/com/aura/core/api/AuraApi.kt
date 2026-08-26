@@ -48,6 +48,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface AuraApi {
 
@@ -151,7 +152,7 @@ interface AuraApi {
     suspend fun terminal(): TerminalDto
 
     @GET("api/v1/terminal/transactions")
-    suspend fun transactions(): List<TransactionDto>
+    suspend fun transactions(@Query("limit") limit: Int): List<TransactionDto>
 
     @GET("api/v1/terminal/promo-codes")
     suspend fun promoCodes(): List<PromoDto>

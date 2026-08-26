@@ -2,7 +2,8 @@ package com.aura.feature.promo.data.repository
 
 import com.aura.core.api.dto.PromoDto
 import com.aura.core.common.IoDispatcher
-import com.aura.core.common.runCatchingCancellable
+import com.aura.core.common.logFailure
+import com.aura.core.common.runCatchingRetried
 import com.aura.core.session.SessionCache
 import com.aura.feature.promo.data.mapper.toDomain
 import com.aura.feature.promo.data.remote.PromoCodesRemoteDataSource
@@ -31,7 +32,9 @@ class PromoCodesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun load(): Boolean = withContext(ioDispatcher) {
-        val codes = runCatchingCancellable { remote.promoCodes() }.getOrNull()
+        val codes = runCatchingRetried { remote.promoCodes() }
+            .logFailure("promoCodes")
+            .getOrNull()
             ?: return@withContext false
 
         loaded.value = codes.mapNotNull(PromoDto::toDomain)

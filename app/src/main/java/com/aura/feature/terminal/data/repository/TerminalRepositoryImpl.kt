@@ -1,7 +1,8 @@
 package com.aura.feature.terminal.data.repository
 
 import com.aura.core.common.IoDispatcher
-import com.aura.core.common.runCatchingCancellable
+import com.aura.core.common.logFailure
+import com.aura.core.common.runCatchingRetried
 import com.aura.core.session.SessionCache
 import com.aura.feature.terminal.data.remote.TerminalRemoteDataSource
 import com.aura.feature.terminal.domain.model.TerminalCounters
@@ -31,7 +32,9 @@ class TerminalRepositoryImpl @Inject constructor(
 
     override suspend fun refreshCounters() {
         withContext(ioDispatcher) {
-            val terminal = runCatchingCancellable { remote.terminal() }.getOrNull()
+            val terminal = runCatchingRetried { remote.terminal() }
+                .logFailure("terminal")
+                .getOrNull()
                 ?: return@withContext
 
             unread.value = TerminalCounters(

@@ -71,6 +71,29 @@ class TransactionsRepositoryImplTest {
     }
 
     @Test
+    fun `a stalled load is given a second chance before it gives up`() = runTest {
+        remote.stored = listOf(transactionDto(id = 1))
+        remote.failOnce = true
+        val repository = repositoryOf()
+        val events = events(repository)
+
+        assertTrue(repository.load())
+
+        assertEquals(2, remote.calls)
+        assertEquals(listOf("1"), events.last().map { it.id })
+    }
+
+    @Test
+    fun `a load that keeps failing stops after the second attempt`() = runTest {
+        remote.failure = IOException("timeout")
+        val repository = repositoryOf()
+
+        assertFalse(repository.load())
+
+        assertEquals(2, remote.calls)
+    }
+
+    @Test
     fun `a failing load reports the failure and keeps the log`() = runTest {
         remote.stored = listOf(transactionDto(id = 1))
         val repository = repositoryOf()

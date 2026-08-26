@@ -51,6 +51,19 @@ class TerminalRepositoryImplTest {
     }
 
     @Test
+    fun `a stalled refresh is given a second chance`() = runTest {
+        remote.counters = terminalDto(transactionsNew = 105)
+        remote.failOnce = true
+        val repository = repositoryOf()
+        val counters = counters(repository)
+
+        repository.refreshCounters()
+
+        assertEquals(2, remote.calls)
+        assertEquals(105, counters.last().unreadTransactions)
+    }
+
+    @Test
     fun `cancellation is never swallowed`() = runTest {
         remote.failure = CancellationException("stop")
         val repository = repositoryOf()

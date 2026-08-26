@@ -6,6 +6,7 @@ import com.aura.core.api.dto.TransactionDto
 import com.aura.feature.promo.data.remote.PromoCodesRemoteDataSource
 import com.aura.feature.terminal.data.remote.TerminalRemoteDataSource
 import com.aura.feature.transactions.data.remote.TransactionsRemoteDataSource
+import java.io.IOException
 
 internal fun terminalDto(transactionsNew: Int = 0, promoCodesNew: Int = 0) = TerminalDto(
     transactionsNew = transactionsNew,
@@ -44,11 +45,17 @@ internal class FakeTerminalRemoteDataSource : TerminalRemoteDataSource {
 
     var failure: Throwable? = null
 
+    var failOnce = false
+
     var calls = 0
         private set
 
     override suspend fun terminal(): TerminalDto {
         calls++
+        if (failOnce) {
+            failOnce = false
+            throw IOException("stalled")
+        }
         failure?.let { throw it }
         return counters
     }
@@ -60,11 +67,17 @@ internal class FakeTransactionsRemoteDataSource : TransactionsRemoteDataSource {
 
     var failure: Throwable? = null
 
+    var failOnce = false
+
     var calls = 0
         private set
 
     override suspend fun transactions(): List<TransactionDto> {
         calls++
+        if (failOnce) {
+            failOnce = false
+            throw IOException("stalled")
+        }
         failure?.let { throw it }
         return stored
     }
@@ -76,11 +89,17 @@ internal class FakePromoCodesRemoteDataSource : PromoCodesRemoteDataSource {
 
     var failure: Throwable? = null
 
+    var failOnce = false
+
     var calls = 0
         private set
 
     override suspend fun promoCodes(): List<PromoDto> {
         calls++
+        if (failOnce) {
+            failOnce = false
+            throw IOException("stalled")
+        }
         failure?.let { throw it }
         return stored
     }

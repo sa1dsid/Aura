@@ -2,7 +2,8 @@ package com.aura.feature.transactions.data.repository
 
 import com.aura.core.api.dto.TransactionDto
 import com.aura.core.common.IoDispatcher
-import com.aura.core.common.runCatchingCancellable
+import com.aura.core.common.logFailure
+import com.aura.core.common.runCatchingRetried
 import com.aura.core.session.SessionCache
 import com.aura.feature.transactions.data.mapper.toDomain
 import com.aura.feature.transactions.data.remote.TransactionsRemoteDataSource
@@ -32,7 +33,9 @@ class TransactionsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun load(): Boolean = withContext(ioDispatcher) {
-        val events = runCatchingCancellable { remote.transactions() }.getOrNull()
+        val events = runCatchingRetried { remote.transactions() }
+            .logFailure("transactions")
+            .getOrNull()
             ?: return@withContext false
 
         loaded.value = events

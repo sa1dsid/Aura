@@ -61,6 +61,19 @@ class PromoCodesRepositoryImplTest {
     }
 
     @Test
+    fun `a stalled load is given a second chance before it gives up`() = runTest {
+        remote.stored = listOf(promoDto(id = 1))
+        remote.failOnce = true
+        val repository = repositoryOf()
+        val codes = codes(repository)
+
+        assertTrue(repository.load())
+
+        assertEquals(2, remote.calls)
+        assertEquals(listOf("1"), codes.last().map { it.id })
+    }
+
+    @Test
     fun `a failing load reports the failure and keeps the wallet`() = runTest {
         remote.stored = listOf(promoDto(id = 1))
         val repository = repositoryOf()

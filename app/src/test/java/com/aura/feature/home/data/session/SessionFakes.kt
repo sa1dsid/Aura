@@ -53,6 +53,8 @@ internal class FakeHomeRemoteDataSource(
 
     var cooldownShift = 0L
 
+    var startRate = SPARK_RATE_ON_WIFI
+
     val interruptedSessions = mutableListOf<String>()
 
     val startedSessions = mutableListOf<String>()
@@ -76,7 +78,7 @@ internal class FakeHomeRemoteDataSource(
         return TapStateDto(
             sessionId = "session-$sessions",
             status = "running",
-            sparkWindowRate = SPARK_RATE_ON_WIFI,
+            sparkWindowRate = startRate,
         )
     }
 

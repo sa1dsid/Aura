@@ -1,9 +1,9 @@
 package com.aura.feature.onboarding.data.remote
 
 import com.aura.core.api.Bodies
+import com.aura.core.api.RoutingApiServer
 import com.aura.core.config.AppConfigRepository
 import com.aura.feature.onboarding.FakeTokenStore
-import com.aura.feature.onboarding.OnboardingServer
 import com.aura.feature.onboarding.Paths
 import com.aura.feature.onboarding.Server
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,7 @@ import org.junit.Test
 
 class OnboardingRemoteDataSourceTest {
 
-    private val server = OnboardingServer()
+    private val server = RoutingApiServer()
 
     private val tokenStore = FakeTokenStore()
 

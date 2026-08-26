@@ -3,6 +3,8 @@ package com.aura.feature.home.data.session
 import com.aura.core.common.TimeSource
 import com.aura.core.system.EmulatorDetector
 import com.aura.feature.home.data.local.TapSessionStore
+import com.aura.feature.home.domain.model.SPARK_RATE_WIFI
+import com.aura.feature.home.domain.model.SPARK_WINDOW_SECONDS
 import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,6 +15,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -265,6 +268,113 @@ class TestSessionEngineTest {
             engine.events.collect { events += it }
         }
         return events
+    }
+
+    @Test
+    fun `the spark window stands still while the button waits for a tap`() = runTest {
+        val engine = watchedEngine()
+
+        advanceTimeBy(1.minutes)
+
+        assertEquals(0.0, engine.spark.value.balance, 0.0)
+        assertTrue(engine.spark.value.isPaused)
+    }
+
+    @Test
+    fun `the spark window opens when the tap is done and ticks by the second`() = runTest {
+        val engine = watchedEngine()
+        engine.start()
+        advanceTimeBy(3.minutes + PAST_TICK)
+        assertEquals(0.0, engine.spark.value.balance, 0.01)
+
+        advanceTimeBy(1.minutes)
+
+        assertEquals(SPARK_RATE_ON_WIFI / SPARK_WINDOW_SECONDS, engine.spark.value.perSecond, 0.0001)
+        assertEquals(
+            SPARK_RATE_ON_WIFI / SPARK_WINDOW_SECONDS * 60,
+            engine.spark.value.balance,
+            1.0,
+        )
+    }
+
+    @Test
+    fun `a vpn freezes the spark window where it stood`() = runTest {
+        val engine = watchedEngine()
+        engine.start()
+        advanceTimeBy(3.minutes + PAST_TICK)
+        advanceTimeBy(1.minutes)
+
+        engine.onVpnChanged(true)
+        advanceTimeBy(1.minutes)
+        val frozen = engine.spark.value.balance
+        advanceTimeBy(5.minutes)
+
+        assertTrue(engine.spark.value.isPaused)
+        assertEquals(frozen, engine.spark.value.balance, 0.0)
+    }
+
+    @Test
+    fun `the spark window runs again once the vpn goes off`() = runTest {
+        val engine = watchedEngine()
+        engine.start()
+        advanceTimeBy(3.minutes + PAST_TICK)
+        engine.onVpnChanged(true)
+        advanceTimeBy(1.minutes)
+        val frozen = engine.spark.value.balance
+
+        engine.onVpnChanged(false)
+        advanceTimeBy(1.minutes)
+
+        assertFalse(engine.spark.value.isPaused)
+        assertTrue(engine.spark.value.balance > frozen)
+    }
+
+    @Test
+    fun `a server that names no window rate falls back to the wifi norm`() = runTest {
+        val store = FakeTapSessionStore()
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler).apply { startRate = 0 }
+        val engine = watchedEngine(remote, store)
+
+        engine.start()
+        runCurrent()
+
+        assertEquals(SPARK_RATE_WIFI, store.rate())
+    }
+
+    @Test
+    fun `the window rate the server names is kept for the next launch`() = runTest {
+        val store = FakeTapSessionStore()
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler).apply { startRate = 40_000 }
+        val engine = watchedEngine(remote, store)
+
+        engine.start()
+        runCurrent()
+
+        assertEquals(40_000, store.rate())
+    }
+
+    @Test
+    fun `a session left behind by the last launch is released on start up`() = runTest {
+        val store = FakeTapSessionStore().apply { savePendingSessionId("stale-session") }
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler)
+
+        watchedEngine(remote, store)
+        runCurrent()
+
+        assertEquals(listOf("stale-session"), remote.interruptedSessions)
+        assertNull(store.pendingSessionId())
+    }
+
+    @Test
+    fun `a dashboard read while a session runs never touches the countdown`() = runTest {
+        val engine = watchedEngine()
+        engine.start()
+        advanceTimeBy(30.seconds)
+
+        engine.syncFromDashboard(cooldownAvailableAt = isoAt(testScheduler.currentTime), sparkBalance = "0")
+        runCurrent()
+
+        assertTrue(engine.state.value is TestSessionState.Running)
     }
 
     private fun TestScope.watchedEngine(

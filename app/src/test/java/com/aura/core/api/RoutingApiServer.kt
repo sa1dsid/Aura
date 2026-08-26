@@ -1,6 +1,5 @@
-package com.aura.feature.onboarding
+package com.aura.core.api
 
-import com.aura.core.api.AuraApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -43,7 +42,7 @@ private class SameThreadExecutorService : AbstractExecutorService() {
     override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean = true
 }
 
-internal class OnboardingServer {
+internal class RoutingApiServer {
 
     private val replies = mutableMapOf<String, ArrayDeque<MockResponse>>()
     private val standing = mutableMapOf<String, MockResponse>()
@@ -52,7 +51,7 @@ internal class OnboardingServer {
     private val server = MockWebServer().apply {
         dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
-                synchronized(this@OnboardingServer) {
+                synchronized(this@RoutingApiServer) {
                     recorded += request
                     val path = request.path?.substringBefore('?').orEmpty()
                     return replies[path]?.removeFirstOrNull()
@@ -98,6 +97,10 @@ internal class OnboardingServer {
     fun bodyOf(path: String): String =
         requests().last { it.path?.substringBefore('?') == path }.body.readUtf8()
 
+    fun bodiesOf(path: String): List<String> = requests()
+        .filter { it.path?.substringBefore('?') == path }
+        .map { it.body.readUtf8() }
+
     fun shutdown() = server.shutdown()
 
     private fun json(code: Int, body: String) = MockResponse()
@@ -109,17 +112,4 @@ internal class OnboardingServer {
         const val READ_TIMEOUT_MILLIS = 400L
         const val CALL_TIMEOUT_MILLIS = 2_000L
     }
-}
-
-internal object Paths {
-    const val REGISTER = "/api/v1/auth/register"
-    const val LOGIN = "/api/v1/auth/login"
-    const val GOOGLE = "/api/v1/auth/google"
-    const val PASSWORD_RESET = "/api/v1/auth/password-reset/request"
-    const val ME = "/api/v1/auth/me"
-    const val INVITE_APPLY = "/api/v1/onboarding/invite/apply"
-    const val INVITE_SKIP = "/api/v1/onboarding/invite/skip"
-    const val GIFT_POPUP_SEEN = "/api/v1/onboarding/gift-popup/seen"
-    const val CONFIG = "/api/v1/home/config"
-    const val MESH = "/api/v1/home/mesh"
 }

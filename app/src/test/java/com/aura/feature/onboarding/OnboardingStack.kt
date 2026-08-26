@@ -3,7 +3,9 @@ package com.aura.feature.onboarding
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewModelScope
 import com.aura.core.api.Bodies
+import com.aura.core.api.RoutingApiServer
 import com.aura.core.auth.GoogleSignInClient
 import com.aura.core.auth.TokenStore
 import com.aura.core.config.AppConfigRepository
@@ -36,9 +38,11 @@ import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Collections
 
 internal class FakeInstallReferrerSource(private val code: String? = null) : InstallReferrerSource {
@@ -52,13 +56,15 @@ internal class FakeInstallReferrerSource(private val code: String? = null) : Ins
 
 internal class OnboardingStack(referrerCode: String? = null) {
 
-    val server = OnboardingServer()
+    val server = RoutingApiServer()
 
     private val ioDispatcher = Dispatchers.Unconfined
 
     private val stackScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
     private val viewModelStore = ViewModelStore()
+
+    private val tracked = mutableListOf<ViewModel>()
 
     private var storedToken: String? = null
 
@@ -179,18 +185,24 @@ internal class OnboardingStack(referrerCode: String? = null) {
     fun bonusViewModel(): WelcomeBonusViewModel =
         track("bonus", WelcomeBonusViewModel(authRepository, flagsRepository))
 
-    fun close() {
+    suspend fun close() {
+        withTimeoutOrNull(SHUTDOWN_MILLIS) {
+            tracked.forEach { it.viewModelScope.coroutineContext.job.cancelAndJoin() }
+            stackScope.coroutineContext.job.cancelAndJoin()
+        }
         viewModelStore.clear()
-        stackScope.cancel()
         server.shutdown()
     }
 
     private fun <T : ViewModel> track(key: String, viewModel: T): T {
         viewModelStore.put(key, viewModel)
+        tracked += viewModel
         return viewModel
     }
 
     companion object {
         const val GOOGLE_ID_TOKEN = "google.id.token"
+
+        private const val SHUTDOWN_MILLIS = 5_000L
     }
 }

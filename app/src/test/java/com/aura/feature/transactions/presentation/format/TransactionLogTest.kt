@@ -78,10 +78,9 @@ class TransactionLogTest {
         id = id,
         timestamp = localMillis(day = day, hour = hour),
         kind = TransactionKind.ION,
-        typeLabel = "ION",
-        fieldKey = "source",
-        fieldValue = "tap_reward",
-        amount = "+20 ION",
+        detail = "tap_reward",
+        amount = 20,
+        currency = "ION",
         isCredit = true,
     )
 

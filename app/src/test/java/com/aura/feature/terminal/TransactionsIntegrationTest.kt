@@ -36,8 +36,10 @@ class TransactionsIntegrationTest : TerminalTestCase() {
         val events = awaitTransactions(states).events
 
         assertEquals(listOf("1", "2"), events.map { it.id }.sorted())
-        assertEquals("+20 ION", events.single { it.id == "1" }.amount)
-        assertEquals("+40,000 SPARK", events.single { it.id == "2" }.amount)
+        assertEquals(20L, events.single { it.id == "1" }.amount)
+        assertEquals("ION", events.single { it.id == "1" }.currency)
+        assertEquals(40_000L, events.single { it.id == "2" }.amount)
+        assertEquals("SPARK", events.single { it.id == "2" }.currency)
     }
 
     @Test
@@ -175,7 +177,8 @@ class TransactionsIntegrationTest : TerminalTestCase() {
 
         val event = awaitTransactions(states).events.single()
 
-        assertEquals("-240,000 SPARK", event.amount)
+        assertEquals(240_000L, event.amount)
+        assertEquals("SPARK", event.currency)
         assertFalse(event.isCredit)
     }
 

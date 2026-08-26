@@ -16,16 +16,9 @@ internal object Terminal {
     const val CAMPAIGN_SPARK = "spark_coupon"
     const val CAMPAIGN_VPN = "vpn_month"
 
-    fun counters(
-        transactionsNew: Int = 0,
-        promoCodesNew: Int = 0,
-        dataShare: Boolean = false,
-        trafficWithdrawals: Boolean = false,
-        vpnCode: Boolean = false,
-    ): String = """
+    fun counters(transactionsNew: Int = 0, promoCodesNew: Int = 0): String = """
         {"transactions_new":$transactionsNew,"promo_codes_new":$promoCodesNew,
-        "feature_flags":{"data_share":$dataShare,
-        "traffic_withdrawals":$trafficWithdrawals,"vpn_code":$vpnCode}}
+        "feature_flags":{"data_share":false,"traffic_withdrawals":false,"vpn_code":false}}
     """.trimIndent()
 
     fun transaction(

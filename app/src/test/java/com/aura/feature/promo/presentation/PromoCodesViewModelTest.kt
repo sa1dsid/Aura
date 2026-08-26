@@ -5,6 +5,7 @@ import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.promo.domain.model.PromoCode
 import com.aura.feature.promo.domain.model.PromoCodeKind
+import com.aura.feature.promo.FakePromoCodesRepository
 import com.aura.feature.terminal.FakeTerminalRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,8 @@ private val CODES = listOf(
 @OptIn(ExperimentalCoroutinesApi::class)
 class PromoCodesViewModelTest {
 
-    private val terminalRepository = FakeTerminalRepository(storedCodes = CODES)
+    private val promoCodesRepository = FakePromoCodesRepository(CODES)
+    private val terminalRepository = FakeTerminalRepository()
     private val newsRepository = FakeNewsRepository()
     private val sessionStore = SessionStore()
 
@@ -53,12 +55,12 @@ class PromoCodesViewModelTest {
         val viewModel = collected(viewModel())
 
         assertEquals(LoadStatus.LOADING, viewModel.uiState.value.status)
-        assertEquals(0, terminalRepository.promoCodesLoadCount)
+        assertEquals(0, promoCodesRepository.loadCount)
     }
 
     @Test
     fun `a broken load is repeated the next time the screen opens`() = runTest {
-        terminalRepository.failNextLoad = true
+        promoCodesRepository.failNextLoad = true
         val viewModel = collected(viewModel())
 
         viewModel.onScreenResumed()
@@ -68,14 +70,14 @@ class PromoCodesViewModelTest {
 
         viewModel.onScreenResumed()
 
-        assertEquals(2, terminalRepository.promoCodesLoadCount)
+        assertEquals(2, promoCodesRepository.loadCount)
         assertEquals(LoadStatus.READY, viewModel.uiState.value.status)
         assertEquals(CODES, viewModel.uiState.value.codes)
     }
 
     @Test
     fun `a retry after a failure loads the codes`() = runTest {
-        terminalRepository.failNextLoad = true
+        promoCodesRepository.failNextLoad = true
         val viewModel = collected(viewModel())
         viewModel.onScreenResumed()
 
@@ -88,13 +90,13 @@ class PromoCodesViewModelTest {
     @Test
     fun `a load already in flight is not started twice`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        terminalRepository.gate = gate
+        promoCodesRepository.gate = gate
         val viewModel = collected(viewModel())
 
         viewModel.onScreenResumed()
         viewModel.onScreenResumed()
 
-        assertEquals(1, terminalRepository.promoCodesLoadCount)
+        assertEquals(1, promoCodesRepository.loadCount)
         assertEquals(LoadStatus.LOADING, viewModel.uiState.value.status)
 
         gate.complete(Unit)
@@ -104,6 +106,7 @@ class PromoCodesViewModelTest {
     }
 
     private fun viewModel() = PromoCodesViewModel(
+        promoCodesRepository = promoCodesRepository,
         terminalRepository = terminalRepository,
         newsRepository = newsRepository,
         sessionStore = sessionStore,

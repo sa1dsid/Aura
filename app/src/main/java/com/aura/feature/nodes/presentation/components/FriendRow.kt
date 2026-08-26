@@ -70,7 +70,7 @@ fun FriendRow(
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Earning(
                             value = friend.spark.formatGrouped(),
-                            unit = stringResource(R.string.nodes_unit_spark),
+                            unit = stringResource(R.string.unit_spark),
                             palette = palette,
                         )
                         Earning(

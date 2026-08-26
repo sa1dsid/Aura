@@ -40,6 +40,7 @@ import com.aura.core.designsystem.component.visibleFraction
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.transactions.domain.model.TransactionEvent
 import com.aura.feature.transactions.presentation.format.TransactionLogLine
+import com.aura.feature.transactions.presentation.format.formatAmount
 import com.aura.feature.transactions.presentation.format.toLogLines
 
 @Composable
@@ -201,9 +202,9 @@ private fun TransactionEvent.headLine(): AnnotatedString {
         punctuationStyle = SpanStyle(color = colors.textDisabled),
         values = listOf(
             LogValue(timestamp.formatClock(), SpanStyle(color = colors.accentBlue)),
-            LogValue(typeLabel, SpanStyle(color = colors.textBright)),
-            LogValue(fieldKey, SpanStyle(color = colors.accentBlue)),
-            LogValue(fieldValue, SpanStyle(color = colors.textBright)),
+            LogValue(stringResource(kind.labelRes), SpanStyle(color = colors.textBright)),
+            LogValue(stringResource(kind.fieldKeyRes), SpanStyle(color = colors.accentBlue)),
+            LogValue(detail, SpanStyle(color = colors.textBright)),
         ),
     )
 }
@@ -218,7 +219,7 @@ private fun TransactionEvent.tailLine(): AnnotatedString {
         punctuationStyle = SpanStyle(color = colors.textDisabled),
         values = listOf(
             LogValue(
-                text = amount,
+                text = formatAmount(),
                 style = SpanStyle(color = if (isCredit) colors.green else colors.textSecondary),
             ),
         ),

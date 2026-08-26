@@ -55,10 +55,9 @@ class TransactionFilterTest {
         id = id,
         timestamp = 1L,
         kind = kind,
-        typeLabel = kind.name,
-        fieldKey = "source",
-        fieldValue = "tap_reward",
-        amount = "+20 ION",
+        detail = "tap_reward",
+        amount = 20,
+        currency = "ION",
         isCredit = true,
     )
 }

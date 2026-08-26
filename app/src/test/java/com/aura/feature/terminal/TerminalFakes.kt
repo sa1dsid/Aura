@@ -3,7 +3,9 @@ package com.aura.feature.terminal
 import com.aura.core.api.dto.PromoDto
 import com.aura.core.api.dto.TerminalDto
 import com.aura.core.api.dto.TransactionDto
+import com.aura.feature.promo.data.remote.PromoCodesRemoteDataSource
 import com.aura.feature.terminal.data.remote.TerminalRemoteDataSource
+import com.aura.feature.transactions.data.remote.TransactionsRemoteDataSource
 
 internal fun terminalDto(transactionsNew: Int = 0, promoCodesNew: Int = 0) = TerminalDto(
     transactionsNew = transactionsNew,
@@ -40,40 +42,46 @@ internal class FakeTerminalRemoteDataSource : TerminalRemoteDataSource {
 
     var counters: TerminalDto = terminalDto()
 
-    var storedTransactions: List<TransactionDto> = emptyList()
+    var failure: Throwable? = null
 
-    var storedPromoCodes: List<PromoDto> = emptyList()
-
-    var countersFailure: Throwable? = null
-
-    var transactionsFailure: Throwable? = null
-
-    var promoCodesFailure: Throwable? = null
-
-    var countersCalls = 0
-        private set
-
-    var transactionsCalls = 0
-        private set
-
-    var promoCodesCalls = 0
+    var calls = 0
         private set
 
     override suspend fun terminal(): TerminalDto {
-        countersCalls++
-        countersFailure?.let { throw it }
+        calls++
+        failure?.let { throw it }
         return counters
     }
+}
+
+internal class FakeTransactionsRemoteDataSource : TransactionsRemoteDataSource {
+
+    var stored: List<TransactionDto> = emptyList()
+
+    var failure: Throwable? = null
+
+    var calls = 0
+        private set
 
     override suspend fun transactions(): List<TransactionDto> {
-        transactionsCalls++
-        transactionsFailure?.let { throw it }
-        return storedTransactions
+        calls++
+        failure?.let { throw it }
+        return stored
     }
+}
+
+internal class FakePromoCodesRemoteDataSource : PromoCodesRemoteDataSource {
+
+    var stored: List<PromoDto> = emptyList()
+
+    var failure: Throwable? = null
+
+    var calls = 0
+        private set
 
     override suspend fun promoCodes(): List<PromoDto> {
-        promoCodesCalls++
-        promoCodesFailure?.let { throw it }
-        return storedPromoCodes
+        calls++
+        failure?.let { throw it }
+        return stored
     }
 }

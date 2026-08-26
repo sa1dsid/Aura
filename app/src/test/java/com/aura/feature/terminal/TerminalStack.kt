@@ -9,12 +9,16 @@ import com.aura.feature.news.domain.model.NewsItem
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthProvider
+import com.aura.feature.promo.data.remote.ApiPromoCodesRemoteDataSource
+import com.aura.feature.promo.data.repository.PromoCodesRepositoryImpl
 import com.aura.feature.promo.presentation.PromoCodesUiState
 import com.aura.feature.promo.presentation.PromoCodesViewModel
 import com.aura.feature.terminal.data.remote.ApiTerminalRemoteDataSource
 import com.aura.feature.terminal.data.repository.TerminalRepositoryImpl
 import com.aura.feature.terminal.presentation.TerminalUiState
 import com.aura.feature.terminal.presentation.TerminalViewModel
+import com.aura.feature.transactions.data.remote.ApiTransactionsRemoteDataSource
+import com.aura.feature.transactions.data.repository.TransactionsRepositoryImpl
 import com.aura.feature.transactions.presentation.TransactionsUiState
 import com.aura.feature.transactions.presentation.TransactionsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -67,9 +71,20 @@ internal class TerminalStack(news: List<NewsItem> = emptyList()) {
         server.always(TerminalPaths.PROMO_CODES, body = "[]")
     }
 
-    val remote = ApiTerminalRemoteDataSource(server.api)
+    val repository = TerminalRepositoryImpl(
+        remote = ApiTerminalRemoteDataSource(server.api),
+        ioDispatcher = ioDispatcher,
+    )
 
-    val repository = TerminalRepositoryImpl(remote = remote, ioDispatcher = ioDispatcher)
+    val transactionsRepository = TransactionsRepositoryImpl(
+        remote = ApiTransactionsRemoteDataSource(server.api),
+        ioDispatcher = ioDispatcher,
+    )
+
+    val promoCodesRepository = PromoCodesRepositoryImpl(
+        remote = ApiPromoCodesRemoteDataSource(server.api),
+        ioDispatcher = ioDispatcher,
+    )
 
     fun signIn(handle: String = "syrex") = sessionStore.open(terminalAccount(handle))
 
@@ -87,6 +102,7 @@ internal class TerminalStack(news: List<NewsItem> = emptyList()) {
     fun transactionsViewModel(): TransactionsViewModel = track(
         "transactions",
         TransactionsViewModel(
+            transactionsRepository = transactionsRepository,
             terminalRepository = repository,
             newsRepository = newsRepository,
             sessionStore = sessionStore,
@@ -96,6 +112,7 @@ internal class TerminalStack(news: List<NewsItem> = emptyList()) {
     fun promoCodesViewModel(): PromoCodesViewModel = track(
         "promo",
         PromoCodesViewModel(
+            promoCodesRepository = promoCodesRepository,
             terminalRepository = repository,
             newsRepository = newsRepository,
             sessionStore = sessionStore,

@@ -61,7 +61,7 @@ fun EarnedCard(
                 RewardColumn(
                     value = rewards.spark.formatGrouped(),
                     valueColor = colors.textBright,
-                    unit = stringResource(R.string.nodes_unit_spark),
+                    unit = stringResource(R.string.unit_spark),
                 )
                 RewardColumn(
                     value = rewards.ion.formatGrouped(),

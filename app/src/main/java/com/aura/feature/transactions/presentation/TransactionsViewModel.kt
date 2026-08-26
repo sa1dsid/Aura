@@ -7,6 +7,7 @@ import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.terminal.domain.repository.TerminalRepository
 import com.aura.feature.transactions.domain.model.TransactionFilter
+import com.aura.feature.transactions.domain.repository.TransactionsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
+    private val transactionsRepository: TransactionsRepository,
     private val terminalRepository: TerminalRepository,
     newsRepository: NewsRepository,
     sessionStore: SessionStore,
@@ -34,7 +36,7 @@ class TransactionsViewModel @Inject constructor(
 
     val uiState: StateFlow<TransactionsUiState> = combine(
         sessionStore.account,
-        terminalRepository.transactions,
+        transactionsRepository.transactions,
         filter,
         newsRepository.hasUnread,
         status,
@@ -65,11 +67,9 @@ class TransactionsViewModel @Inject constructor(
 
         loadJob = viewModelScope.launch {
             status.value = LoadStatus.LOADING
-            status.value = if (terminalRepository.openTransactions()) {
-                LoadStatus.READY
-            } else {
-                LoadStatus.FAILED
-            }
+            val loaded = transactionsRepository.load()
+            if (loaded) terminalRepository.clearTransactionsCounter()
+            status.value = if (loaded) LoadStatus.READY else LoadStatus.FAILED
         }
     }
 }

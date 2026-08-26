@@ -9,6 +9,7 @@
     <string name="home_connecting">CONNECTING TO MESH</string>
     <string name="cd_menu">Menu</string>
     <string name="unit_ion">ION</string>
+    <string name="unit_spark">Spark</string>
     <string name="bonus_text_accent">reserved</string>
     <string name="timer_paused_vpn">PAUSED · VPN ON</string>
 
@@ -115,6 +116,12 @@
     <!-- ДЛИННАЯ: подзаголовок экрана, в макете переносится на две строки. -->
     <string name="tx_subtitle">Every ION and Spark event — coupons live separately in Promo Codes</string>
     <string name="tx_history">HISTORY</string>
+    <!-- Названия типов событий лога: их выводит клиент, сервер шлёт только машинный kind. -->
+    <string name="tx_type_ion">ION</string>
+    <string name="tx_type_spark">Spark</string>
+    <string name="tx_type_data_share">Data Share</string>
+    <string name="tx_type_referral">Referral</string>
+    <string name="tx_type_exchange">Exchange</string>
     <string name="tx_filter_all">ALL</string>
     <string name="tx_filter_ion">ION</string>
     <string name="tx_filter_spark">SPARK</string>
@@ -129,6 +136,10 @@
          Типы, источники и суммы приходят с сервера как есть и тоже не переводятся. -->
     <string name="tx_log_title">transactions_log.json · %1$d events</string>
     <string name="tx_log_day">// %1$s (%2$d events)</string>
+    <string name="tx_log_key_source">source</string>
+    <string name="tx_log_key_given">given</string>
+    <string name="tx_log_key_from">from</string>
+    <string name="tx_log_key_for">for</string>
     <string name="tx_log_line_head">%1$s:type:%2$s,%3$s:%4$s,</string>
     <string name="tx_log_line_tail">amount:%1$s</string>
     <string name="tx_log_more">// scroll for more ↓</string>
@@ -171,7 +182,6 @@
     <string name="nodes_more_for">More for %1$s</string>
 
     <string name="nodes_earned">Earned From Referrals</string>
-    <string name="nodes_unit_spark">Spark</string>
     <string name="nodes_unit_bonus">(bonus)</string>
     <!-- ДЛИННАЯ: строка тира, проценты и название тира приходят с сервера.
          После тире — неразрывный пробел, как в макете. -->

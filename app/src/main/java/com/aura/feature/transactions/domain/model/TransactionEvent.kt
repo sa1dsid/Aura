@@ -4,12 +4,15 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.aura.R
 
-enum class TransactionKind {
-    ION,
-    SPARK,
-    DATA_SHARE,
-    REFERRAL,
-    EXCHANGE,
+enum class TransactionKind(
+    @field:StringRes val labelRes: Int,
+    @field:StringRes val fieldKeyRes: Int,
+) {
+    ION(R.string.tx_type_ion, R.string.tx_log_key_source),
+    SPARK(R.string.tx_type_spark, R.string.tx_log_key_source),
+    DATA_SHARE(R.string.tx_type_data_share, R.string.tx_log_key_given),
+    REFERRAL(R.string.tx_type_referral, R.string.tx_log_key_from),
+    EXCHANGE(R.string.tx_type_exchange, R.string.tx_log_key_for),
 }
 
 @Immutable
@@ -17,10 +20,9 @@ data class TransactionEvent(
     val id: String,
     val timestamp: Long,
     val kind: TransactionKind,
-    val typeLabel: String,
-    val fieldKey: String,
-    val fieldValue: String,
-    val amount: String,
+    val detail: String,
+    val amount: Long,
+    val currency: String,
     val isCredit: Boolean,
 )
 

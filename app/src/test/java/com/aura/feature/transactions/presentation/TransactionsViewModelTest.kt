@@ -4,6 +4,7 @@ import com.aura.core.common.LoadStatus
 import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.terminal.FakeTerminalRepository
+import com.aura.feature.transactions.FakeTransactionsRepository
 import com.aura.feature.transactions.domain.model.TransactionEvent
 import com.aura.feature.transactions.domain.model.TransactionKind
 import kotlinx.coroutines.CompletableDeferred
@@ -26,10 +27,9 @@ private val EVENTS = listOf(
         id = "1",
         timestamp = 1L,
         kind = TransactionKind.ION,
-        typeLabel = "ION",
-        fieldKey = "source",
-        fieldValue = "tap_reward",
-        amount = "+20 ION",
+        detail = "tap_reward",
+        amount = 20,
+        currency = "ION",
         isCredit = true,
     ),
 )
@@ -37,7 +37,8 @@ private val EVENTS = listOf(
 @OptIn(ExperimentalCoroutinesApi::class)
 class TransactionsViewModelTest {
 
-    private val terminalRepository = FakeTerminalRepository(EVENTS)
+    private val transactionsRepository = FakeTransactionsRepository(EVENTS)
+    private val terminalRepository = FakeTerminalRepository()
     private val newsRepository = FakeNewsRepository()
     private val sessionStore = SessionStore()
 
@@ -53,7 +54,7 @@ class TransactionsViewModelTest {
 
     @Test
     fun `a broken load is repeated the next time the screen opens`() = runTest {
-        terminalRepository.failNextLoad = true
+        transactionsRepository.failNextLoad = true
         val viewModel = collected(viewModel())
 
         viewModel.onScreenResumed()
@@ -63,7 +64,7 @@ class TransactionsViewModelTest {
 
         viewModel.onScreenResumed()
 
-        assertEquals(2, terminalRepository.transactionsLoadCount)
+        assertEquals(2, transactionsRepository.loadCount)
         assertEquals(LoadStatus.READY, viewModel.uiState.value.status)
         assertEquals(EVENTS, viewModel.uiState.value.events)
     }
@@ -71,13 +72,13 @@ class TransactionsViewModelTest {
     @Test
     fun `a load already in flight is not started twice`() = runTest {
         val gate = CompletableDeferred<Unit>()
-        terminalRepository.gate = gate
+        transactionsRepository.gate = gate
         val viewModel = collected(viewModel())
 
         viewModel.onScreenResumed()
         viewModel.onScreenResumed()
 
-        assertEquals(1, terminalRepository.transactionsLoadCount)
+        assertEquals(1, transactionsRepository.loadCount)
         assertEquals(LoadStatus.LOADING, viewModel.uiState.value.status)
 
         gate.complete(Unit)
@@ -87,6 +88,7 @@ class TransactionsViewModelTest {
     }
 
     private fun viewModel() = TransactionsViewModel(
+        transactionsRepository = transactionsRepository,
         terminalRepository = terminalRepository,
         newsRepository = newsRepository,
         sessionStore = sessionStore,

@@ -60,7 +60,6 @@ data class NodeFriendDto(
 data class TerminalDto(
     @SerialName("transactions_new") val transactionsNew: Int = 0,
     @SerialName("promo_codes_new") val promoCodesNew: Int = 0,
-    @SerialName("feature_flags") val featureFlags: FeatureFlagsDto = FeatureFlagsDto(),
 )
 
 @Serializable

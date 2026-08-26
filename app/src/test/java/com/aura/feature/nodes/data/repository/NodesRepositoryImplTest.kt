@@ -6,9 +6,9 @@ import com.aura.feature.nodes.accountOf
 import com.aura.feature.nodes.domain.model.NodesState
 import com.aura.feature.nodes.nodesDto
 import com.aura.feature.onboarding.data.local.SessionStore
+import com.aura.testing.CountingDispatcher
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -19,7 +19,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
-import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NodesRepositoryImplTest {
@@ -143,18 +142,5 @@ class NodesRepositoryImplTest {
             repository.observeNodes().collect { states += it }
         }
         return states
-    }
-}
-
-private class CountingDispatcher(
-    private val delegate: CoroutineDispatcher,
-) : CoroutineDispatcher() {
-
-    var dispatches = 0
-        private set
-
-    override fun dispatch(context: CoroutineContext, block: Runnable) {
-        dispatches++
-        delegate.dispatch(context, block)
     }
 }

@@ -30,13 +30,22 @@ internal class FakeTerminalRepository(
     var promoCodesLoadCount = 0
         private set
 
+    var refreshCount = 0
+        private set
+
     override val counters: Flow<TerminalCounters> = loadedCounters
 
     override val transactions: Flow<List<TransactionEvent>> = loadedTransactions
 
     override val promoCodes: Flow<List<PromoCode>> = loadedPromoCodes
 
-    override suspend fun refreshCounters() = Unit
+    override suspend fun refreshCounters() {
+        refreshCount++
+    }
+
+    fun emit(counters: TerminalCounters) {
+        loadedCounters.value = counters
+    }
 
     override fun clearTransactionsCounter() {
         loadedCounters.update { it.copy(unreadTransactions = 0) }

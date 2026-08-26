@@ -8,6 +8,7 @@ import com.aura.feature.network.data.diagnostics.ThroughputProbe
 import com.aura.feature.network.data.diagnostics.PingProbe
 import com.aura.feature.network.data.local.NetworkLocalStore
 import com.aura.feature.network.data.remote.ApiNetworkRemoteDataSource
+import com.aura.feature.network.data.remote.LinkConditionsSource
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
 import com.aura.feature.network.data.repository.NetworkRepositoryImpl
 import com.aura.feature.network.data.repository.PingHistoryRepositoryImpl
@@ -55,4 +56,8 @@ interface NetworkDataModule {
     @Binds
     @IntoSet
     fun bindSpeedTestSessionCache(impl: SpeedTestEngine): SessionCache
+
+    @Binds
+    @IntoSet
+    fun bindLinkConditionsSessionCache(impl: LinkConditionsSource): SessionCache
 }

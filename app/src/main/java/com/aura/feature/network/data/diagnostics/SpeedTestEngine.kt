@@ -90,17 +90,21 @@ class SpeedTestEngine @Inject constructor(
                 return@launch
             }
 
+            val downloadMbps = download.megabitsPerSecond.round()
+            val jitterMs = sample.jitterMs ?: 0
+            val packetLossPercent = sample.packetLossPercent.round()
+
             val result = SpeedTestResult(
-                downloadMbps = download.megabitsPerSecond.round(),
+                downloadMbps = downloadMbps,
                 uploadMbps = upload.megabitsPerSecond.round(),
                 pingMs = pingMs,
-                jitterMs = sample.jitterMs ?: 0,
-                packetLossPercent = sample.packetLossPercent.round(),
+                jitterMs = jitterMs,
+                packetLossPercent = packetLossPercent,
                 grade = ConnectionScoring.gradeOf(
                     pingMs = pingMs,
-                    jitterMs = sample.jitterMs ?: 0,
-                    packetLossPercent = sample.packetLossPercent,
-                    downloadMbps = download.megabitsPerSecond,
+                    jitterMs = jitterMs,
+                    packetLossPercent = packetLossPercent,
+                    downloadMbps = downloadMbps,
                 ),
             )
 

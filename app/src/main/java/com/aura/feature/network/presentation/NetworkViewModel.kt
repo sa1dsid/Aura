@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aura.core.network.NetworkMonitor
 import com.aura.feature.network.data.diagnostics.SpeedTestEngine
-import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.network.domain.model.SpeedTestState
 import com.aura.feature.network.domain.usecase.ObserveConnectionDetailsUseCase
 import com.aura.feature.network.domain.usecase.ObserveNetworkMetricsUseCase
 import com.aura.feature.network.domain.usecase.ObservePingHistoryUseCase
 import com.aura.feature.network.domain.usecase.RefreshNetworkUseCase
+import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.BufferOverflow
@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
@@ -90,9 +92,5 @@ class NetworkViewModel @Inject constructor(
 
     fun onVpnCardClick() {
         _events.tryEmit(NetworkEvent.OpenVpnSettings)
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

@@ -25,11 +25,14 @@ class NetworkLocalStoreTest {
     fun emptyTheStore() = runTest { store().clearSession() }
 
     @Test
-    fun `a store nobody wrote to has an empty journal and no quality`() = runTest {
+    fun `a store nobody wrote to has an empty journal and no measurement`() = runTest {
         val store = store()
+        val measured = store.measured.first()
 
         assertTrue(store.history.first().isEmpty())
-        assertNull(store.quality.first())
+        assertNull(measured.pingMs)
+        assertNull(measured.jitterMs)
+        assertNull(measured.packetLossPercent)
     }
 
     @Test
@@ -83,35 +86,71 @@ class NetworkLocalStoreTest {
     }
 
     @Test
-    fun `the measured quality outlives the process`() = runTest {
-        store().saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
+    fun `a speed test outlives the process whole`() = runTest {
+        store().saveSpeedTest(pingMs = 24, jitterMs = 9, packetLossPercent = 0.7)
 
-        val quality = store().quality.first()!!
+        val measured = store().measured.first()
 
-        assertEquals(9, quality.jitterMs)
-        assertEquals(0.7, quality.packetLossPercent, 0.0001)
+        assertEquals(24, measured.pingMs)
+        assertEquals(9, measured.jitterMs)
+        assertEquals(0.7, measured.packetLossPercent!!, 0.0001)
     }
 
     @Test
-    fun `a later quality replaces the one before it`() = runTest {
+    fun `a probe writes down the ping alone`() = runTest {
         val store = store()
-        store.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
 
-        store.saveQuality(MeasuredQuality(jitterMs = 3, packetLossPercent = 0.1))
+        store.savePing(pingMs = 41)
 
-        assertEquals(3, store.quality.first()!!.jitterMs)
+        val measured = store.measured.first()
+
+        assertEquals(41, measured.pingMs)
+        assertNull(measured.jitterMs)
+        assertNull(measured.packetLossPercent)
     }
 
     @Test
-    fun `closing the session empties the journal and the quality`() = runTest {
+    fun `a probe after a speed test leaves the jitter and the loss alone`() = runTest {
+        val store = store()
+        store.saveSpeedTest(pingMs = 24, jitterMs = 9, packetLossPercent = 0.7)
+
+        store.savePing(pingMs = 41)
+
+        val measured = store.measured.first()
+
+        assertEquals(41, measured.pingMs)
+        assertEquals(9, measured.jitterMs)
+        assertEquals(0.7, measured.packetLossPercent!!, 0.0001)
+    }
+
+    @Test
+    fun `a later speed test replaces the one before it`() = runTest {
+        val store = store()
+        store.saveSpeedTest(pingMs = 24, jitterMs = 9, packetLossPercent = 0.7)
+
+        store.saveSpeedTest(pingMs = 18, jitterMs = 3, packetLossPercent = 0.1)
+
+        val measured = store.measured.first()
+
+        assertEquals(18, measured.pingMs)
+        assertEquals(3, measured.jitterMs)
+        assertEquals(0.1, measured.packetLossPercent!!, 0.0001)
+    }
+
+    @Test
+    fun `closing the session empties the journal and the last measurement`() = runTest {
         val store = store()
         store.append(record(pingMs = 27))
-        store.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
+        store.saveSpeedTest(pingMs = 24, jitterMs = 9, packetLossPercent = 0.7)
 
         store.clearSession()
 
+        val measured = store.measured.first()
+
         assertTrue(store.history.first().isEmpty())
-        assertNull(store.quality.first())
+        assertNull(measured.pingMs)
+        assertNull(measured.jitterMs)
+        assertNull(measured.packetLossPercent)
     }
 
     @Test

@@ -232,18 +232,6 @@ class NetworkConnectionIntegrationTest : NetworkTestCase() {
     }
 
     @Test
-    fun `the card is clickable only behind a vpn`() = network { stack ->
-        val (_, states) = screenOf(stack)
-        assertFalse(awaitContent(states).connection.isVpnCardClickable)
-
-        stack.networkMonitor.set(isVpnActive = true)
-
-        assertTrue(
-            awaitConnection(states, "the vpn to light up") { it.isVpnActive }.isVpnCardClickable
-        )
-    }
-
-    @Test
     fun `the location on the screen comes from the summary`() = network { stack ->
         stack.server.always(
             NetworkPaths.STATE,

@@ -2,17 +2,18 @@ package com.aura.feature.network.data.repository
 
 import com.aura.core.api.dto.PingDto
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.logFailure
+import com.aura.core.common.runCatchingCancellable
 import com.aura.feature.network.data.diagnostics.PingProbe
-import com.aura.feature.network.data.local.MeasuredQuality
 import com.aura.feature.network.data.local.NetworkLocalStore
-import com.aura.feature.network.data.mapper.toDomain
+import com.aura.feature.network.data.mapper.toRecord
+import com.aura.feature.network.data.remote.LinkConditionsSource
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
 import com.aura.feature.network.domain.model.PING_HISTORY_LIMIT
 import com.aura.feature.network.domain.model.PingRecord
 import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.model.SpeedTestResult
 import com.aura.feature.network.domain.repository.PingHistoryRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -23,6 +24,7 @@ import javax.inject.Singleton
 class PingHistoryRepositoryImpl @Inject constructor(
     private val localStore: NetworkLocalStore,
     private val remote: NetworkRemoteDataSource,
+    private val linkConditions: LinkConditionsSource,
     private val pingProbe: PingProbe,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PingHistoryRepository {
@@ -31,47 +33,40 @@ class PingHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {
-            val records = try {
-                remote.measurements()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                return@withContext
-            }
+            val measurements = runCatchingCancellable { remote.measurements() }
+                .logFailure("network measurements")
+                .getOrNull()
+                ?: return@withContext
 
-            localStore.replaceAll(records.toRecords())
+            localStore.replaceAll(measurements.toRecords())
         }
     }
 
     override suspend fun recordProbe(source: PingSource) {
         withContext(ioDispatcher) {
             val pingMs = pingProbe.measure() ?: return@withContext
-            publish(source) { remote.addPing(pingMs, source) }
+            localStore.savePing(pingMs)
+            publish(source) { remote.addPing(linkConditions.current(), source, pingMs) }
         }
     }
 
     override suspend fun record(result: SpeedTestResult, source: PingSource) {
         withContext(ioDispatcher) {
-            localStore.saveQuality(
-                MeasuredQuality(
-                    jitterMs = result.jitterMs,
-                    packetLossPercent = result.packetLossPercent,
-                )
+            localStore.saveSpeedTest(
+                pingMs = result.pingMs,
+                jitterMs = result.jitterMs,
+                packetLossPercent = result.packetLossPercent,
             )
-            publish(source) { remote.addSpeedTest(result, source) }
+            publish(source) { remote.addSpeedTest(linkConditions.current(), source, result) }
         }
     }
 
     private suspend fun publish(source: PingSource, send: suspend () -> PingDto) {
-        val stored = try {
-            send()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            null
-        }
+        val record = runCatchingCancellable { send() }
+            .logFailure("network measurement")
+            .getOrNull()
+            ?.toRecord()
 
-        val record = stored?.toDomain()
         if (record != null) {
             localStore.append(record)
             return
@@ -80,7 +75,7 @@ class PingHistoryRepositoryImpl @Inject constructor(
         if (source != PingSource.BACKGROUND) refresh()
     }
 
-    private fun List<PingDto>.toRecords(): List<PingRecord> = mapNotNull(PingDto::toDomain)
+    private fun List<PingDto>.toRecords(): List<PingRecord> = mapNotNull(PingDto::toRecord)
         .sortedBy(PingRecord::timestamp)
         .takeLast(PING_HISTORY_LIMIT)
 }

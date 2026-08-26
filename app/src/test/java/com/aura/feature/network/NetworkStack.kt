@@ -10,6 +10,7 @@ import com.aura.feature.home.MutableNetworkMonitor
 import com.aura.feature.network.data.diagnostics.SpeedTestEngine
 import com.aura.feature.network.data.local.NetworkLocalStore
 import com.aura.feature.network.data.remote.ApiNetworkRemoteDataSource
+import com.aura.feature.network.data.remote.LinkConditionsSource
 import com.aura.feature.network.data.repository.NetworkRepositoryImpl
 import com.aura.feature.network.data.repository.PingHistoryRepositoryImpl
 import com.aura.feature.network.domain.usecase.ObserveConnectionDetailsUseCase
@@ -85,22 +86,22 @@ internal class NetworkStack(context: Context, news: List<NewsItem> = emptyList()
         server.always(NetworkPaths.MEASUREMENTS, body = Net.ping(), method = NetworkPaths.POST)
     }
 
-    val remote = ApiNetworkRemoteDataSource(
-        api = server.api,
-        networkMonitor = networkMonitor,
-        userLocationSource = userLocationSource,
-    )
+    val linkConditions = LinkConditionsSource(networkMonitor)
+
+    val remote = ApiNetworkRemoteDataSource(server.api)
 
     val repository = NetworkRepositoryImpl(
         remote = remote,
         localStore = localStore,
-        networkMonitor = networkMonitor,
+        linkConditions = linkConditions,
+        userLocationSource = userLocationSource,
         ioDispatcher = ioDispatcher,
     )
 
     val pingHistory = PingHistoryRepositoryImpl(
         localStore = localStore,
         remote = remote,
+        linkConditions = linkConditions,
         pingProbe = pingProbe,
         ioDispatcher = ioDispatcher,
     )

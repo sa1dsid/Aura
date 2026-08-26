@@ -274,7 +274,7 @@ class DiagnosticsIntegrationTest : NetworkTestCase() {
     }
 
     @Test
-    fun `the grade is judged on the raw numbers and not the rounded ones`() = network { stack ->
+    fun `the grade is judged on the very numbers the card shows`() = network { stack ->
         stack.pingProbe.sample = sampleOf(92.0, 180.0)
         stack.throughputProbe.downloadResult = Throughput(24.96, 0)
         val states = stack.eventsOf(stack.speedTestEngine.state)
@@ -284,6 +284,20 @@ class DiagnosticsIntegrationTest : NetworkTestCase() {
         val result = resultOf(awaitDiagnostics(states, "the result") { it is SpeedTestState.Done })
 
         assertEquals(25.0, result.downloadMbps, 0.0001)
+        assertEquals(ConnectionGrade.GOOD, result.grade)
+    }
+
+    @Test
+    fun `a hair below the rounding line the grade drops`() = network { stack ->
+        stack.pingProbe.sample = sampleOf(92.0, 180.0)
+        stack.throughputProbe.downloadResult = Throughput(24.94, 0)
+        val states = stack.eventsOf(stack.speedTestEngine.state)
+
+        stack.speedTestEngine.start()
+
+        val result = resultOf(awaitDiagnostics(states, "the result") { it is SpeedTestState.Done })
+
+        assertEquals(24.9, result.downloadMbps, 0.0001)
         assertEquals(ConnectionGrade.POOR, result.grade)
     }
 

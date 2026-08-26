@@ -1,6 +1,6 @@
 package com.aura.feature.network
 
-import com.aura.feature.network.data.local.MeasuredQuality
+import com.aura.feature.network.domain.model.PingSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -82,81 +82,72 @@ class NetworkMetricsIntegrationTest : NetworkTestCase() {
     }
 
     @Test
-    fun `the locally measured jitter fills in while the server is silent`() = network { stack ->
-        stack.localStore.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
+    fun `the last measurement wins over the summary`() = network { stack ->
+        stack.localStore.saveSpeedTest(pingMs = 41, jitterMs = 9, packetLossPercent = 0.7)
         stack.server.always(
             NetworkPaths.SUMMARY,
-            body = Net.summary(jitterMs = null, packetLossPct = null),
+            body = Net.summary(
+                pingMs = "27.000000",
+                jitterMs = "3.000000",
+                packetLossPct = "0.100000",
+            ),
             method = NetworkPaths.GET,
         )
         val (_, states) = screenOf(stack)
 
-        val metrics = awaitMetrics(states, "the local quality") { it.jitterMs == 9 }
+        val metrics = awaitMetrics(states, "the last measurement") { it.pingMs == 41 }
 
+        assertEquals(9, metrics.jitterMs)
         assertEquals(0.7, metrics.packetLossPercent!!, 0.0001)
     }
 
     @Test
-    fun `the server jitter wins over the locally measured one`() = network { stack ->
-        stack.localStore.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
+    fun `the summary fills in what was never measured here`() = network { stack ->
+        stack.localStore.savePing(pingMs = 41)
         stack.server.always(
             NetworkPaths.SUMMARY,
-            body = Net.summary(jitterMs = "3.000000", packetLossPct = "0.100000"),
+            body = Net.summary(
+                pingMs = "27.000000",
+                jitterMs = "3.000000",
+                packetLossPct = "0.100000",
+            ),
             method = NetworkPaths.GET,
         )
         val (_, states) = screenOf(stack)
 
-        val metrics = awaitMetrics(states, "the summary") { it.jitterMs == 3 }
+        val metrics = awaitMetrics(states, "the last measurement") { it.pingMs == 41 }
 
+        assertEquals(3, metrics.jitterMs)
         assertEquals(0.1, metrics.packetLossPercent!!, 0.0001)
     }
 
     @Test
-    fun `the locally measured quality never fills in for the ping`() = network { stack ->
-        stack.localStore.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
-        stack.server.always(
-            NetworkPaths.SUMMARY,
-            body = Net.summary(pingMs = null),
-            method = NetworkPaths.GET,
-        )
-        val (_, states) = screenOf(stack)
-
-        val metrics = awaitMetrics(states, "the local quality") { it.jitterMs == 9 }
-
-        assertNull(metrics.pingMs)
-    }
-
-    @Test
-    fun `a failing summary empties the ping but keeps the local quality`() = network { stack ->
-        stack.localStore.saveQuality(MeasuredQuality(jitterMs = 9, packetLossPercent = 0.7))
+    fun `a failing summary leaves the last measurement on the screen`() = network { stack ->
+        stack.localStore.saveSpeedTest(pingMs = 41, jitterMs = 9, packetLossPercent = 0.7)
         stack.server.always(NetworkPaths.SUMMARY, code = SERVER_ERROR, method = NetworkPaths.GET)
         val (_, states) = screenOf(stack)
 
-        val metrics = awaitMetrics(states, "the local quality") { it.jitterMs == 9 }
+        val metrics = awaitMetrics(states, "the last measurement") { it.pingMs == 41 }
 
-        assertNull(metrics.pingMs)
+        assertEquals(9, metrics.jitterMs)
+        assertEquals(0.7, metrics.packetLossPercent!!, 0.0001)
     }
 
     @Test
-    fun `a finished speed test refreshes the jitter and the packet loss on the screen`() =
-        network { stack ->
-            stack.pingProbe.sample = sampleOf(30.0, 42.0)
-            stack.server.always(
-                NetworkPaths.SUMMARY,
-                body = Net.summary(pingMs = "27.000000", jitterMs = null, packetLossPct = null),
-                method = NetworkPaths.GET,
-            )
-            val (_, states) = screenOf(stack)
-            awaitMetrics(states, "the summary") { it.pingMs == 27 }
+    fun `a failing summary with nothing measured leaves the cards empty`() = network { stack ->
+        stack.server.always(NetworkPaths.SUMMARY, code = SERVER_ERROR, method = NetworkPaths.GET)
+        val (_, states) = screenOf(stack)
 
-            stack.speedTestEngine.start()
+        val metrics = awaitContent(states).metrics
 
-            assertEquals(6, awaitMetrics(states, "the measured jitter") { it.jitterMs == 6 }.jitterMs)
-        }
+        assertNull(metrics.pingMs)
+        assertNull(metrics.jitterMs)
+        assertNull(metrics.packetLossPercent)
+    }
 
     @Test
-    fun `a finished speed test leaves the ping card waiting for the server`() = network { stack ->
-        stack.pingProbe.sample = sampleOf(90.0, 94.0)
+    fun `a finished speed test refreshes all three cards at once`() = network { stack ->
+        stack.pingProbe.sample = sampleOf(30.0, 42.0)
         stack.server.always(
             NetworkPaths.SUMMARY,
             body = Net.summary(pingMs = "27.000000", jitterMs = null, packetLossPct = null),
@@ -166,8 +157,28 @@ class NetworkMetricsIntegrationTest : NetworkTestCase() {
         awaitMetrics(states, "the summary") { it.pingMs == 27 }
 
         stack.speedTestEngine.start()
-        val metrics = awaitMetrics(states, "the measured jitter") { it.jitterMs != null }
 
-        assertEquals(27, metrics.pingMs)
+        val metrics = awaitMetrics(states, "the measured ping") { it.pingMs == 30 }
+
+        assertEquals(6, metrics.jitterMs)
+        assertEquals(0.0, metrics.packetLossPercent!!, 0.0001)
+    }
+
+    @Test
+    fun `a probe refreshes the ping card without touching the rest`() = network { stack ->
+        stack.pingProbe.measurement = 41
+        stack.server.always(
+            NetworkPaths.SUMMARY,
+            body = Net.summary(pingMs = "27.000000", jitterMs = "3.000000"),
+            method = NetworkPaths.GET,
+        )
+        val (_, states) = screenOf(stack)
+        awaitMetrics(states, "the summary") { it.pingMs == 27 }
+
+        stack.pingHistory.recordProbe(PingSource.HOME)
+
+        val metrics = awaitMetrics(states, "the measured ping") { it.pingMs == 41 }
+
+        assertEquals(3, metrics.jitterMs)
     }
 }

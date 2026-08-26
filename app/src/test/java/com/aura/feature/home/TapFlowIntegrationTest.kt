@@ -325,7 +325,7 @@ class TapFlowIntegrationTest : HomeTestCase() {
 
 
     @Test
-    fun `a dashboard that forgot the cooldown unlocks the button again`() = home { stack ->
+    fun `a dashboard that forgot the cooldown never unlocks the button`() = home { stack ->
         stack.stubTapStart()
         stack.server.always(
             HomePaths.finishOf(SESSION),
@@ -347,14 +347,14 @@ class TapFlowIntegrationTest : HomeTestCase() {
         stack.clock.advanceBy(3.minutes.inWholeMilliseconds + 1_000)
         awaitEvent(events)
 
-        awaitUntil("the button to unlock again") {
-            stack.sessionEngine.state.value is TestSessionState.Ready
-        }
+        awaitRequest(stack, HomePaths.DASHBOARD, count = 2)
+
+        assertTrue(stack.sessionEngine.state.value is TestSessionState.Cooldown)
     }
 
 
     @Test
-    fun `a completed session is left behind in the local store`() = home { stack ->
+    fun `a completed session is cleared from the local store`() = home { stack ->
         stack.stubTapStart()
         stack.server.always(
             HomePaths.finishOf(SESSION),
@@ -372,7 +372,7 @@ class TapFlowIntegrationTest : HomeTestCase() {
         stack.clock.advanceBy(3.minutes.inWholeMilliseconds + 1_000)
         awaitEvent(events)
 
-        assertEquals(SESSION, stack.tapSessionStore.pending)
+        assertNull(stack.tapSessionStore.pending)
     }
 
     private fun HomeStack.stubTapStart() {

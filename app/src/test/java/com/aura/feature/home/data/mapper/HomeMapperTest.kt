@@ -8,6 +8,7 @@ import com.aura.core.api.dto.SparkCouponDto
 import com.aura.core.config.FeatureFlags
 import com.aura.core.network.NetworkStatus
 import com.aura.core.network.NetworkType
+import com.aura.feature.home.domain.model.BatteryOptimizationState
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SPARK_COUPON_THRESHOLD
 import com.aura.feature.home.domain.model.SparkWindow
@@ -35,7 +36,6 @@ class HomeMapperTest {
                 availableToWithdrawIon = 3_000,
                 reservedBonusIon = 3_000,
                 tapCount = 7,
-                unreadNews = 2,
             )
         )
 
@@ -43,7 +43,6 @@ class HomeMapperTest {
         assertEquals(3_000L, home.balances.availableToWithdraw)
         assertEquals(3_000L, home.balances.reservedBonus)
         assertEquals(7, home.tapCount)
-        assertEquals(2, home.unreadNews)
     }
 
     @Test
@@ -207,7 +206,7 @@ class HomeMapperTest {
     }
 
     @Test
-    fun `the battery answer of the dashboard is carried along`() {
+    fun `the battery answer belongs to the repository, not to the mapper`() {
         val home = dashboard(
             DashboardDto(
                 batteryOptimization = BatteryOptimizationDto(
@@ -217,8 +216,16 @@ class HomeMapperTest {
             )
         )
 
-        assertTrue(home.batteryOptimization.shouldShow)
-        assertFalse(home.batteryOptimization.isDisabled)
+        assertEquals(BatteryOptimizationState(), home.batteryOptimization)
+    }
+
+    @Test
+    fun `a battery answer becomes its own piece of state`() {
+        val state = BatteryOptimizationDto(shouldShow = true, optimizationDisabled = true)
+            .toDomain()
+
+        assertTrue(state.shouldShow)
+        assertTrue(state.isDisabled)
     }
 
     @Test

@@ -70,7 +70,6 @@ object HomePreviewData {
                 inviteLink = "https://ioaura.app/i/syrex",
             ),
             tapCount = 14,
-            unreadNews = 1,
             batteryOptimization = BatteryOptimizationState(),
         ),
         mesh = MeshState(

@@ -1,6 +1,8 @@
 package com.aura.feature.home.data.repository
 
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.TimeSource
+import com.aura.core.common.runCatchingCancellable
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.session.SessionCache
 import com.aura.feature.home.data.mapper.toDomain
@@ -10,7 +12,6 @@ import com.aura.feature.home.domain.model.MeshState
 import com.aura.feature.home.domain.model.NodesOnline
 import com.aura.feature.home.domain.model.UserPresence
 import com.aura.feature.home.domain.repository.MeshRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ import kotlin.time.Duration.Companion.days
 class MeshRepositoryImpl @Inject constructor(
     private val remote: MeshRemoteDataSource,
     private val networkMonitor: NetworkMonitor,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val timeSource: TimeSource,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : MeshRepository, SessionCache {
 
     private val cities = MutableStateFlow<List<MeshCity>>(emptyList())
@@ -64,27 +66,20 @@ class MeshRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchSnapshot() {
-        try {
-            val snapshot = remote.fetchMeshSnapshot()
-            cities.value = snapshot.cities.map { it.toDomain() }
-            nodesOnline.value = snapshot.nodesOnline.toNodesOnline(snapshot.stale)
-            lastFetchAtMillis = System.currentTimeMillis()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            nodesOnline.value = nodesOnline.value.degradeToLastKnown()
-        }
+        runCatchingCancellable { remote.fetchMeshSnapshot() }.fold(
+            onSuccess = { snapshot ->
+                cities.value = snapshot.cities.map { it.toDomain() }
+                nodesOnline.value = snapshot.nodesOnline.toNodesOnline(snapshot.stale)
+                lastFetchAtMillis = timeSource.nowMillis()
+            },
+            onFailure = { nodesOnline.value = nodesOnline.value.degradeToLastKnown() },
+        )
     }
 
     private suspend fun fetchUserLocation() {
-        try {
-            val location = remote.fetchUserLocation()
-            if (location.vpnActive || networkMonitor.current().isVpnActive) return
-            honestPresence.value = location.toDomain() ?: honestPresence.value
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-        }
+        val location = runCatchingCancellable { remote.fetchUserLocation() }.getOrNull() ?: return
+        if (location.vpnActive || networkMonitor.current().isVpnActive) return
+        honestPresence.value = location.toDomain() ?: honestPresence.value
     }
 
     private fun Int.toNodesOnline(stale: Boolean): NodesOnline = when {
@@ -94,8 +89,7 @@ class MeshRepositoryImpl @Inject constructor(
     }
 
     private fun isCacheStale(): Boolean =
-        cities.value.isEmpty() ||
-            System.currentTimeMillis() - lastFetchAtMillis >= CACHE_TTL_MILLIS
+        cities.value.isEmpty() || timeSource.nowMillis() - lastFetchAtMillis >= CACHE_TTL_MILLIS
 
     private fun NodesOnline.degradeToLastKnown(): NodesOnline = when (this) {
         is NodesOnline.Live -> NodesOnline.LastKnown(count)

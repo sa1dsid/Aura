@@ -1,7 +1,10 @@
 package com.aura.feature.home.data.repository
 
+import com.aura.core.api.dto.BatteryOptimizationDto
 import com.aura.core.api.dto.DashboardDto
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.runCatchingCancellable
+import com.aura.core.config.AppConfig
 import com.aura.core.config.AppConfigRepository
 import com.aura.core.network.NetworkMonitor
 import com.aura.core.session.SessionCache
@@ -13,7 +16,6 @@ import com.aura.feature.home.domain.model.HomeState
 import com.aura.feature.home.domain.repository.HomeRepository
 import com.aura.feature.nodes.domain.model.NodesState
 import com.aura.feature.nodes.domain.repository.NodesRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,12 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private data class HomeExtras(
+    val config: AppConfig,
+    val nodes: NodesState?,
+    val battery: BatteryOptimizationState,
+)
+
 @Singleton
 class HomeRepositoryImpl @Inject constructor(
     private val remote: HomeRemoteDataSource,
@@ -32,7 +40,7 @@ class HomeRepositoryImpl @Inject constructor(
     private val networkMonitor: NetworkMonitor,
     private val appConfigRepository: AppConfigRepository,
     private val nodesRepository: NodesRepository,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : HomeRepository, SessionCache {
 
     private val snapshot = MutableStateFlow<DashboardDto?>(null)
@@ -49,42 +57,28 @@ class HomeRepositoryImpl @Inject constructor(
             sessionEngine.state,
             sessionEngine.spark,
             networkMonitor.status,
-            combine(
-                appConfigRepository.config,
-                nodesRepository.observeNodes().map<NodesState, NodesState?> { it }.onStart { emit(null) },
-                battery,
-            ) { config, nodes, batteryState -> Triple(config, nodes, batteryState) },
+            extras(),
         ) { dashboard, session, spark, network, extras ->
-            val (config, nodes, batteryState) = extras
-
             dashboard
                 .toDomain(
                     session = session,
                     spark = spark,
                     network = network,
-                    flags = config.featureFlags,
-                    nodes = nodes,
+                    flags = extras.config.featureFlags,
+                    nodes = extras.nodes,
                 )
-                .copy(batteryOptimization = batteryState)
+                .copy(batteryOptimization = extras.battery)
         }
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {
             appConfigRepository.refresh()
 
-            val dashboard = try {
-                remote.dashboard()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                null
-            } ?: return@withContext
+            val dashboard = runCatchingCancellable { remote.dashboard() }.getOrNull()
+                ?: return@withContext
 
             snapshot.value = dashboard
-            battery.value = BatteryOptimizationState(
-                shouldShow = dashboard.batteryOptimization.shouldShow,
-                isDisabled = dashboard.batteryOptimization.optimizationDisabled,
-            )
+            battery.value = dashboard.batteryOptimization.toDomain()
 
             sessionEngine.syncFromDashboard(
                 cooldownAvailableAt = dashboard.cooldownAvailableAt,
@@ -108,32 +102,26 @@ class HomeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendHeartbeat() {
-        withContext(ioDispatcher) {
-            runCatching { remote.heartbeat() }
-        }
+        withContext(ioDispatcher) { runCatchingCancellable { remote.heartbeat() } }
     }
 
     override suspend fun markBonusTeaserSeen() {
-        withContext(ioDispatcher) {
-            runCatching { remote.markBonusTeaserSeen() }
-        }
+        withContext(ioDispatcher) { runCatchingCancellable { remote.markBonusTeaserSeen() } }
         refresh()
     }
 
-    private suspend fun update(request: suspend () -> com.aura.core.api.dto.BatteryOptimizationDto) {
-        withContext(ioDispatcher) {
-            val state = try {
-                request()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-                return@withContext
-            }
+    private fun extras(): Flow<HomeExtras> = combine(
+        appConfigRepository.config,
+        nodesRepository.observeNodes().map<NodesState, NodesState?> { it }.onStart { emit(null) },
+        battery,
+        ::HomeExtras,
+    )
 
-            battery.value = BatteryOptimizationState(
-                shouldShow = state.shouldShow,
-                isDisabled = state.optimizationDisabled,
-            )
+    private suspend fun update(request: suspend () -> BatteryOptimizationDto) {
+        withContext(ioDispatcher) {
+            runCatchingCancellable { request() }
+                .getOrNull()
+                ?.let { state -> battery.value = state.toDomain() }
         }
     }
 }

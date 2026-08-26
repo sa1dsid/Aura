@@ -230,6 +230,7 @@ internal class HomeStack(isEmulator: Boolean = false) {
     val meshRepository = MeshRepositoryImpl(
         remote = meshRemote,
         networkMonitor = networkMonitor,
+        timeSource = clock,
         ioDispatcher = ioDispatcher,
     )
 

@@ -26,6 +26,5 @@ data class HomeState(
     val session: TestSessionState,
     val invite: InviteState,
     val tapCount: Int,
-    val unreadNews: Int,
-    val batteryOptimization: BatteryOptimizationState,
+    val batteryOptimization: BatteryOptimizationState = BatteryOptimizationState(),
 )

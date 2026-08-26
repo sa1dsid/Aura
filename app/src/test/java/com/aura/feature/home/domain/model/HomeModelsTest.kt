@@ -45,9 +45,10 @@ class HomeModelsTest {
     }
 
     @Test
-    fun `the test lasts three minutes and locks the button for twelve hours`() {
+    fun `the test lasts three minutes, pays twenty and locks the button for twelve hours`() {
         assertEquals(3.minutes, TEST_DURATION)
         assertEquals(12.hours, COOLDOWN_DURATION)
+        assertEquals(20, TAP_REWARD_ION)
     }
 
     @Test
@@ -101,12 +102,17 @@ class HomeModelsTest {
     }
 
     @Test
-    fun `every tier carries the referral rate of its rung`() {
-        assertEquals(0.0, NodeTier.IDLE_NODE.referralRate, 0.0)
-        assertEquals(2.5, NodeTier.ACTIVE_SIGNAL.referralRate, 0.0)
-        assertEquals(2.5, NodeTier.STABLE_LINK.referralRate, 0.0)
-        assertEquals(5.0, NodeTier.CORE_NODE.referralRate, 0.0)
-        assertEquals(10.0, NodeTier.IONIC_PRIME.referralRate, 0.0)
+    fun `the tiers climb in the order the spec names`() {
+        assertEquals(
+            listOf(
+                NodeTier.IDLE_NODE,
+                NodeTier.ACTIVE_SIGNAL,
+                NodeTier.STABLE_LINK,
+                NodeTier.CORE_NODE,
+                NodeTier.IONIC_PRIME,
+            ),
+            NodeTier.entries,
+        )
     }
 
     @Test

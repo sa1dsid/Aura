@@ -18,6 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import java.io.IOException
 import org.junit.Test
+import kotlin.time.Duration.Companion.days
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MeshRepositoryImplTest {
@@ -25,9 +26,12 @@ class MeshRepositoryImplTest {
     private val remote = FakeMeshRemoteDataSource()
     private val networkMonitor = FakeNetworkMonitor()
 
+    private var nowMillis = 1_787_702_400_000L
+
     private fun repository() = MeshRepositoryImpl(
         remote = remote,
         networkMonitor = networkMonitor,
+        timeSource = { nowMillis },
         ioDispatcher = UnconfinedTestDispatcher(),
     )
 
@@ -66,6 +70,28 @@ class MeshRepositoryImplTest {
         val repository = repository()
         repository.refresh(force = true)
 
+        repository.refresh(force = false)
+
+        assertEquals(1, remote.snapshotCalls)
+    }
+
+    @Test
+    fun `asks again once the cache has stood for a week`() = runTest {
+        val repository = repository()
+        repository.refresh(force = true)
+
+        nowMillis += 7.days.inWholeMilliseconds
+        repository.refresh(force = false)
+
+        assertEquals(2, remote.snapshotCalls)
+    }
+
+    @Test
+    fun `a cache one day short of a week is still trusted`() = runTest {
+        val repository = repository()
+        repository.refresh(force = true)
+
+        nowMillis += 6.days.inWholeMilliseconds
         repository.refresh(force = false)
 
         assertEquals(1, remote.snapshotCalls)

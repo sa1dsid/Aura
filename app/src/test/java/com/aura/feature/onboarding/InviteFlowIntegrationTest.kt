@@ -2,6 +2,7 @@ package com.aura.feature.onboarding
 
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.InviteFailure
+import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusEvent
 import com.aura.feature.onboarding.presentation.invite.InviteEvent
 import com.aura.feature.onboarding.presentation.invite.InviteViewModel
 import org.junit.Assert.assertEquals
@@ -268,19 +269,21 @@ class InviteFlowIntegrationTest : OnboardingTestCase() {
     }
 
     @Test
-    fun `the invite screen does nothing at all without a session`() = onboarding { stack ->
-        val viewModel = stack.inviteViewModel()
-        val events = stack.eventsOf(viewModel.events)
+    fun `the invite screen asks for a new sign in when the session is gone`() =
+        onboarding { stack ->
+            val viewModel = stack.inviteViewModel()
+            val events = stack.eventsOf(viewModel.events)
 
-        viewModel.onScreenResumed()
-        viewModel.onCodeChange(CODE)
-        viewModel.onApplyClick()
-        viewModel.onSkipClick()
+            viewModel.onScreenResumed()
+            viewModel.onCodeChange(CODE)
+            viewModel.onApplyClick()
+            viewModel.onSkipClick()
+            awaitEvent(events, count = 3)
 
-        assertTrue(events.isEmpty())
-        assertEquals(0, stack.server.hits(Paths.INVITE_APPLY))
-        assertEquals(0, stack.server.hits(Paths.INVITE_SKIP))
-    }
+            assertEquals(List(3) { InviteEvent.SessionLost }, events)
+            assertEquals(0, stack.server.hits(Paths.INVITE_APPLY))
+            assertEquals(0, stack.server.hits(Paths.INVITE_SKIP))
+        }
 
     @Test
     fun `the bonus popup reads the reserved amount of the signed in account`() =
@@ -313,13 +316,13 @@ class InviteFlowIntegrationTest : OnboardingTestCase() {
         stack.openSession()
         stack.server.always(Paths.GIFT_POPUP_SEEN, body = Server.giftPopupSeen())
         val viewModel = stack.bonusViewModel()
-        val dismissals = stack.eventsOf(viewModel.dismissed)
+        val events = stack.eventsOf(viewModel.events)
 
         viewModel.onDismiss()
-        awaitEvent(dismissals)
+        awaitEvent(events)
         awaitRequest(stack, Paths.GIFT_POPUP_SEEN)
 
-        assertEquals(1, dismissals.size)
+        assertEquals(listOf(WelcomeBonusEvent.Finished), events)
         assertEquals(1, stack.server.hits(Paths.GIFT_POPUP_SEEN))
     }
 
@@ -332,21 +335,24 @@ class InviteFlowIntegrationTest : OnboardingTestCase() {
             body = Server.detail("Internal Server Error"),
         )
         val viewModel = stack.bonusViewModel()
-        val dismissals = stack.eventsOf(viewModel.dismissed)
+        val events = stack.eventsOf(viewModel.events)
 
         viewModel.onDismiss()
-        awaitEvent(dismissals)
+        awaitEvent(events)
 
-        assertEquals(1, dismissals.size)
+        assertEquals(listOf(WelcomeBonusEvent.Finished), events)
     }
 
     @Test
-    fun `the bonus popup never talks to the server without a session`() = onboarding { stack ->
+    fun `the bonus popup asks for a new sign in when the session is gone`() = onboarding { stack ->
         val viewModel = stack.bonusViewModel()
+        val events = stack.eventsOf(viewModel.events)
 
         viewModel.onScreenResumed()
         viewModel.onDismiss()
+        awaitEvent(events, count = 2)
 
+        assertEquals(List(2) { WelcomeBonusEvent.SessionLost }, events)
         assertNull(stack.sessionStore.account.value)
         assertEquals(0, stack.server.hits(Paths.GIFT_POPUP_SEEN))
     }

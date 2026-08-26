@@ -53,20 +53,21 @@ class StartupFlowIntegrationTest : OnboardingTestCase() {
     }
 
     @Test
-    fun `a broken server keeps the user signed in and opens home`() = onboarding { stack ->
+    fun `a session the server could not confirm never lands on home`() = onboarding { stack ->
         stack.signedInWithToken()
         stack.server.always(Paths.ME, code = 500, body = Server.detail("Internal Server Error"))
 
-        assertEquals(StartDestination.HOME, stack.resolveStartDestination())
+        assertEquals(StartDestination.AUTH, stack.resolveStartDestination())
         assertEquals("restored.session.token", stack.savedToken)
+        assertNull(stack.sessionStore.account.value)
     }
 
     @Test
-    fun `a dead network keeps the user signed in and opens home`() = onboarding { stack ->
+    fun `a dead network keeps the token but still opens auth`() = onboarding { stack ->
         stack.signedInWithToken()
         stack.server.nextDropsConnection(Paths.ME)
 
-        assertEquals(StartDestination.HOME, stack.resolveStartDestination())
+        assertEquals(StartDestination.AUTH, stack.resolveStartDestination())
         assertEquals("restored.session.token", stack.savedToken)
         assertNull(stack.sessionStore.account.value)
     }
@@ -98,26 +99,20 @@ class StartupFlowIntegrationTest : OnboardingTestCase() {
     }
 
     @Test
-    fun `the boot config carries the live node count and the hot cities`() = onboarding { stack ->
+    fun `the boot config carries the live node count`() = onboarding { stack ->
         stack.server.always(
             Paths.MESH,
             body = Server.mesh(nodesOnline = 12_048, cities = listOf("Tallinn", "Rostov-na-Donu")),
         )
 
-        assertEquals(
-            BootConfig(nodeCount = 12_048, hotCities = listOf("Tallinn", "Rostov-na-Donu")),
-            stack.bootstrap(),
-        )
+        assertEquals(BootConfig(nodeCount = 12_048), stack.bootstrap())
     }
 
     @Test
     fun `a mesh outage falls back to the built in node count`() = onboarding { stack ->
         stack.server.always(Paths.MESH, code = 500, body = Server.detail("Internal Server Error"))
 
-        assertEquals(
-            BootConfig(nodeCount = BootConfig.DEFAULT_NODE_COUNT, hotCities = emptyList()),
-            stack.bootstrap(),
-        )
+        assertEquals(BootConfig.FALLBACK, stack.bootstrap())
     }
 
     @Test

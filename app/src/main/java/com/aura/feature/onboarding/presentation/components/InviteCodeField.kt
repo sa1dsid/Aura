@@ -33,7 +33,7 @@ import com.aura.R
 import com.aura.core.designsystem.component.PRESS_FADE_MILLIS
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
+import com.aura.feature.onboarding.domain.model.toInviteCode
 
 private val FieldShape = RoundedCornerShape(16.dp)
 
@@ -66,12 +66,7 @@ fun InviteCodeField(
         ) {
             BasicTextField(
                 value = code,
-                onValueChange = { raw ->
-                    val filtered = raw.filter { it.isLetterOrDigit() }
-                        .uppercase()
-                        .take(INVITE_CODE_LENGTH)
-                    onCodeChange(filtered)
-                },
+                onValueChange = { raw -> onCodeChange(raw.toInviteCode()) },
                 singleLine = true,
                 readOnly = locked,
                 textStyle = AuraTheme.typography.inviteCode.copy(color = colors.textPrimary),

@@ -35,7 +35,10 @@ private class ApiError(
     val detail: String?,
     val fields: List<String>,
     val types: List<String>,
-)
+) {
+    val namesTheProblem: Boolean
+        get() = fields.isNotEmpty() || detail != null
+}
 
 private fun Throwable.apiError(): ApiError? {
     val http = this as? HttpException ?: return null
@@ -77,9 +80,14 @@ fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
 
             CONFLICT -> AuthFailure.EMAIL_ALREADY_REGISTERED
             UNPROCESSABLE -> when {
-                "password" !in error.fields -> AuthFailure.EMAIL_INVALID
-                error.types.any { it.contains(TOO_LONG) } -> AuthFailure.PASSWORD_TOO_LONG
-                else -> AuthFailure.PASSWORD_TOO_SHORT
+                "password" in error.fields -> if (error.types.any { it.contains(TOO_LONG) }) {
+                    AuthFailure.PASSWORD_TOO_LONG
+                } else {
+                    AuthFailure.PASSWORD_TOO_SHORT
+                }
+
+                error.namesTheProblem -> AuthFailure.EMAIL_INVALID
+                else -> AuthFailure.NETWORK
             }
 
             SERVICE_UNAVAILABLE -> AuthFailure.GOOGLE_UNAVAILABLE
@@ -98,7 +106,8 @@ fun Throwable.toInviteFailure(): InviteException {
             CONFLICT -> InviteFailure.ALREADY_APPLIED
             UNPROCESSABLE -> when {
                 error.fields.isNotEmpty() -> InviteFailure.UNKNOWN_CODE
-                else -> InviteFailure.OWN_CODE
+                error.detail != null -> InviteFailure.OWN_CODE
+                else -> InviteFailure.NETWORK
             }
 
             BAD_REQUEST -> InviteFailure.UNKNOWN_CODE

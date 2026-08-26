@@ -99,7 +99,9 @@ internal class OnboardingStack(referrerCode: String? = null) {
 
     val sessionStore = SessionStore()
 
-    val attributionStore = InviteAttributionStore(referrerSource)
+    val attributionStorage = FakeInviteAttributionStorage()
+
+    val attributionStore = InviteAttributionStore(referrerSource, attributionStorage)
 
     val appConfigRepository = AppConfigRepository(server.api, ioDispatcher)
 

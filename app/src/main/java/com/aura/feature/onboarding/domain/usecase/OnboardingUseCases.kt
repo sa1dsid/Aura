@@ -5,14 +5,23 @@ import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
 import com.aura.feature.onboarding.domain.model.InviteAttribution
+import com.aura.feature.onboarding.domain.model.InviteException
+import com.aura.feature.onboarding.domain.model.InviteFailure
 import com.aura.feature.onboarding.domain.model.MIN_PASSWORD_LENGTH
 import com.aura.feature.onboarding.domain.model.StartDestination
+import com.aura.feature.onboarding.domain.model.isWholeInviteCode
+import com.aura.feature.onboarding.domain.model.toInviteCode
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import com.aura.feature.onboarding.domain.repository.BootRepository
 import com.aura.feature.onboarding.domain.repository.InviteRepository
 import javax.inject.Inject
 
 private val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s.]+\\.[^@\\s]+$")
+
+private fun String.asEmailAddress(): String? = trim().takeIf(EMAIL_PATTERN::matches)
+
+private fun rejected(failure: AuthFailure): Result<Nothing> =
+    Result.failure(AuthException(failure))
 
 class BootstrapUseCase @Inject constructor(
     private val bootRepository: BootRepository,
@@ -30,11 +39,8 @@ class SignInUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
-        val trimmed = email.trim()
-        if (!EMAIL_PATTERN.matches(trimmed)) {
-            return Result.failure(AuthException(AuthFailure.EMAIL_INVALID))
-        }
-        return authRepository.signIn(trimmed, password)
+        val address = email.asEmailAddress() ?: return rejected(AuthFailure.EMAIL_INVALID)
+        return authRepository.signIn(address, password)
     }
 }
 
@@ -42,14 +48,11 @@ class SignUpUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
-        val trimmed = email.trim()
-        if (!EMAIL_PATTERN.matches(trimmed)) {
-            return Result.failure(AuthException(AuthFailure.EMAIL_INVALID))
-        }
+        val address = email.asEmailAddress() ?: return rejected(AuthFailure.EMAIL_INVALID)
         if (password.length < MIN_PASSWORD_LENGTH) {
-            return Result.failure(AuthException(AuthFailure.PASSWORD_TOO_SHORT))
+            return rejected(AuthFailure.PASSWORD_TOO_SHORT)
         }
-        return authRepository.signUp(trimmed, password)
+        return authRepository.signUp(address, password)
     }
 }
 
@@ -64,11 +67,9 @@ class RequestPasswordResetUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(email: String): Result<Unit> {
-        val trimmed = email.trim()
-        if (trimmed.isEmpty()) {
-            return Result.failure(AuthException(AuthFailure.EMAIL_REQUIRED))
-        }
-        return authRepository.requestPasswordReset(trimmed)
+        if (email.isBlank()) return rejected(AuthFailure.EMAIL_REQUIRED)
+        val address = email.asEmailAddress() ?: return rejected(AuthFailure.EMAIL_INVALID)
+        return authRepository.requestPasswordReset(address)
     }
 }
 
@@ -81,13 +82,17 @@ class ObserveInviteAttributionUseCase @Inject constructor(
 class ApplyInviteCodeUseCase @Inject constructor(
     private val inviteRepository: InviteRepository,
 ) {
-    suspend operator fun invoke(accountId: String, code: String): Result<Unit> =
-        inviteRepository.applyCode(accountId, code.filterNot(Char::isWhitespace).uppercase())
+    suspend operator fun invoke(code: String): Result<Unit> {
+        val inviteCode = code.toInviteCode()
+        if (!inviteCode.isWholeInviteCode) {
+            return Result.failure(InviteException(InviteFailure.UNKNOWN_CODE))
+        }
+        return inviteRepository.applyCode(inviteCode)
+    }
 }
 
 class SkipInviteUseCase @Inject constructor(
     private val inviteRepository: InviteRepository,
 ) {
-    suspend operator fun invoke(accountId: String): Result<Unit> =
-        inviteRepository.skipInvite(accountId)
+    suspend operator fun invoke(): Result<Unit> = inviteRepository.skipInvite()
 }

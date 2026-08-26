@@ -11,4 +11,6 @@ data class InviteUiState(
 
 sealed interface InviteEvent {
     data class Finished(val bonusPopupPending: Boolean) : InviteEvent
+
+    data object SessionLost : InviteEvent
 }

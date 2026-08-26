@@ -16,8 +16,6 @@ import org.junit.Test
 import java.io.IOException
 import java.net.SocketTimeoutException
 
-private const val ACCOUNT_ID = "309"
-
 class OnboardingFlagsRepositoryImplTest {
 
     private val remote = FakeOnboardingRemoteDataSource()
@@ -28,19 +26,11 @@ class OnboardingFlagsRepositoryImplTest {
 
     @Test
     fun `reads the flags the server sent`() = runTest {
-        remote.flags = OnboardingFlagsDto(
-            inviteScreenPassed = true,
-            bonusPopupShown = true,
-            reservedBonusIon = 1_500L,
-        )
+        remote.flags = OnboardingFlagsDto(bonusPopupShown = true, reservedBonusIon = 1_500L)
 
         assertEquals(
-            OnboardingFlags(
-                inviteScreenPassed = true,
-                bonusPopupShown = true,
-                reservedBonusIon = 1_500L,
-            ),
-            repository().flags(ACCOUNT_ID),
+            OnboardingFlags(bonusPopupShown = true, reservedBonusIon = 1_500L),
+            repository().flags(),
         )
     }
 
@@ -48,7 +38,7 @@ class OnboardingFlagsRepositoryImplTest {
     fun `falls back to a pending bonus popup when the server times out`() = runTest {
         remote.flagsError = SocketTimeoutException("timeout")
 
-        val flags = repository().flags(ACCOUNT_ID)
+        val flags = repository().flags()
 
         assertEquals(OnboardingFlags.FALLBACK, flags)
         assertFalse(flags.bonusPopupShown)
@@ -59,7 +49,7 @@ class OnboardingFlagsRepositoryImplTest {
     fun `survives a timeout while marking the bonus popup shown`() = runTest {
         remote.markBonusPopupShownError = SocketTimeoutException("timeout")
 
-        repository().markBonusPopupShown(ACCOUNT_ID)
+        repository().markBonusPopupShown()
 
         assertEquals(1, remote.markBonusPopupShownCalls)
     }
@@ -69,28 +59,22 @@ class OnboardingFlagsRepositoryImplTest {
         remote.flagsError = CancellationException("gone")
 
         assertThrows(CancellationException::class.java) {
-            runBlocking { repository().flags(ACCOUNT_ID) }
+            runBlocking { repository().flags() }
         }
     }
 
     @Test
     fun `the boot config carries what the server sent`() = runTest {
-        remote.bootConfig = BootConfigDto(nodeCount = 12_048, hotCities = listOf("Tallinn"))
+        remote.bootConfig = BootConfigDto(nodeCount = 12_048)
 
-        assertEquals(
-            BootConfig(nodeCount = 12_048, hotCities = listOf("Tallinn")),
-            bootRepository().bootstrap(),
-        )
+        assertEquals(BootConfig(nodeCount = 12_048), bootRepository().bootstrap())
     }
 
     @Test
     fun `a boot without an answer falls back to the built in node count`() = runTest {
         remote.bootstrapError = IOException("offline")
 
-        assertEquals(
-            BootConfig(nodeCount = BootConfig.DEFAULT_NODE_COUNT, hotCities = emptyList()),
-            bootRepository().bootstrap(),
-        )
+        assertEquals(BootConfig.FALLBACK, bootRepository().bootstrap())
     }
 
     @Test

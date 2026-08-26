@@ -12,12 +12,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 private const val MIN_VISIBLE_MILLIS = 1_500L
@@ -28,7 +28,7 @@ private const val BOOTSTRAP_TIMEOUT_MILLIS = 4_000L
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+    @ApplicationContext private val context: Context,
     private val bootstrap: BootstrapUseCase,
     private val resolveStartDestination: ResolveStartDestinationUseCase,
 ) : ViewModel() {
@@ -43,28 +43,30 @@ class SplashViewModel @Inject constructor(
             val startedAt = System.currentTimeMillis()
             val typing = launch { typeOut() }
 
-            val loadedConfig = async {
-                withTimeoutOrNull(BOOTSTRAP_TIMEOUT_MILLIS) { bootstrap() }
-            }
-            val resolvedDestination = async { resolveStartDestination() }
+            val config = async { withTimeoutOrNull(BOOTSTRAP_TIMEOUT_MILLIS) { bootstrap() } }
+            val destination = async { resolveStartDestination() }
 
-            val config = loadedConfig.await()
-                ?: BootConfig(BootConfig.DEFAULT_NODE_COUNT, emptyList())
-            val destination = resolvedDestination.await()
+            showNodeCount((config.await() ?: BootConfig.FALLBACK).nodeCount)
+            val startDestination = destination.await()
 
-            if (config.nodeCount != BootConfig.DEFAULT_NODE_COUNT) {
-                val log = buildLog(config.nodeCount)
-                _uiState.update { state ->
-                    state.copy(log = log, printedLength = minOf(state.printedLength, log.length))
-                }
-            }
-
-            val elapsed = System.currentTimeMillis() - startedAt
-            if (elapsed < MIN_VISIBLE_MILLIS) delay(MIN_VISIBLE_MILLIS - elapsed)
-
+            awaitMinimumOnScreen(startedAt)
             typing.cancel()
-            _uiState.update { it.copy(startDestination = destination) }
+            _uiState.update { it.copy(startDestination = startDestination) }
         }
+    }
+
+    private fun showNodeCount(nodeCount: Int) {
+        if (nodeCount == BootConfig.DEFAULT_NODE_COUNT) return
+
+        val log = buildLog(nodeCount)
+        _uiState.update { state ->
+            state.copy(log = log, printedLength = minOf(state.printedLength, log.length))
+        }
+    }
+
+    private suspend fun awaitMinimumOnScreen(startedAt: Long) {
+        val elapsed = System.currentTimeMillis() - startedAt
+        if (elapsed < MIN_VISIBLE_MILLIS) delay(MIN_VISIBLE_MILLIS - elapsed)
     }
 
     private suspend fun typeOut() {

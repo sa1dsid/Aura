@@ -60,7 +60,7 @@ class InviteViewModelTest {
 
         viewModel.onSkipClick()
 
-        assertEquals(listOf("1"), inviteRepository.skippedAccounts)
+        assertEquals(1, inviteRepository.skips)
         assertEquals(listOf(InviteEvent.Finished(bonusPopupPending = true)), events)
     }
 
@@ -123,7 +123,17 @@ class InviteViewModelTest {
     }
 
     @Test
-    fun `pasting drops the punctuation and raises the case`() = runTest {
+    fun `typing drops the punctuation and raises the case`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onScreenResumed()
+
+        viewModel.onCodeChange("sy-rex 482")
+
+        assertEquals("SYREX482", viewModel.uiState.value.code)
+    }
+
+    @Test
+    fun `pasting is normalised the same way as typing`() = runTest {
         val viewModel = viewModel()
         viewModel.onScreenResumed()
 
@@ -145,7 +155,7 @@ class InviteViewModelTest {
     }
 
     @Test
-    fun `apply needs a code of at least eight characters`() = runTest {
+    fun `apply needs a whole code of eight characters`() = runTest {
         val viewModel = viewModel()
         viewModel.onScreenResumed()
 
@@ -195,13 +205,13 @@ class InviteViewModelTest {
         viewModel.onCodeChange("ABCD1234")
         viewModel.onApplyClick()
 
-        viewModel.onCodeChange("ABCD12345")
+        viewModel.onCodeChange("ABCD1235")
 
         assertNull(viewModel.uiState.value.failure)
     }
 
     @Test
-    fun `a signed out screen asks the server for nothing`() = runTest {
+    fun `a signed out screen says the session is gone instead of going quiet`() = runTest {
         authRepository.account = null
         val viewModel = viewModel()
         val events = events(viewModel)
@@ -209,11 +219,9 @@ class InviteViewModelTest {
         viewModel.onScreenResumed()
         viewModel.onCodeChange("ABCD1234")
         viewModel.onApplyClick()
-        viewModel.onSkipClick()
 
         assertTrue(inviteRepository.appliedCodes.isEmpty())
-        assertTrue(inviteRepository.skippedAccounts.isEmpty())
-        assertTrue(events.isEmpty())
+        assertEquals(listOf(InviteEvent.SessionLost, InviteEvent.SessionLost), events)
     }
 
     private fun TestScope.events(viewModel: InviteViewModel): List<InviteEvent> {

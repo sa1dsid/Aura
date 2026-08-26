@@ -1,13 +1,11 @@
 package com.aura.feature.onboarding.data.repository
 
 import com.aura.core.common.IoDispatcher
+import com.aura.core.common.runCatchingCancellable
 import com.aura.feature.onboarding.data.mapper.toDomain
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.domain.model.OnboardingFlags
-import com.aura.feature.onboarding.domain.repository.BootRepository
-import com.aura.feature.onboarding.domain.model.BootConfig
 import com.aura.feature.onboarding.domain.repository.OnboardingFlagsRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -19,41 +17,11 @@ class OnboardingFlagsRepositoryImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : OnboardingFlagsRepository {
 
-    override suspend fun flags(accountId: String): OnboardingFlags = withContext(ioDispatcher) {
-        try {
-            remote.flags(accountId).toDomain()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            OnboardingFlags.FALLBACK
-        }
+    override suspend fun flags(): OnboardingFlags = withContext(ioDispatcher) {
+        runCatchingCancellable { remote.flags().toDomain() }.getOrDefault(OnboardingFlags.FALLBACK)
     }
 
-    override suspend fun markBonusPopupShown(accountId: String) {
-        withContext(ioDispatcher) {
-            try {
-                remote.markBonusPopupShown(accountId)
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Throwable) {
-            }
-        }
-    }
-}
-
-@Singleton
-class BootRepositoryImpl @Inject constructor(
-    private val remote: OnboardingRemoteDataSource,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : BootRepository {
-
-    override suspend fun bootstrap(): BootConfig = withContext(ioDispatcher) {
-        try {
-            remote.bootstrap().toDomain()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-            BootConfig(nodeCount = BootConfig.DEFAULT_NODE_COUNT, hotCities = emptyList())
-        }
+    override suspend fun markBonusPopupShown() {
+        withContext(ioDispatcher) { runCatchingCancellable { remote.markBonusPopupShown() } }
     }
 }

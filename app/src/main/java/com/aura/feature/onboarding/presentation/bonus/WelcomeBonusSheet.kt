@@ -54,6 +54,7 @@ private val ActionShape = RoundedCornerShape(percent = 50)
 @Composable
 fun WelcomeBonusRoute(
     onFinished: () -> Unit,
+    onSessionLost: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: WelcomeBonusViewModel = hiltViewModel(),
 ) {
@@ -64,7 +65,12 @@ fun WelcomeBonusRoute(
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.dismissed.collect { onFinished() }
+        viewModel.events.collect { event ->
+            when (event) {
+                WelcomeBonusEvent.Finished -> onFinished()
+                WelcomeBonusEvent.SessionLost -> onSessionLost()
+            }
+        }
     }
 
     WelcomeBonusSheet(

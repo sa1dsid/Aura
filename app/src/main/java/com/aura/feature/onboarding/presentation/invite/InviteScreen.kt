@@ -28,14 +28,15 @@ import com.aura.core.designsystem.component.AuraOutlinedButton
 import com.aura.core.designsystem.component.AuraPrimaryButton
 import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.feature.onboarding.domain.model.INVITE_CODE_LENGTH
 import com.aura.feature.onboarding.domain.model.InviteFailure
+import com.aura.feature.onboarding.domain.model.isWholeInviteCode
 import com.aura.feature.onboarding.presentation.components.InviteCodeField
 import com.aura.feature.onboarding.presentation.components.designBottomGap
 
 @Composable
 fun InviteRoute(
     onFinished: (bonusPopupPending: Boolean) -> Unit,
+    onSessionLost: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InviteViewModel = hiltViewModel(),
 ) {
@@ -50,6 +51,7 @@ fun InviteRoute(
         viewModel.events.collect { event ->
             when (event) {
                 is InviteEvent.Finished -> onFinished(event.bonusPopupPending)
+                InviteEvent.SessionLost -> onSessionLost()
             }
         }
     }
@@ -150,7 +152,7 @@ fun InviteScreen(
             AuraPrimaryButton(
                 text = stringResource(R.string.invite_apply),
                 onClick = actions.onApplyClick,
-                enabled = uiState.code.length >= INVITE_CODE_LENGTH && !uiState.submitting,
+                enabled = uiState.code.isWholeInviteCode && !uiState.submitting,
             )
 
             Spacer(Modifier.height(12.dp))
@@ -167,7 +169,6 @@ fun InviteScreen(
 private fun InviteFailure.textRes(): Int = when (this) {
     InviteFailure.UNKNOWN_CODE,
     InviteFailure.OWN_CODE,
-    InviteFailure.OWNER_DELETED,
     InviteFailure.ALREADY_APPLIED,
     -> R.string.toast_code_invalid
 

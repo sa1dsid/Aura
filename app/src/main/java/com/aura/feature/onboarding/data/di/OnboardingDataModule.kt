@@ -1,6 +1,8 @@
 package com.aura.feature.onboarding.data.di
 
+import com.aura.feature.onboarding.data.attribution.DataStoreInviteAttributionStorage
 import com.aura.feature.onboarding.data.attribution.InstallReferrerSource
+import com.aura.feature.onboarding.data.attribution.InviteAttributionStorage
 import com.aura.feature.onboarding.data.attribution.PlayInstallReferrerSource
 import com.aura.feature.onboarding.data.remote.ApiOnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
@@ -25,6 +27,12 @@ interface OnboardingDataModule {
     @Binds
     @Singleton
     fun bindInstallReferrerSource(impl: PlayInstallReferrerSource): InstallReferrerSource
+
+    @Binds
+    @Singleton
+    fun bindInviteAttributionStorage(
+        impl: DataStoreInviteAttributionStorage,
+    ): InviteAttributionStorage
 
     @Binds
     @Singleton

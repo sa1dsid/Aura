@@ -31,24 +31,25 @@ class OnboardingRemoteDataSourceTest {
     fun tearDown() = server.shutdown()
 
     @Test
-    fun `signing in stores the token and reports a returning account`() = runTest {
+    fun `signing in stores the token the server issued`() = runTest {
         server.next(
             Paths.LOGIN,
             body = Server.token(accessToken = "issued.token", expiresIn = 3_600),
         )
 
-        val session = remote.signIn("said@ioaura.app", "Password123")
+        remote.signIn("said@ioaura.app", "Password123")
 
         assertEquals("issued.token", tokenStore.token)
         assertEquals(3_600, tokenStore.expiresIn)
-        assertFalse(session.accountCreated)
     }
 
     @Test
-    fun `signing up reports a fresh account`() = runTest {
-        server.next(Paths.REGISTER, code = 201, body = Server.token(isNewAccount = true))
+    fun `signing up stores the token as well`() = runTest {
+        server.next(Paths.REGISTER, code = 201, body = Server.token(accessToken = "fresh.token"))
 
-        assertTrue(remote.signUp("said@ioaura.app", "Password123").accountCreated)
+        remote.signUp("said@ioaura.app", "Password123")
+
+        assertEquals("fresh.token", tokenStore.token)
     }
 
     @Test
@@ -80,14 +81,16 @@ class OnboardingRemoteDataSourceTest {
         assertEquals("77", account.id)
         assertEquals("said@ioaura.app", account.email)
         assertEquals("said", account.handle)
-        assertEquals("SYREX482", account.inviteCode)
         assertEquals("https://ioaura.app/i/SYREX482", account.inviteLink)
         assertEquals("GOOGLE", account.authProvider)
     }
 
     @Test
     fun `an account without a google method is an email account`() = runTest {
-        server.next(Paths.LOGIN, body = Server.token(user = Server.user(authMethods = listOf("email"))))
+        server.next(
+            Paths.LOGIN,
+            body = Server.token(user = Server.user(authMethods = listOf("email"))),
+        )
 
         assertEquals("EMAIL", remote.signIn("a@b.dev", "Password123").account.authProvider)
     }
@@ -105,46 +108,37 @@ class OnboardingRemoteDataSourceTest {
     }
 
     @Test
-    fun `restoring never issues a token and never reports a fresh account`() = runTest {
+    fun `restoring never issues a token`() = runTest {
         server.next(Paths.ME, body = Server.user(inviteDecision = "pending"))
 
         val session = remote.restore()
 
         assertNull(tokenStore.token)
-        assertFalse(session.accountCreated)
         assertTrue(session.invitePending)
     }
 
     @Test
     fun `the flags are read off the current user`() = runTest {
-        server.next(
-            Paths.ME,
-            body = Server.user(
-                inviteDecision = "applied",
-                giftPopupSeen = true,
-                bonusReservedIon = 1_500L,
-            ),
-        )
+        server.next(Paths.ME, body = Server.user(giftPopupSeen = true, bonusReservedIon = 1_500L))
 
-        val flags = remote.flags("39")
+        val flags = remote.flags()
 
-        assertTrue(flags.inviteScreenPassed)
         assertTrue(flags.bonusPopupShown)
         assertEquals(1_500L, flags.reservedBonusIon)
     }
 
     @Test
-    fun `a pending decision means the invite screen was not passed`() = runTest {
-        server.next(Paths.ME, body = Server.user(inviteDecision = "pending"))
+    fun `an untouched popup is reported as not shown`() = runTest {
+        server.next(Paths.ME, body = Server.user(giftPopupSeen = false))
 
-        assertFalse(remote.flags("39").inviteScreenPassed)
+        assertFalse(remote.flags().bonusPopupShown)
     }
 
     @Test
     fun `applying a code names it as a manual entry`() = runTest {
         server.next(Paths.INVITE_APPLY, body = Server.inviteState())
 
-        remote.applyInviteCode("39", "SYREX482")
+        remote.applyInviteCode("SYREX482")
 
         assertEquals("""{"code":"SYREX482","source":"manual"}""", server.bodyOf(Paths.INVITE_APPLY))
     }
@@ -154,8 +148,8 @@ class OnboardingRemoteDataSourceTest {
         server.next(Paths.INVITE_SKIP, body = Server.inviteState(decision = "skipped"))
         server.next(Paths.GIFT_POPUP_SEEN, body = Server.giftPopupSeen())
 
-        remote.skipInvite("39")
-        remote.markBonusPopupShown("39")
+        remote.skipInvite()
+        remote.markBonusPopupShown()
 
         assertEquals("", server.bodyOf(Paths.INVITE_SKIP))
         assertEquals("", server.bodyOf(Paths.GIFT_POPUP_SEEN))
@@ -173,12 +167,9 @@ class OnboardingRemoteDataSourceTest {
     @Test
     fun `booting refreshes the config and reads the mesh`() = runTest {
         server.always(Paths.CONFIG, body = Bodies.CONFIG)
-        server.next(Paths.MESH, body = Server.mesh(nodesOnline = 12_048, cities = listOf("Tallinn")))
+        server.next(Paths.MESH, body = Server.mesh(nodesOnline = 12_048))
 
-        val config = remote.bootstrap()
-
-        assertEquals(12_048, config.nodeCount)
-        assertEquals(listOf("Tallinn"), config.hotCities)
+        assertEquals(12_048, remote.bootstrap().nodeCount)
         assertEquals(1, server.hits(Paths.CONFIG))
     }
 
@@ -187,16 +178,13 @@ class OnboardingRemoteDataSourceTest {
         server.always(Paths.CONFIG, body = Bodies.CONFIG)
         server.next(Paths.MESH, code = 500, body = Server.detail("Internal Server Error"))
 
-        val config = remote.bootstrap()
-
-        assertNull(config.nodeCount)
-        assertEquals(emptyList<String>(), config.hotCities)
+        assertNull(remote.bootstrap().nodeCount)
     }
 
     @Test
     fun `an empty mesh leaves the node count unknown`() = runTest {
         server.always(Paths.CONFIG, body = Bodies.CONFIG)
-        server.next(Paths.MESH, body = Server.mesh(nodesOnline = 0, cities = emptyList()))
+        server.next(Paths.MESH, body = Server.mesh(nodesOnline = 0))
 
         assertNull(remote.bootstrap().nodeCount)
     }

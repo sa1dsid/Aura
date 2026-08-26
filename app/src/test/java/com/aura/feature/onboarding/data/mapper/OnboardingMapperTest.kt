@@ -30,8 +30,8 @@ class OnboardingMapperTest {
     }
 
     @Test
-    fun `the invite code itself is dropped on the way to the domain`() {
-        val account = accountDto(inviteCode = "SYREX482").toDomain()
+    fun `the invite link crosses over as the server built it`() {
+        val account = accountDto().toDomain()
 
         assertEquals("https://ioaura.app/i/SYREX482", account.inviteLink)
     }
@@ -52,60 +52,36 @@ class OnboardingMapperTest {
     }
 
     @Test
-    fun `a session carries the new account and pending invite marks`() {
-        val session = AuthSessionDto(
-            account = accountDto(),
-            accountCreated = true,
-            invitePending = true,
-        ).toDomain()
+    fun `a session carries the pending invite mark`() {
+        val session = AuthSessionDto(account = accountDto(), invitePending = true).toDomain()
 
-        assertEquals(true, session.accountCreated)
         assertEquals(true, session.invitePending)
         assertEquals("39", session.account.id)
     }
 
     @Test
     fun `flags cross over untouched`() {
-        val flags = OnboardingFlagsDto(
-            inviteScreenPassed = true,
-            bonusPopupShown = true,
-            reservedBonusIon = 1_500L,
-        ).toDomain()
+        val flags = OnboardingFlagsDto(bonusPopupShown = true, reservedBonusIon = 1_500L).toDomain()
 
-        assertEquals(
-            OnboardingFlags(
-                inviteScreenPassed = true,
-                bonusPopupShown = true,
-                reservedBonusIon = 1_500L,
-            ),
-            flags,
-        )
+        assertEquals(OnboardingFlags(bonusPopupShown = true, reservedBonusIon = 1_500L), flags)
     }
 
     @Test
     fun `a boot config without a node count falls back to the built in one`() {
-        val config = BootConfigDto(nodeCount = null, hotCities = listOf("Tallinn")).toDomain()
-
-        assertEquals(BootConfig(BootConfig.DEFAULT_NODE_COUNT, listOf("Tallinn")), config)
+        assertEquals(BootConfig.FALLBACK, BootConfigDto(nodeCount = null).toDomain())
         assertEquals(4_210, BootConfig.DEFAULT_NODE_COUNT)
     }
 
     @Test
     fun `a boot config keeps the node count the server sent`() {
-        val config = BootConfigDto(nodeCount = 12_048, hotCities = emptyList()).toDomain()
-
-        assertEquals(12_048, config.nodeCount)
+        assertEquals(12_048, BootConfigDto(nodeCount = 12_048).toDomain().nodeCount)
     }
 
-    private fun accountDto(
-        inviteCode: String = "SYREX482",
-        authProvider: String = "EMAIL",
-    ) = AccountDto(
+    private fun accountDto(authProvider: String = "EMAIL") = AccountDto(
         id = "39",
         email = "said@ioaura.app",
         handle = "said",
-        inviteCode = inviteCode,
-        inviteLink = "https://ioaura.app/i/$inviteCode",
+        inviteLink = "https://ioaura.app/i/SYREX482",
         authProvider = authProvider,
     )
 }

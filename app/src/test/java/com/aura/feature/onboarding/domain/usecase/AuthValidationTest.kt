@@ -88,11 +88,19 @@ class AuthValidationTest {
     }
 
     @Test
-    fun `password reset does not check the email format`() = runTest {
+    fun `password reset checks the email format too`() = runTest {
         val result = RequestPasswordResetUseCase(repository)("said")
 
+        assertEquals(AuthFailure.EMAIL_INVALID, result.failure())
+        assertNull(repository.resetEmail)
+    }
+
+    @Test
+    fun `password reset accepts a well formed email`() = runTest {
+        val result = RequestPasswordResetUseCase(repository)("said@ioaura.app")
+
         assertTrue(result.isSuccess)
-        assertEquals("said", repository.resetEmail)
+        assertEquals("said@ioaura.app", repository.resetEmail)
     }
 
     private fun Result<*>.failure(): AuthFailure? =
@@ -112,23 +120,23 @@ class AuthValidationTest {
         override suspend fun signIn(email: String, password: String): Result<AuthSession> {
             signInEmail = email
             signInPassword = password
-            return session(accountCreated = false)
+            return session(invitePending = false)
         }
 
         override suspend fun signUp(email: String, password: String): Result<AuthSession> {
             signUpEmail = email
-            return session(accountCreated = true)
+            return session(invitePending = true)
         }
 
         override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
-            session(accountCreated = true)
+            session(invitePending = true)
 
         override suspend fun requestPasswordReset(email: String): Result<Unit> {
             resetEmail = email
             return failWith?.let { Result.failure(AuthException(it)) } ?: Result.success(Unit)
         }
 
-        private fun session(accountCreated: Boolean): Result<AuthSession> =
+        private fun session(invitePending: Boolean): Result<AuthSession> =
             failWith?.let { Result.failure(AuthException(it)) }
                 ?: Result.success(
                     AuthSession(
@@ -139,8 +147,7 @@ class AuthValidationTest {
                             inviteLink = "https://ioaura.app/i/SAID001",
                             authProvider = AuthProvider.EMAIL,
                         ),
-                        accountCreated = accountCreated,
-                        invitePending = accountCreated,
+                        invitePending = invitePending,
                     )
                 )
     }

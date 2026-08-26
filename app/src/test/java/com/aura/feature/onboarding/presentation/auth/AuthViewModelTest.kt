@@ -298,7 +298,6 @@ class AuthViewModelTest {
                         inviteLink = "https://ioaura.app/i/SYREX482",
                         authProvider = AuthProvider.EMAIL,
                     ),
-                    accountCreated = invitePending,
                     invitePending = invitePending,
                 )
             )

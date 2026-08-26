@@ -113,7 +113,7 @@ class SplashViewModelTest {
 
     @Test
     fun `a live node count is written back into the log`() = splashTest {
-        boot.config = BootConfig(nodeCount = 12_048, hotCities = listOf("Tallinn"))
+        boot.config = BootConfig(nodeCount = 12_048)
         val viewModel = viewModel()
 
         advanceUntilIdle()
@@ -123,7 +123,7 @@ class SplashViewModelTest {
 
     @Test
     fun `a shorter log never leaves the cursor past its end`() = splashTest {
-        boot.config = BootConfig(nodeCount = 1, hotCities = emptyList())
+        boot.config = BootConfig(nodeCount = 1)
         val viewModel = viewModel()
 
         advanceUntilIdle()
@@ -169,7 +169,7 @@ class SplashViewModelTest {
     private fun splashTest(body: suspend TestScope.() -> Unit) = runTest { body() }
 
     private class ProgrammableBootRepository : BootRepository {
-        var config = BootConfig(BootConfig.DEFAULT_NODE_COUNT, emptyList())
+        var config = BootConfig.FALLBACK
         var hang = false
 
         override suspend fun bootstrap(): BootConfig {

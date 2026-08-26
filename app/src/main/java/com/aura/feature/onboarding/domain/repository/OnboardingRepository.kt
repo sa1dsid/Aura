@@ -26,15 +26,15 @@ interface InviteRepository {
 
     suspend fun rememberDeepLinkCode(code: String)
 
-    suspend fun applyCode(accountId: String, code: String): Result<Unit>
+    suspend fun applyCode(code: String): Result<Unit>
 
-    suspend fun skipInvite(accountId: String): Result<Unit>
+    suspend fun skipInvite(): Result<Unit>
 }
 
 interface OnboardingFlagsRepository {
-    suspend fun flags(accountId: String): OnboardingFlags
+    suspend fun flags(): OnboardingFlags
 
-    suspend fun markBonusPopupShown(accountId: String)
+    suspend fun markBonusPopupShown()
 }
 
 interface BootRepository {

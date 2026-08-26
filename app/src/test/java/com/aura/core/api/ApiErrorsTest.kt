@@ -119,10 +119,11 @@ class ApiErrorsTest {
     }
 
     @Test
-    fun `an unreadable body on a validation status still blames the email`() {
+    fun `an unreadable body on a validation status blames nobody`() {
         val proxyPage = "<html>bad gateway</html>"
 
-        assertEquals(AuthFailure.EMAIL_INVALID, httpError(422, proxyPage).toAuthFailure().failure)
+        assertEquals(AuthFailure.NETWORK, httpError(422, proxyPage).toAuthFailure().failure)
+        assertEquals(InviteFailure.NETWORK, httpError(422, proxyPage).toInviteFailure().failure)
     }
 
     @Test
@@ -136,24 +137,10 @@ class ApiErrorsTest {
     @Test
     fun `a failure already named by the app is passed through untouched`() {
         val auth = AuthException(AuthFailure.GOOGLE_CANCELLED)
-        val invite = InviteException(InviteFailure.OWNER_DELETED)
+        val invite = InviteException(InviteFailure.OWN_CODE)
 
         assertEquals(AuthFailure.GOOGLE_CANCELLED, auth.toAuthFailure().failure)
-        assertEquals(InviteFailure.OWNER_DELETED, invite.toInviteFailure().failure)
-    }
-
-    @Test
-    fun `a deleted invite owner is never named by the server mapping`() {
-        val statuses = listOf(400, 401, 403, 404, 409, 410, 422, 500, 503)
-
-        for (status in statuses) {
-            val body = """{"detail":"Invite owner deleted their account"}"""
-            assertEquals(
-                status.toString(),
-                false,
-                httpError(status, body).toInviteFailure().failure == InviteFailure.OWNER_DELETED,
-            )
-        }
+        assertEquals(InviteFailure.OWN_CODE, invite.toInviteFailure().failure)
     }
 
     @Test
@@ -164,10 +151,10 @@ class ApiErrorsTest {
     }
 
     @Test
-    fun `a validation error naming no field at all reads as a bad email`() {
+    fun `a validation error naming no field at all is not pinned on the email`() {
         val body = """{"detail":[{"type":"value_error","loc":[],"msg":"bad"}]}"""
 
-        assertEquals(AuthFailure.EMAIL_INVALID, httpError(422, body).toAuthFailure().failure)
+        assertEquals(AuthFailure.NETWORK, httpError(422, body).toAuthFailure().failure)
     }
 
     private fun httpError(code: Int, body: String) = HttpException(

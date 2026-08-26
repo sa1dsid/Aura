@@ -7,6 +7,8 @@ import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
 import com.aura.feature.onboarding.domain.model.InviteAttribution
+import com.aura.feature.onboarding.domain.model.InviteException
+import com.aura.feature.onboarding.domain.model.InviteFailure
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import com.aura.feature.onboarding.domain.repository.BootRepository
@@ -91,42 +93,60 @@ class OnboardingUseCaseTest {
     }
 
     @Test
-    fun `a reset asks for an email but not for a valid one`() = runTest {
+    fun `a reset asks for an email before anything else`() = runTest {
         assertEquals(
             AuthFailure.EMAIL_REQUIRED,
             RequestPasswordResetUseCase(auth)("  ").failure(),
         )
+        assertNull(auth.resetEmail)
+    }
 
-        assertTrue(RequestPasswordResetUseCase(auth)("said").isSuccess)
-        assertEquals("said", auth.resetEmail)
+    @Test
+    fun `a reset checks the email the same way the sign in does`() = runTest {
+        assertEquals(
+            AuthFailure.EMAIL_INVALID,
+            RequestPasswordResetUseCase(auth)("said").failure(),
+        )
+        assertNull(auth.resetEmail)
+
+        assertTrue(RequestPasswordResetUseCase(auth)("  said@ioaura.app ").isSuccess)
+        assertEquals("said@ioaura.app", auth.resetEmail)
     }
 
     @Test
     fun `an invite code loses its spaces and goes up in case`() = runTest {
-        ApplyInviteCodeUseCase(invites)(ACCOUNT_ID, "  sy rex\t482 \n")
+        ApplyInviteCodeUseCase(invites)("  sy rex\t482 \n")
 
         assertEquals("SYREX482", invites.appliedCode)
     }
 
     @Test
-    fun `an invite code keeps the punctuation typed into it`() = runTest {
-        ApplyInviteCodeUseCase(invites)(ACCOUNT_ID, "syrex-482")
+    fun `an invite code loses the punctuation typed into it`() = runTest {
+        ApplyInviteCodeUseCase(invites)("syrex-482")
 
-        assertEquals("SYREX-482", invites.appliedCode)
+        assertEquals("SYREX482", invites.appliedCode)
     }
 
     @Test
-    fun `an invite code of the wrong length still reaches the server`() = runTest {
-        ApplyInviteCodeUseCase(invites)(ACCOUNT_ID, "abc")
+    fun `an invite code longer than eight characters is cut down to size`() = runTest {
+        ApplyInviteCodeUseCase(invites)("syrex482extra")
 
-        assertEquals("ABC", invites.appliedCode)
+        assertEquals("SYREX482", invites.appliedCode)
     }
 
     @Test
-    fun `skipping names the account and nothing else`() = runTest {
-        SkipInviteUseCase(invites)(ACCOUNT_ID)
+    fun `an invite code of the wrong length never reaches the server`() = runTest {
+        val result = ApplyInviteCodeUseCase(invites)("abc")
 
-        assertEquals(ACCOUNT_ID, invites.skippedAccount)
+        assertEquals(InviteFailure.UNKNOWN_CODE, result.inviteFailure())
+        assertNull(invites.appliedCode)
+    }
+
+    @Test
+    fun `skipping asks the repository and nothing else`() = runTest {
+        SkipInviteUseCase(invites)()
+
+        assertEquals(1, invites.skips)
     }
 
     @Test
@@ -142,15 +162,18 @@ class OnboardingUseCaseTest {
     @Test
     fun `booting and resolving are plain pass through`() = runTest {
         val boot = object : BootRepository {
-            override suspend fun bootstrap() = BootConfig(7, listOf("Tallinn"))
+            override suspend fun bootstrap() = BootConfig(nodeCount = 7)
         }
 
-        assertEquals(BootConfig(7, listOf("Tallinn")), BootstrapUseCase(boot)())
+        assertEquals(BootConfig(nodeCount = 7), BootstrapUseCase(boot)())
         assertEquals(StartDestination.HOME, ResolveStartDestinationUseCase(auth)())
     }
 
     private fun Result<*>.failure(): AuthFailure? =
         (exceptionOrNull() as? AuthException)?.failure
+
+    private fun Result<*>.inviteFailure(): InviteFailure? =
+        (exceptionOrNull() as? InviteException)?.failure
 
     private class RecordingAuthRepository : AuthRepository {
         var signInEmail: String? = null
@@ -191,7 +214,6 @@ class OnboardingUseCaseTest {
                 inviteLink = "https://ioaura.app/i/SYREX482",
                 authProvider = AuthProvider.EMAIL,
             ),
-            accountCreated = false,
             invitePending = false,
         )
     }
@@ -199,7 +221,7 @@ class OnboardingUseCaseTest {
     private class RecordingInviteRepository : InviteRepository {
         var attribution: InviteAttribution = InviteAttribution.None
         var appliedCode: String? = null
-        var skippedAccount: String? = null
+        var skips = 0
         var rememberedCode: String? = null
 
         override suspend fun pendingAttribution(): InviteAttribution = attribution
@@ -208,13 +230,13 @@ class OnboardingUseCaseTest {
             rememberedCode = code
         }
 
-        override suspend fun applyCode(accountId: String, code: String): Result<Unit> {
+        override suspend fun applyCode(code: String): Result<Unit> {
             appliedCode = code
             return Result.success(Unit)
         }
 
-        override suspend fun skipInvite(accountId: String): Result<Unit> {
-            skippedAccount = accountId
+        override suspend fun skipInvite(): Result<Unit> {
+            skips++
             return Result.success(Unit)
         }
     }

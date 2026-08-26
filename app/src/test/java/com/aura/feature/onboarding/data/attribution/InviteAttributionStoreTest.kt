@@ -1,5 +1,6 @@
 package com.aura.feature.onboarding.data.attribution
 
+import com.aura.feature.onboarding.FakeInviteAttributionStorage
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -8,6 +9,8 @@ import org.junit.Test
 private const val CODE = "SYREX482"
 
 class InviteAttributionStoreTest {
+
+    private val storage = FakeInviteAttributionStorage()
 
     @Test
     fun `an install without a link carries no code`() = runTest {
@@ -36,11 +39,43 @@ class InviteAttributionStoreTest {
     @Test
     fun `the install referrer is read once no matter how often the screen asks`() = runTest {
         val source = FakeReferrerSource(CODE)
-        val store = InviteAttributionStore(source)
+        val store = InviteAttributionStore(source, storage)
 
         repeat(5) { store.pending() }
 
         assertEquals(1, source.reads)
+    }
+
+    @Test
+    fun `the install referrer is not read again after a restart`() = runTest {
+        val source = FakeReferrerSource(CODE)
+        InviteAttributionStore(source, storage).pending()
+
+        val afterRestart = FakeReferrerSource(CODE)
+        val restored = InviteAttributionStore(afterRestart, storage).pending()
+
+        assertEquals(0, afterRestart.reads)
+        assertEquals(InviteAttribution.FromLink(CODE), restored)
+    }
+
+    @Test
+    fun `a code opened from a link outlives the process`() = runTest {
+        store(referrer = null).rememberDeepLink(CODE)
+
+        val afterRestart = InviteAttributionStore(FakeReferrerSource(null), storage)
+
+        assertEquals(InviteAttribution.FromLink(CODE), afterRestart.pending())
+    }
+
+    @Test
+    fun `a decision already made outlives the process`() = runTest {
+        val store = store(referrer = CODE)
+        store.pending()
+        store.consume()
+
+        val afterRestart = InviteAttributionStore(FakeReferrerSource(CODE), storage)
+
+        assertEquals(InviteAttribution.None, afterRestart.pending())
     }
 
     @Test
@@ -66,7 +101,7 @@ class InviteAttributionStoreTest {
     @Test
     fun `the install referrer is not read after the decision`() = runTest {
         val source = FakeReferrerSource(CODE)
-        val store = InviteAttributionStore(source)
+        val store = InviteAttributionStore(source, storage)
 
         store.consume()
         store.pending()
@@ -95,10 +130,18 @@ class InviteAttributionStoreTest {
         val store = store(referrer = null)
 
         store.rememberDeepLink("SYREX48")
-        store.rememberDeepLink("SYREX4821")
         store.rememberDeepLink("")
 
         assertEquals(InviteAttribution.None, store.pending())
+    }
+
+    @Test
+    fun `a code longer than eight characters is cut down to size`() = runTest {
+        val store = store(referrer = null)
+
+        store.rememberDeepLink("SYREX4821")
+
+        assertEquals(InviteAttribution.FromLink(CODE), store.pending())
     }
 
     @Test
@@ -111,14 +154,8 @@ class InviteAttributionStoreTest {
         assertEquals(InviteAttribution.FromLink(CODE), store.pending())
     }
 
-    @Test
-    fun `a referrer code of the wrong length leaves the screen empty`() = runTest {
-        val store = store(referrer = "TOOLONGCODE")
-
-        assertEquals(InviteAttribution.None, store.pending())
-    }
-
-    private fun store(referrer: String?) = InviteAttributionStore(FakeReferrerSource(referrer))
+    private fun store(referrer: String?) =
+        InviteAttributionStore(FakeReferrerSource(referrer), storage)
 
     private class FakeReferrerSource(private val code: String?) : InstallReferrerSource {
         var reads = 0

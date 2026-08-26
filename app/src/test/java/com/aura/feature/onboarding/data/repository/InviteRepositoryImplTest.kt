@@ -1,5 +1,6 @@
 package com.aura.feature.onboarding.data.repository
 
+import com.aura.feature.onboarding.FakeInviteAttributionStorage
 import com.aura.feature.onboarding.FakeOnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.attribution.InstallReferrerSource
 import com.aura.feature.onboarding.data.attribution.InviteAttributionStore
@@ -20,8 +21,6 @@ import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 
-private const val ACCOUNT_ID = "39"
-
 private const val CODE = "SYREX482"
 
 class InviteRepositoryImplTest {
@@ -30,8 +29,9 @@ class InviteRepositoryImplTest {
 
     private val attributionStore = InviteAttributionStore(
         object : InstallReferrerSource {
-            override suspend fun inviteCode(): String? = CODE
-        }
+            override suspend fun inviteCode(): String = CODE
+        },
+        FakeInviteAttributionStorage(),
     )
 
     private fun repository() =
@@ -42,7 +42,7 @@ class InviteRepositoryImplTest {
         val repository = repository()
         assertEquals(InviteAttribution.FromLink(CODE), repository.pendingAttribution())
 
-        assertTrue(repository.applyCode(ACCOUNT_ID, CODE).isSuccess)
+        assertTrue(repository.applyCode(CODE).isSuccess)
 
         assertEquals(listOf(CODE), remote.appliedCodes)
         assertEquals(InviteAttribution.None, repository.pendingAttribution())
@@ -53,7 +53,7 @@ class InviteRepositoryImplTest {
         remote.applyError = httpError(404, """{"detail":"Invite code not found"}""")
         val repository = repository()
 
-        val result = repository.applyCode(ACCOUNT_ID, CODE)
+        val result = repository.applyCode(CODE)
 
         assertEquals(InviteFailure.UNKNOWN_CODE, result.failure())
         assertEquals(InviteAttribution.FromLink(CODE), repository.pendingAttribution())
@@ -63,9 +63,9 @@ class InviteRepositoryImplTest {
     fun `a skipped invite releases the attribution`() = runTest {
         val repository = repository()
 
-        assertTrue(repository.skipInvite(ACCOUNT_ID).isSuccess)
+        assertTrue(repository.skipInvite().isSuccess)
 
-        assertEquals(listOf(ACCOUNT_ID), remote.skippedAccounts)
+        assertEquals(1, remote.skipCalls)
         assertEquals(InviteAttribution.None, repository.pendingAttribution())
     }
 
@@ -74,7 +74,7 @@ class InviteRepositoryImplTest {
         remote.skipError = httpError(500)
         val repository = repository()
 
-        val result = repository.skipInvite(ACCOUNT_ID)
+        val result = repository.skipInvite()
 
         assertEquals(InviteFailure.NETWORK, result.failure())
         assertEquals(InviteAttribution.FromLink(CODE), repository.pendingAttribution())
@@ -116,7 +116,7 @@ class InviteRepositoryImplTest {
         remote.applyError = CancellationException("gone")
 
         assertThrows(CancellationException::class.java) {
-            runBlocking { repository().applyCode(ACCOUNT_ID, CODE) }
+            runBlocking { repository().applyCode(CODE) }
         }
     }
 
@@ -127,11 +127,12 @@ class InviteRepositoryImplTest {
             InviteAttributionStore(
                 object : InstallReferrerSource {
                     override suspend fun inviteCode(): String? = null
-                }
+                },
+                FakeInviteAttributionStorage(),
             ),
             Dispatchers.Unconfined,
         )
-        return repository.applyCode(ACCOUNT_ID, CODE).failure()
+        return repository.applyCode(CODE).failure()
     }
 
     private fun Result<*>.failure(): InviteFailure? =

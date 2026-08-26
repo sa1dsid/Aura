@@ -2,6 +2,8 @@ package com.aura.feature.onboarding
 
 import com.aura.core.auth.TokenStore
 import com.aura.core.push.PushTokenRepository
+import com.aura.feature.onboarding.data.attribution.InviteAttributionState
+import com.aura.feature.onboarding.data.attribution.InviteAttributionStorage
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
@@ -30,23 +32,18 @@ internal fun testAccount(id: String) = Account(
 
 internal fun testAccountDto(
     id: String = "39",
-    inviteCode: String = "SYREX482",
+    inviteLink: String = "https://ioaura.app/i/SYREX482",
     authProvider: String = "EMAIL",
 ) = AccountDto(
     id = id,
     email = "said@ioaura.app",
     handle = "said",
-    inviteCode = inviteCode,
-    inviteLink = "https://ioaura.app/i/$inviteCode",
+    inviteLink = inviteLink,
     authProvider = authProvider,
 )
 
-internal fun testSessionDto(
-    accountCreated: Boolean = false,
-    invitePending: Boolean = false,
-) = AuthSessionDto(
+internal fun testSessionDto(invitePending: Boolean = false) = AuthSessionDto(
     account = testAccountDto(),
-    accountCreated = accountCreated,
     invitePending = invitePending,
 )
 
@@ -71,45 +68,58 @@ internal class FakeAuthRepository(var account: Account? = testAccount("1")) : Au
 
 internal class FakeOnboardingFlagsRepository : OnboardingFlagsRepository {
     var flags = OnboardingFlags.FALLBACK
-    val markedAccounts = mutableListOf<String>()
+    var bonusPopupMarks = 0
+        private set
 
-    override suspend fun flags(accountId: String): OnboardingFlags = flags
+    override suspend fun flags(): OnboardingFlags = flags
 
-    override suspend fun markBonusPopupShown(accountId: String) {
-        markedAccounts += accountId
+    override suspend fun markBonusPopupShown() {
+        bonusPopupMarks++
     }
 }
 
 internal class FakeInviteRepository : InviteRepository {
     var attribution: InviteAttribution = InviteAttribution.None
     var result: Result<Unit> = Result.success(Unit)
-    val skippedAccounts = mutableListOf<String>()
+    var skips = 0
+        private set
     val appliedCodes = mutableListOf<String>()
 
     override suspend fun pendingAttribution(): InviteAttribution = attribution
 
     override suspend fun rememberDeepLinkCode(code: String) = Unit
 
-    override suspend fun applyCode(accountId: String, code: String): Result<Unit> {
+    override suspend fun applyCode(code: String): Result<Unit> {
         appliedCodes += code
         return result
     }
 
-    override suspend fun skipInvite(accountId: String): Result<Unit> {
-        skippedAccounts += accountId
+    override suspend fun skipInvite(): Result<Unit> {
+        skips++
         return result
+    }
+}
+
+internal class FakeInviteAttributionStorage(
+    private var state: InviteAttributionState = InviteAttributionState(),
+) : InviteAttributionStorage {
+
+    var writes = 0
+        private set
+
+    override suspend fun read(): InviteAttributionState = state
+
+    override suspend fun write(state: InviteAttributionState) {
+        this.state = state
+        writes++
     }
 }
 
 internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
 
     var session = testSessionDto()
-    var flags = OnboardingFlagsDto(
-        inviteScreenPassed = false,
-        bonusPopupShown = false,
-        reservedBonusIon = 3_000L,
-    )
-    var bootConfig = BootConfigDto(nodeCount = 4_210, hotCities = emptyList())
+    var flags = OnboardingFlagsDto(bonusPopupShown = false, reservedBonusIon = 3_000L)
+    var bootConfig = BootConfigDto(nodeCount = 4_210)
 
     var restoreError: Throwable? = null
     var signInError: Throwable? = null
@@ -127,10 +137,10 @@ internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
     var googleCalls = 0
     var signInCalls = 0
     var signUpCalls = 0
+    var skipCalls = 0
     var markBonusPopupShownCalls = 0
     val sentIdTokens = mutableListOf<String>()
     val appliedCodes = mutableListOf<String>()
-    val skippedAccounts = mutableListOf<String>()
     val resetEmails = mutableListOf<String>()
 
     override suspend fun bootstrap(): BootConfigDto {
@@ -168,22 +178,22 @@ internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
         resetError?.let { throw it }
     }
 
-    override suspend fun flags(accountId: String): OnboardingFlagsDto {
+    override suspend fun flags(): OnboardingFlagsDto {
         flagsError?.let { throw it }
         return flags
     }
 
-    override suspend fun applyInviteCode(accountId: String, code: String) {
+    override suspend fun applyInviteCode(code: String) {
         appliedCodes += code
         applyError?.let { throw it }
     }
 
-    override suspend fun skipInvite(accountId: String) {
-        skippedAccounts += accountId
+    override suspend fun skipInvite() {
+        skipCalls++
         skipError?.let { throw it }
     }
 
-    override suspend fun markBonusPopupShown(accountId: String) {
+    override suspend fun markBonusPopupShown() {
         markBonusPopupShownCalls++
         markBonusPopupShownError?.let { throw it }
     }

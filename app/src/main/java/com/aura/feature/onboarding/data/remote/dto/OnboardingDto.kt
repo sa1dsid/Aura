@@ -4,24 +4,18 @@ data class AccountDto(
     val id: String,
     val email: String,
     val handle: String,
-    val inviteCode: String,
     val inviteLink: String,
     val authProvider: String,
 )
 
 data class AuthSessionDto(
     val account: AccountDto,
-    val accountCreated: Boolean,
     val invitePending: Boolean,
 )
 
 data class OnboardingFlagsDto(
-    val inviteScreenPassed: Boolean,
     val bonusPopupShown: Boolean,
     val reservedBonusIon: Long,
 )
 
-data class BootConfigDto(
-    val nodeCount: Int?,
-    val hotCities: List<String>,
-)
+data class BootConfigDto(val nodeCount: Int?)

@@ -87,21 +87,21 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `any other server refusal keeps the token and opens home`() = runTest {
+    fun `any other server refusal keeps the token but never opens home`() = runTest {
         tokenStore.store.save(TOKEN, 604_800)
         remote.restoreError = httpError(403)
 
-        assertEquals(StartDestination.HOME, repository().restoreSession())
+        assertEquals(StartDestination.AUTH, repository().restoreSession())
         assertEquals(TOKEN, tokenStore.token)
         assertEquals(0, tokenStore.clears)
     }
 
     @Test
-    fun `a dead network keeps the token and opens home`() = runTest {
+    fun `a dead network keeps the token but never opens home`() = runTest {
         tokenStore.store.save(TOKEN, 604_800)
         remote.restoreError = IOException("offline")
 
-        assertEquals(StartDestination.HOME, repository().restoreSession())
+        assertEquals(StartDestination.AUTH, repository().restoreSession())
         assertEquals(TOKEN, tokenStore.token)
         assertNull(sessionStore.account.value)
     }
@@ -118,7 +118,7 @@ class AuthRepositoryImplTest {
 
     @Test
     fun `signing in opens the session and refreshes the push subscription`() = runTest {
-        remote.session = testSessionDto(accountCreated = false, invitePending = true)
+        remote.session = testSessionDto(invitePending = true)
 
         val result = repository().signIn("said@ioaura.app", "Password123")
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Контент ФАКа экрана IONI: 15 пар вопрос-ответ из раздела 8
+         «Вёрстка IONI РЕЛИЗ». Порядок ленты вопросов — этот же.
+         Тексты заказчика, править только по новой поставке. -->
+    <string-array name="ioni_faq_questions">
+        <item>What is IO Aura?</item>
+        <item>Is IO Aura free?</item>
+        <item>What is ION and why collect it?</item>
+        <item>What is Spark?</item>
+        <item>What is Node Status?</item>
+        <item>Where do I find a squad?</item>
+        <item>How does the welcome bonus work?</item>
+        <item>Why should I disable battery optimization for IO Aura?</item>
+        <item>Why did my counter stop?</item>
+        <item>What are Promo Codes?</item>
+        <item>How do invites work?</item>
+        <item>What is IONI AI?</item>
+        <item>What data does IO Aura use?</item>
+        <item>What\'s next for IO Aura?</item>
+        <item>Still have a question?</item>
+    </string-array>
+
+    <string-array name="ioni_faq_answers">
+        <item>IO Aura is a network diagnostics tool for your phone. It shows everything about your connection in one place: real-time ping, jitter and packet loss, your IP address, connection type and operator, VPN status and location. The app continuously reads your network quality and gives it a clear verdict — from Excellent to Poor — so you always know how good your connection really is. Run full speed tests, keep a history of your last 50 measurements to see how your network behaves over time, and watch the worldwide mesh of nodes live on the map. Active users also collect ION and Spark tokens along the way.</item>
+        <item>Yes. IO Aura is completely free: all diagnostics, speed tests, history and token earning cost nothing. There are no paid subscriptions and no in-app purchases.</item>
+        <item>ION is the currency of the mesh. You earn it with every completed connection test. Collect ION to unlock free access to Ionika ecosystem products — the VPN (fast, private servers of the project) and IONI AI (your AI assistant). Your welcome coupon of 3,000 ION is reserved at sign-up and unlocks as you complete in-app steps.</item>
+        <item>Spark is the second token of the mesh — separate from ION. Every completed connection test opens a 12-hour Spark window: it ticks live on your screen, second by second, until the window closes. Stack Spark to reach coupon targets — each unlocked coupon converts into a top-up code for SigmaDrop, a partner app with weekly events and giveaways. Spark never affects your node status — that one is all about your squad.</item>
+        <item>Node Status is your rank in the mesh — and it grows when you build your squad. Share your invite code or link from the Nodes screen, friends join with it and start tapping. Everyone begins as an Idle Node; complete your first taps and you become an Active Signal — this unlocks referral income. From there, every active friend lifts you a tier: Stable Link (1 active friend), Core Node (2), IONIC Prime (3). The higher the tier, the bigger your share of what your friends earn — credited automatically, on full passive. A friend counts as active once they reach Active Signal themselves. If someone goes quiet, your tier recalculates — but your own progress never drops below Active Signal, and everything already credited stays yours. So the play is simple: tap daily, invite your people, keep the squad alive.</item>
+        <item>Join our socials and communities — that\'s where squads are built. Find people for your node, grow your tier and increase your earnings. All official links are in the FIND YOUR NODE section at the bottom of the Nodes screen.</item>
+        <item>Every new account gets a 3,000 ION welcome coupon reserved at sign-up. Unlocking it is a path of four steps — you always see your current one, and each next step reveals only when the previous is complete. Step one is simple: complete 20 taps (one finished 3-minute test = one tap, the button on Home). Your progress is saved at every moment and never resets. Track it in the Bonus Withdrawal card on Home.</item>
+        <item>The app checks your network in the background every 12 hours — even when you don\'t open it: these background measurements keep your node visible to the mesh and feed your network history. Android\'s battery optimization kills background work, and with it your Spark and ION accrual. Disabled optimization = uninterrupted earning and an unbroken measurement history. The app will ask you once after your first completed test.</item>
+        <item>Almost always the answer is VPN. When a VPN is active, IO Aura can\'t measure your real network — so ION accrual, the Spark tick and the test cooldown all pause until you turn it off. The connection badge above the button turns red and shows it. Turn the VPN off — everything resumes on its own, nothing is lost. Diagnostics on the Network screen works even with VPN on.</item>
+        <item>Promo Codes is your vault of earned codes — find it on the Terminal tab. Spark codes arrive when you hit coupon targets: copy one with a tap and redeem it in SigmaDrop. VPN codes arrive with a future update. The vault keeps your last 7 codes per category, newest on top; used codes stay visible and can still be copied anytime.</item>
+        <item>Your personal code and link live on the Nodes screen. A friend enters the code at sign-up (or just installs via your link — it applies automatically). One code per account, applied once and forever. From their very first taps you receive a share of their Spark; once they reach Active Signal, they count toward your tier and the full referral flow. Their earnings are theirs — your share is added on top, it never takes anything from them.</item>
+        <item>IONI AI is the AI assistant of the Ionika ecosystem — coming as a separate app. Powering it will be simple: stay active in IO Aura, and IONI works for you. It launches in selected regions first. Follow the news drawer — you\'ll know the moment it goes live.</item>
+        <item>Only what you see on screen: network metrics (ping, jitter, speed, connection type), your IP and the city derived from it, plus your account email. That\'s what diagnostics is. IO Aura doesn\'t read your messages, files, browsing or anything on your device.</item>
+        <item>IO Aura starts as a diagnostics tool — and every measurement helps map the quality of the worldwide mesh. The goal we\'re building toward: a self-healing network, where strong nodes back up weak ones. When your connection lags or drops, the mesh reroutes you through the healthiest nodes nearby and keeps you online. Every node and every measurement brings it closer. And your tokens already have a purpose: they unlock Ionika products — IONI AI and the VPN. Follow the news drawer — everything switches on automatically.</item>
+        <item>Type it in the field below — IONI answers questions about the project right in this chat. If you need our team, tap Contact support.</item>
+    </string-array>
+</resources>

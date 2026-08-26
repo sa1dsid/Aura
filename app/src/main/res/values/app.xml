@@ -286,4 +286,19 @@
     <string name="ioni_sheet_geo_text">It launches region by region. Your activity in IO Aura keeps counting — IONI switches on here as soon as it arrives.</string>
     <string name="ioni_sheet_got_it">Got it</string>
 
+    <!-- Экран IONI (ФАК и поддержка). Тексты из «Вёрстка IONI РЕЛИЗ»,
+         в поставку локализации ещё не вошли. Логотип набирается из двух
+         кусков, между ними — иконка планеты вместо Ø. -->
+    <string name="ioni_logo_start" translatable="false">I</string>
+    <string name="ioni_logo_end" translatable="false">ni</string>
+    <string name="ioni_watermark" translatable="false">IØ</string>
+    <string name="ioni_tab_about">About</string>
+    <string name="ioni_tab_ai">IONI AI</string>
+    <string name="ioni_input_hint">Ask anything about the project</string>
+    <string name="ioni_thinking">Thinking about your request</string>
+    <string name="ioni_support">Contact support</string>
+    <string name="ioni_stub_answer">I’m still learning. Soon I’ll answer any question about the project — for now, check the ready questions above or copy the support email below.</string>
+    <string name="toast_email_copied">Email copied</string>
+    <string name="cd_ioni_send">Send</string>
+
 </resources>

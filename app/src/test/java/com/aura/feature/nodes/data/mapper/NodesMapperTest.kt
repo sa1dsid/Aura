@@ -97,6 +97,59 @@ class NodesMapperTest {
         assertTrue(snapshot(friends = emptyList()).toDomain().isEmpty)
     }
 
+    @Test
+    fun `derives the next tier from the tier order when the server keeps quiet`() {
+        val derived = listOf("IDLE", "ACTIVE_SIGNAL", "STABLE_LINK", "CORE_NODE")
+            .map { snapshot(tier = it, nextTier = null).toDomain().nextTier }
+
+        assertEquals(
+            listOf(
+                ReferralTier.ACTIVE_SIGNAL,
+                ReferralTier.STABLE_LINK,
+                ReferralTier.CORE_NODE,
+                ReferralTier.IONIC_PRIME,
+            ),
+            derived,
+        )
+    }
+
+    @Test
+    fun `leaves the top tier without a next one`() {
+        assertNull(snapshot(tier = "IONIC_PRIME", nextTier = null).toDomain().nextTier)
+    }
+
+    @Test
+    fun `starts an unknown tier over from idle`() {
+        val state = snapshot(tier = "galactic", nextTier = null).toDomain()
+
+        assertEquals(ReferralTier.IDLE, state.tier)
+        assertEquals(ReferralTier.ACTIVE_SIGNAL, state.nextTier)
+    }
+
+    @Test
+    fun `hands the rates and the rewards over untouched`() {
+        val state = snapshot().toDomain()
+
+        assertEquals(15, state.tierRates.sparkPercent)
+        assertEquals(5.0, state.tierRates.withdrawalPercent, 0.0)
+        assertEquals(3_260L, state.rewards.spark)
+        assertEquals(890L, state.rewards.ion)
+        assertEquals(1, state.friendsToNextTier)
+    }
+
+    @Test
+    fun `carries the invite offer as the server wrote it`() {
+        val invite = snapshot(
+            quote = "I collect gifts in IO Aura",
+            shareText = "Join my node",
+        ).toDomain().invite
+
+        assertEquals("SYREX482", invite.code)
+        assertEquals("https://ioaura.app/i/syrex", invite.link)
+        assertEquals("I collect gifts in IO Aura", invite.quote)
+        assertEquals("Join my node", invite.shareText)
+    }
+
     private fun friend(
         id: String = "f1",
         name: String = "Daniel R.",

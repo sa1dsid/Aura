@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,12 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.auraGlow
+import com.aura.core.designsystem.component.drawPlanet
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.ioni.presentation.IoniTab
 
@@ -35,7 +35,15 @@ private val BarHeight = 60.dp
 
 private val PlanetBox = 24.dp
 
-private val PlanetIcon = 18.dp
+private val FarGlowSize = 22.5.dp
+
+private val FarGlowBlur = 30.dp
+
+private val NearGlowSize = 18.dp
+
+private val NearGlowBlur = 12.dp
+
+private const val PLANET_BODY_FRACTION = 16.125f / 24f
 
 private val TabShape = RoundedCornerShape(16.dp)
 
@@ -100,25 +108,25 @@ private fun Logo(modifier: Modifier = Modifier) {
                 .size(PlanetBox)
                 .auraGlow(
                     color = Color.White.copy(alpha = FAR_GLOW_ALPHA),
-                    width = 22.5.dp,
-                    height = 22.5.dp,
-                    blurRadius = 30.dp,
+                    width = FarGlowSize,
+                    height = FarGlowSize,
+                    blurRadius = FarGlowBlur,
                 )
                 .auraGlow(
                     color = Color.White.copy(alpha = NEAR_GLOW_ALPHA),
-                    width = 18.dp,
-                    height = 18.dp,
-                    blurRadius = 12.dp,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_global),
-                contentDescription = null,
-                tint = colors.textBright,
-                modifier = Modifier.size(PlanetIcon),
-            )
-        }
+                    width = NearGlowSize,
+                    height = NearGlowSize,
+                    blurRadius = NearGlowBlur,
+                )
+                .drawBehind {
+                    drawPlanet(
+                        bodyColor = colors.surfaceTop,
+                        dotColor = colors.newsPlanetDot,
+                        bodyFraction = PLANET_BODY_FRACTION,
+                        haloAlpha = 0f,
+                    )
+                }
+        )
 
         Text(
             text = stringResource(R.string.ioni_logo_end),

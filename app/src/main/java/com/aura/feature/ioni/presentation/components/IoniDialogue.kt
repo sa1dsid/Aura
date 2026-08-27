@@ -29,9 +29,11 @@ private val AnswerMaxWidth = 293.dp
 
 private val ThinkingTextSize = 12.5.sp
 
-private const val WATERMARK_ALPHA = 0.05f
+private const val WATERMARK_ALPHA = 0.14f
 
-private val WatermarkSize = 132.sp
+private val WatermarkSize = 220.dp
+
+private const val INDICATOR_ALPHA = 0.80f
 
 private const val ANSWER_ALPHA = 0.80f
 
@@ -41,10 +43,12 @@ fun IoniWatermark(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = stringResource(R.string.ioni_watermark),
-            style = AuraTheme.typography.screenHeading.copy(fontSize = WatermarkSize),
-            color = AuraTheme.colors.textBright.copy(alpha = WATERMARK_ALPHA),
+        IoniDotPlanet(
+            color = AuraTheme.colors.ioniHint,
+            size = WatermarkSize,
+            alpha = WATERMARK_ALPHA,
+            animated = false,
+            fade = true,
         )
     }
 }
@@ -78,7 +82,7 @@ fun IoniThinkingRow(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        IoniDotPlanet(color = AuraTheme.colors.textBright)
+        IoniDotPlanet(color = AuraTheme.colors.textBright, alpha = INDICATOR_ALPHA)
 
         Text(
             text = stringResource(R.string.ioni_thinking),

@@ -35,6 +35,10 @@ private const val WAVE_LENGTH = 0.32f
 
 private const val WAVE_DEPTH = 0.55f
 
+private const val FADE_BASE = 1.0f
+
+private const val FADE_FALLOFF = 1.718f
+
 private val PlanetSize = 20.dp
 
 @Composable
@@ -44,6 +48,7 @@ fun IoniDotPlanet(
     size: Dp = PlanetSize,
     alpha: Float = 1f,
     animated: Boolean = true,
+    fade: Boolean = false,
 ) {
     val dots = remember { planetDots() }
     val phase = rememberWavePhase(animated)
@@ -53,12 +58,13 @@ fun IoniDotPlanet(
         val wave = phase.value
 
         dots.forEach { dot ->
-            val fade = if (animated) waveAlpha(dot.distance, wave) else 1f
+            val base = if (fade) FADE_BASE - FADE_FALLOFF * dot.distance else 1f
+            val pulse = if (animated) waveAlpha(dot.distance, wave) else 1f
             drawCircle(
                 color = color,
                 radius = dot.radius * extent,
                 center = Offset(dot.x * extent, dot.y * extent),
-                alpha = alpha * fade,
+                alpha = (alpha * base * pulse).coerceIn(0f, 1f),
             )
         }
     }

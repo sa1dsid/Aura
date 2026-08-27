@@ -291,7 +291,6 @@
          кусков, между ними — иконка планеты вместо Ø. -->
     <string name="ioni_logo_start" translatable="false">I</string>
     <string name="ioni_logo_end" translatable="false">ni</string>
-    <string name="ioni_watermark" translatable="false">IØ</string>
     <string name="ioni_tab_about">About</string>
     <string name="ioni_tab_ai">IONI AI</string>
     <string name="ioni_input_hint">Ask anything about the project</string>

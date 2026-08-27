@@ -22,9 +22,17 @@ data class SocialLinkDto(
 )
 
 @Serializable
+data class IoniConfigDto(
+    @SerialName("support_email") val supportEmail: String = "",
+    @SerialName("assistant_enabled") val assistantEnabled: Boolean = false,
+    @SerialName("ai_released") val aiReleased: Boolean = false,
+)
+
+@Serializable
 data class PublicConfigDto(
     @SerialName("terms_url") val termsUrl: String = "",
     @SerialName("privacy_url") val privacyUrl: String = "",
     @SerialName("feature_flags") val featureFlags: FeatureFlagsDto = FeatureFlagsDto(),
     @SerialName("social_links") val socialLinks: List<SocialLinkDto> = emptyList(),
+    val ioni: IoniConfigDto = IoniConfigDto(),
 )

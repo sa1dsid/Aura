@@ -2,6 +2,7 @@ package com.aura.core.api.di
 
 import com.aura.BuildConfig
 import com.aura.core.api.AuraApi
+import com.aura.core.api.SlowPathInterceptor
 import com.aura.core.auth.AuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -16,7 +17,9 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
-private const val TIMEOUT_SECONDS = 30L
+private const val CONNECT_TIMEOUT_SECONDS = 15L
+
+private const val READ_TIMEOUT_SECONDS = 10L
 
 private const val FALLBACK_BASE_URL = "http://3.127.248.37/"
 
@@ -35,9 +38,13 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        slowPathInterceptor: SlowPathInterceptor,
+    ): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(slowPathInterceptor)
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = if (BuildConfig.DEBUG) {
@@ -47,8 +54,8 @@ object ApiModule {
                     }
                 }
             )
-            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
 
     @Provides

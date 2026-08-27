@@ -75,6 +75,9 @@ fun AuraBottomSheet(
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 24.dp,
     bottomGap: Dp = 24.dp,
+    topPadding: Dp = 10.dp,
+    grabberWidth: Dp = 36.dp,
+    grabberColor: Color? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = AuraTheme.colors
@@ -175,17 +178,17 @@ fun AuraBottomSheet(
                         }
                     },
                 )
-                .padding(top = 10.dp)
+                .padding(top = topPadding)
                 .padding(horizontal = horizontalPadding)
                 .padding(bottom = sheetBottomGap(bottomGap)),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 Modifier
-                    .width(36.dp)
+                    .width(grabberWidth)
                     .height(4.dp)
                     .clip(GrabberShape)
-                    .background(colors.sheetMuted)
+                    .background(grabberColor ?: colors.sheetMuted)
             )
 
             Spacer(Modifier.height(14.dp))

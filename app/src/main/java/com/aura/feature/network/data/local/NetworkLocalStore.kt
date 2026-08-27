@@ -23,9 +23,10 @@ private val Context.networkDataStore: DataStore<Preferences> by preferencesDataS
     name = "network_log",
 )
 
-data class MeasuredQuality(
-    val jitterMs: Int,
-    val packetLossPercent: Double,
+data class MeasuredMetrics(
+    val pingMs: Int?,
+    val jitterMs: Int?,
+    val packetLossPercent: Double?,
 )
 
 @Singleton
@@ -40,15 +41,18 @@ class NetworkLocalStore @Inject constructor(
 
     val history: Flow<List<PingRecord>> = preferences.map { it[RECORDS].decodeRecords() }
 
-    val quality: Flow<MeasuredQuality?> = preferences.map { stored ->
-        val jitter = stored[JITTER_MS]
-        val loss = stored[PACKET_LOSS]
-        if (jitter == null || loss == null) null else MeasuredQuality(jitter, loss)
+    val measured: Flow<MeasuredMetrics> = preferences.map { stored ->
+        MeasuredMetrics(
+            pingMs = stored[PING_MS],
+            jitterMs = stored[JITTER_MS],
+            packetLossPercent = stored[PACKET_LOSS],
+        )
     }
 
     override suspend fun clearSession() {
         context.networkDataStore.edit { stored ->
             stored.remove(RECORDS)
+            stored.remove(PING_MS)
             stored.remove(JITTER_MS)
             stored.remove(PACKET_LOSS)
         }
@@ -66,15 +70,21 @@ class NetworkLocalStore @Inject constructor(
         }
     }
 
-    suspend fun saveQuality(quality: MeasuredQuality) {
+    suspend fun savePing(pingMs: Int) {
+        context.networkDataStore.edit { stored -> stored[PING_MS] = pingMs }
+    }
+
+    suspend fun saveSpeedTest(pingMs: Int, jitterMs: Int, packetLossPercent: Double) {
         context.networkDataStore.edit { stored ->
-            stored[JITTER_MS] = quality.jitterMs
-            stored[PACKET_LOSS] = quality.packetLossPercent
+            stored[PING_MS] = pingMs
+            stored[JITTER_MS] = jitterMs
+            stored[PACKET_LOSS] = packetLossPercent
         }
     }
 
     private companion object {
         val RECORDS = stringPreferencesKey("records")
+        val PING_MS = intPreferencesKey("ping_ms")
         val JITTER_MS = intPreferencesKey("jitter_ms")
         val PACKET_LOSS = doublePreferencesKey("packet_loss")
     }

@@ -1,133 +1,79 @@
 package com.aura.feature.network.data.remote
 
 import com.aura.core.api.AuraApi
+import com.aura.core.api.dto.NetworkStateDto
 import com.aura.core.api.dto.NetworkStateUpdateDto
+import com.aura.core.api.dto.NetworkSummaryDto
 import com.aura.core.api.dto.PingCreateDto
 import com.aura.core.api.dto.PingDto
-import com.aura.core.geo.UserLocationSource
-import com.aura.core.network.NetworkMonitor
-import com.aura.core.network.NetworkType
-import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
+import com.aura.feature.network.data.mapper.toWire
+import com.aura.feature.network.domain.model.LinkConditions
 import com.aura.feature.network.domain.model.PingSource
 import com.aura.feature.network.domain.model.SpeedTestResult
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface NetworkRemoteDataSource {
-    suspend fun syncState(): NetworkSnapshotDto
 
-    suspend fun summary(): NetworkSnapshotDto
+    suspend fun syncState(conditions: LinkConditions): NetworkStateDto
+
+    suspend fun summary(): NetworkSummaryDto
 
     suspend fun measurements(): List<PingDto>
 
-    suspend fun addPing(pingMs: Int, source: PingSource): PingDto
+    suspend fun addPing(conditions: LinkConditions, source: PingSource, pingMs: Int): PingDto
 
-    suspend fun addSpeedTest(result: SpeedTestResult, source: PingSource): PingDto
+    suspend fun addSpeedTest(
+        conditions: LinkConditions,
+        source: PingSource,
+        result: SpeedTestResult,
+    ): PingDto
 }
 
 @Singleton
 class ApiNetworkRemoteDataSource @Inject constructor(
     private val api: AuraApi,
-    private val networkMonitor: NetworkMonitor,
-    private val userLocationSource: UserLocationSource,
 ) : NetworkRemoteDataSource {
 
-    @Volatile
-    private var lastProtocol: String? = null
-
-    override suspend fun syncState(): NetworkSnapshotDto {
-        val status = networkMonitor.current()
-        val state = api.updateNetworkState(
+    override suspend fun syncState(conditions: LinkConditions): NetworkStateDto =
+        api.updateNetworkState(
             NetworkStateUpdateDto(
-                operator = status.operator,
-                connection = status.type.wireName(),
-                protocol = lastProtocol,
-                vpn = status.isVpnActive,
+                operator = conditions.operator,
+                connection = conditions.networkType.toWire(),
+                protocol = conditions.protocol?.toWire(),
+                vpn = conditions.isVpnActive,
             )
         )
 
-        lastProtocol = state.ip.protocolName()
-        userLocationSource.remember(state.location)
-
-        return NetworkSnapshotDto(
-            networkType = status.type.name,
-            operator = state.operator ?: status.operator,
-            ipAddress = state.ip,
-            protocol = lastProtocol,
-            location = state.location,
-            lastTestedAt = null,
-            pingMs = null,
-            jitterMs = null,
-            packetLossPercent = null,
-        )
-    }
-
-    override suspend fun summary(): NetworkSnapshotDto {
-        val status = networkMonitor.current()
-        val summary = api.networkSummary()
-        lastProtocol = summary.ip.protocolName() ?: summary.protocol
-        userLocationSource.remember(summary.location)
-
-        return NetworkSnapshotDto(
-            networkType = status.type.name,
-            operator = summary.operator ?: status.operator,
-            ipAddress = summary.ip,
-            protocol = lastProtocol,
-            location = summary.location,
-            lastTestedAt = summary.lastTestedAt,
-            pingMs = summary.pingMs,
-            jitterMs = summary.jitterMs,
-            packetLossPercent = summary.packetLossPct,
-        )
-    }
+    override suspend fun summary(): NetworkSummaryDto = api.networkSummary()
 
     override suspend fun measurements(): List<PingDto> = api.measurements()
 
-    override suspend fun addPing(pingMs: Int, source: PingSource): PingDto {
-        val status = networkMonitor.current()
+    override suspend fun addPing(
+        conditions: LinkConditions,
+        source: PingSource,
+        pingMs: Int,
+    ): PingDto = api.addMeasurement(conditions.measurement(source, pingMs.toDouble()))
 
-        return api.addMeasurement(
-            PingCreateDto(
-                source = source.wireName,
-                operator = status.operator,
-                connection = status.type.wireName(),
-                protocol = lastProtocol,
-                vpn = status.isVpnActive,
-                pingMs = pingMs.toDouble(),
-            )
+    override suspend fun addSpeedTest(
+        conditions: LinkConditions,
+        source: PingSource,
+        result: SpeedTestResult,
+    ): PingDto = api.addMeasurement(
+        conditions.measurement(source, result.pingMs.toDouble()).copy(
+            jitterMs = result.jitterMs.toDouble(),
+            packetLossPct = result.packetLossPercent,
+            downloadMbps = result.downloadMbps,
+            uploadMbps = result.uploadMbps,
         )
-    }
+    )
 
-    override suspend fun addSpeedTest(result: SpeedTestResult, source: PingSource): PingDto {
-        val status = networkMonitor.current()
-
-        return api.addMeasurement(
-            PingCreateDto(
-                source = source.wireName,
-                operator = status.operator,
-                connection = status.type.wireName(),
-                protocol = lastProtocol,
-                vpn = status.isVpnActive,
-                pingMs = result.pingMs.toDouble(),
-                jitterMs = result.jitterMs.toDouble(),
-                packetLossPct = result.packetLossPercent,
-                downloadMbps = result.downloadMbps,
-                uploadMbps = result.uploadMbps,
-            )
-        )
-    }
-
-    private fun NetworkType.wireName(): String? =
-        if (this == NetworkType.NONE) null else name
-
-    private fun String?.protocolName(): String? = when {
-        this == null -> null
-        contains(':') -> PROTOCOL_IPV6
-        else -> PROTOCOL_IPV4
-    }
-
-    private companion object {
-        const val PROTOCOL_IPV4 = "IPv4"
-        const val PROTOCOL_IPV6 = "IPv6"
-    }
+    private fun LinkConditions.measurement(source: PingSource, pingMs: Double) = PingCreateDto(
+        source = source.wireName,
+        operator = operator,
+        connection = networkType.toWire(),
+        protocol = protocol?.toWire(),
+        vpn = isVpnActive,
+        pingMs = pingMs,
+    )
 }

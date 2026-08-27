@@ -54,6 +54,11 @@ private fun PublicConfigDto.toDomain(): AppConfig = AppConfig(
         vpnCode = featureFlags.vpnCode,
     ),
     socialLinks = socialLinks.mapNotNull(SocialLinkDto::toDomain),
+    ioni = IoniConfig(
+        supportEmail = ioni.supportEmail,
+        assistantEnabled = ioni.assistantEnabled,
+        aiReleased = ioni.aiReleased,
+    ),
 )
 
 private fun SocialLinkDto.toDomain(): SocialLink? {

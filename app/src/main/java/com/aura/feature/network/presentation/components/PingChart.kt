@@ -226,7 +226,7 @@ private fun LatestBadge(record: PingRecord, modifier: Modifier = Modifier) {
     }
 }
 
-private fun List<PingRecord>.toPoints(width: Float, top: Float, bottom: Float): List<Offset> {
+internal fun List<PingRecord>.toPoints(width: Float, top: Float, bottom: Float): List<Offset> {
     val span = bottom - top
     return mapIndexed { index, record ->
         val x = if (size == 1) width / 2f else width * index / (size - 1)

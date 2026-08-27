@@ -60,4 +60,12 @@
     <string name="nodes_find_subtitle">Меш живёт и за пределами приложения — присоединяйтесь к отряду.</string>
     <string name="nodes_share_text">Я собираю подарки в IO Aura — заходите по моей ссылке и тоже получите бонус. %1$s</string>
     <string name="cd_open_link">Открыть</string>
+
+    <!-- Экран IONI. Русские тексты из «Вёрстка IONI РЕЛИЗ». -->
+    <string name="ioni_input_hint">Спроси что угодно о проекте</string>
+    <string name="ioni_thinking">Думаю над твоим вопросом</string>
+    <string name="ioni_support">Написать в поддержку</string>
+    <string name="ioni_stub_answer">Я ещё учусь. Скоро смогу ответить на любой вопрос о проекте — а пока посмотри готовые вопросы выше или скопируй почту поддержки ниже.</string>
+    <string name="toast_email_copied">Почта скопирована</string>
+
 </resources>

@@ -1,8 +1,9 @@
 package com.aura.feature.nodes.data.mapper
 
-import com.aura.feature.nodes.data.remote.dto.FriendDto
-import com.aura.feature.nodes.data.remote.dto.NodesSnapshotDto
-import com.aura.feature.nodes.data.remote.dto.SocialLinkDto
+import com.aura.core.api.dto.InviteStateDto
+import com.aura.core.api.dto.NodeFriendDto
+import com.aura.core.api.dto.NodesDto
+import com.aura.core.config.AppConfig
 import com.aura.feature.nodes.domain.model.Friend
 import com.aura.feature.nodes.domain.model.FriendStatus
 import com.aura.feature.nodes.domain.model.InviteOffer
@@ -12,46 +13,68 @@ import com.aura.feature.nodes.domain.model.ReferralTier
 import com.aura.feature.nodes.domain.model.SocialLink
 import com.aura.feature.nodes.domain.model.SocialNetwork
 import com.aura.feature.nodes.domain.model.TierRates
+import com.aura.feature.onboarding.domain.model.Account
 
 private const val INITIALS_LIMIT = 2
 
-fun NodesSnapshotDto.toDomain(): NodesState = NodesState(
-    handle = handle,
-    invite = InviteOffer(
-        code = inviteCode,
-        link = inviteLink,
-        quote = inviteQuote?.takeIf { it.isNotBlank() },
-        shareText = inviteShareText?.takeIf { it.isNotBlank() },
-    ),
-    friendsJoined = friendsJoined,
-    activeFriends = activeFriends,
-    tier = tier.toTier() ?: ReferralTier.IDLE,
-    tierRates = TierRates(
-        sparkPercent = tierSparkPercent,
-        withdrawalPercent = tierWithdrawalPercent,
-    ),
-    nextTier = if (nextTier == null) (tier.toTier() ?: ReferralTier.IDLE).next()
-    else nextTier.toTier(),
-    friendsToNextTier = friendsToNextTier,
-    rewards = ReferralRewards(spark = earnedSpark, ion = earnedIon),
-    friends = friends.map(FriendDto::toDomain),
-    socials = socials.mapNotNull(SocialLinkDto::toDomain),
-)
+fun NodesDto.toDomain(
+    account: Account?,
+    invite: InviteStateDto?,
+    config: AppConfig,
+): NodesState {
+    val currentTier = tier.toTier() ?: ReferralTier.IDLE
 
-private fun FriendDto.toDomain(): Friend = Friend(
-    id = id,
-    name = name,
-    handle = handle,
-    initials = name.toInitials(),
-    spark = spark,
-    ion = ion,
+    return NodesState(
+        handle = account?.handle.orEmpty(),
+        invite = InviteOffer(
+            code = invite?.personalCode.orEmpty(),
+            link = invite?.personalUrl?.takeIf { it.isNotBlank() }
+                ?: account?.inviteLink.orEmpty(),
+            shareText = invite?.shareText?.takeIf { it.isNotBlank() },
+        ),
+        friendsJoined = friendsJoined,
+        activeFriends = activeFriends,
+        tier = currentTier,
+        tierRates = TierRates(
+            sparkPercent = sparkReferralPercent,
+            withdrawalPercent = ionReferralPercentStage2,
+        ),
+        nextTier = currentTier.next,
+        friendsToNextTier = friendsLeftForNextTier(),
+        rewards = ReferralRewards(
+            spark = earnedFromReferrals.spark.toWholeAmount(),
+            ion = earnedFromReferrals.ion,
+        ),
+        friends = friends.map(NodeFriendDto::toDomain),
+        socials = config.toSocialLinks(),
+    )
+}
+
+private fun NodesDto.friendsLeftForNextTier(): Int = moreForNextTier
+    ?: nodeStatus.progressTarget?.minus(nodeStatus.progressCurrent)?.coerceAtLeast(0)
+    ?: nextThreshold?.minus(activeFriends)?.coerceAtLeast(0)
+    ?: 0
+
+private fun NodeFriendDto.toDomain(): Friend = Friend(
+    id = id.toString(),
+    name = displayName,
+    initials = displayName.toInitials(),
+    spark = ownSpark.toWholeAmount(),
+    ion = ownIon,
     status = status.toStatus(),
 )
 
-private fun SocialLinkDto.toDomain(): SocialLink? {
-    val known = network.toNetwork() ?: return null
-    return SocialLink(network = known, webUrl = webUrl, appUrl = appUrl?.takeIf { it.isNotBlank() })
+private fun AppConfig.toSocialLinks(): List<SocialLink> {
+    val urls = socialLinks
+        .filter { it.url.isNotBlank() }
+        .associate { it.network.name to it.url }
+
+    return SocialNetwork.entries.map { network ->
+        SocialLink(network = network, webUrl = urls[network.name].orEmpty())
+    }
 }
+
+private fun String.toWholeAmount(): Long = toBigDecimalOrNull()?.toLong() ?: 0
 
 private fun String.toInitials(): String = split(' ', '.')
     .filter { it.isNotBlank() }
@@ -59,14 +82,8 @@ private fun String.toInitials(): String = split(' ', '.')
     .map { it.first().uppercaseChar() }
     .joinToString(separator = "")
 
-private fun ReferralTier.next(): ReferralTier? =
-    ReferralTier.entries.getOrNull(ordinal + 1)
-
 private fun String.toTier(): ReferralTier? =
     ReferralTier.entries.firstOrNull { it.name == uppercase() }
 
 private fun String.toStatus(): FriendStatus =
     FriendStatus.entries.firstOrNull { it.name == uppercase() } ?: FriendStatus.INACTIVE
-
-private fun String.toNetwork(): SocialNetwork? =
-    SocialNetwork.entries.firstOrNull { it.name == uppercase() }

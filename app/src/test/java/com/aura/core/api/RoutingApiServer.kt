@@ -54,7 +54,10 @@ internal class RoutingApiServer {
                 synchronized(this@RoutingApiServer) {
                     recorded += request
                     val path = request.path?.substringBefore('?').orEmpty()
-                    return replies[path]?.removeFirstOrNull()
+                    val route = routeOf(request.method, path)
+                    return replies[route]?.removeFirstOrNull()
+                        ?: replies[path]?.removeFirstOrNull()
+                        ?: standing[route]
                         ?: standing[path]
                         ?: MockResponse().setResponseCode(404).setBody("""{"detail":"no stub"}""")
                 }
@@ -75,16 +78,18 @@ internal class RoutingApiServer {
         .build()
         .create(AuraApi::class.java)
 
-    fun always(path: String, code: Int = 200, body: String = "{}") = synchronized(this) {
-        standing[path] = json(code, body)
-    }
+    fun always(path: String, code: Int = 200, body: String = "{}", method: String? = null) =
+        synchronized(this) {
+            standing[routeOf(method, path)] = json(code, body)
+        }
 
-    fun next(path: String, code: Int = 200, body: String = "{}") = synchronized(this) {
-        replies.getOrPut(path) { ArrayDeque() } += json(code, body)
-    }
+    fun next(path: String, code: Int = 200, body: String = "{}", method: String? = null) =
+        synchronized(this) {
+            replies.getOrPut(routeOf(method, path)) { ArrayDeque() } += json(code, body)
+        }
 
-    fun nextDropsConnection(path: String) = synchronized(this) {
-        replies.getOrPut(path) { ArrayDeque() } +=
+    fun nextDropsConnection(path: String, method: String? = null) = synchronized(this) {
+        replies.getOrPut(routeOf(method, path)) { ArrayDeque() } +=
             MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST)
     }
 
@@ -92,16 +97,22 @@ internal class RoutingApiServer {
 
     fun paths(): List<String> = requests().mapNotNull { it.path?.substringBefore('?') }
 
-    fun hits(path: String): Int = paths().count { it == path }
+    fun hits(path: String, method: String? = null): Int = matching(path, method).size
 
-    fun bodyOf(path: String): String =
-        requests().last { it.path?.substringBefore('?') == path }.body.readUtf8()
+    fun bodyOf(path: String, method: String? = null): String =
+        matching(path, method).last().body.clone().readUtf8()
 
-    fun bodiesOf(path: String): List<String> = requests()
-        .filter { it.path?.substringBefore('?') == path }
-        .map { it.body.readUtf8() }
+    fun bodiesOf(path: String, method: String? = null): List<String> =
+        matching(path, method).map { it.body.clone().readUtf8() }
 
     fun shutdown() = server.shutdown()
+
+    private fun matching(path: String, method: String?): List<RecordedRequest> = requests()
+        .filter { it.path?.substringBefore('?') == path }
+        .filter { method == null || it.method == method }
+
+    private fun routeOf(method: String?, path: String): String =
+        if (method == null) path else "$method $path"
 
     private fun json(code: Int, body: String) = MockResponse()
         .setResponseCode(code)

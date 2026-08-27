@@ -48,6 +48,8 @@ private val ArrowBoxSize = 48.dp
 
 private val ProgressHeight = 1.dp
 
+val CardGap = 12.dp
+
 private const val MONO_SPACE_EM = 0.6f
 
 private const val COUNTER_GAP_EM = 0.28f
@@ -70,7 +72,7 @@ fun TeaserCards(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(CardGap),
     ) {
         TeaserCard(
             iconRes = R.drawable.ic_send_2,

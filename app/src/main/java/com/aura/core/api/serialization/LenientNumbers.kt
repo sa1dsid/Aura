@@ -41,6 +41,21 @@ object DecimalAsIntSerializer : KSerializer<Int> {
     }
 }
 
+object DecimalAsDoubleSerializer : KSerializer<Double> {
+
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("DecimalAsDouble", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Double {
+        val json = decoder as? JsonDecoder ?: return decoder.decodeDouble()
+        return json.decodeJsonElement().jsonPrimitive.content.toDoubleOrNull() ?: 0.0
+    }
+
+    override fun serialize(encoder: Encoder, value: Double) {
+        encoder.encodeDouble(value)
+    }
+}
+
 object DecimalAsStringSerializer : KSerializer<String> {
 
     override val descriptor: SerialDescriptor =

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.aura.core.common.LoadStatus
 import com.aura.feature.news.domain.repository.NewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
+import com.aura.feature.promo.domain.repository.PromoCodesRepository
 import com.aura.feature.terminal.domain.repository.TerminalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -20,6 +21,7 @@ private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class PromoCodesViewModel @Inject constructor(
+    private val promoCodesRepository: PromoCodesRepository,
     private val terminalRepository: TerminalRepository,
     newsRepository: NewsRepository,
     sessionStore: SessionStore,
@@ -31,7 +33,7 @@ class PromoCodesViewModel @Inject constructor(
 
     val uiState: StateFlow<PromoCodesUiState> = combine(
         sessionStore.account,
-        terminalRepository.promoCodes,
+        promoCodesRepository.promoCodes,
         newsRepository.hasUnread,
         status,
     ) { account, loaded, hasUnreadNews, loadStatus ->
@@ -56,11 +58,9 @@ class PromoCodesViewModel @Inject constructor(
 
         loadJob = viewModelScope.launch {
             status.value = LoadStatus.LOADING
-            status.value = if (terminalRepository.openPromoCodes()) {
-                LoadStatus.READY
-            } else {
-                LoadStatus.FAILED
-            }
+            val loaded = promoCodesRepository.load()
+            if (loaded) terminalRepository.clearPromoCodesCounter()
+            status.value = if (loaded) LoadStatus.READY else LoadStatus.FAILED
         }
     }
 }

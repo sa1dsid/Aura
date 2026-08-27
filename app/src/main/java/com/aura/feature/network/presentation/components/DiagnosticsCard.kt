@@ -134,7 +134,7 @@ fun DiagnosticsCard(
     }
 }
 
-private fun SpeedTestState.litFraction(): Float = when (this) {
+internal fun SpeedTestState.litFraction(): Float = when (this) {
     SpeedTestState.Idle -> 0f
     is SpeedTestState.Running -> progress
     is SpeedTestState.Done -> 1f

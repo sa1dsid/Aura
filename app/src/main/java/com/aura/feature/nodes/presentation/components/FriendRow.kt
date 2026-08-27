@@ -60,25 +60,17 @@ fun FriendRow(
                 Avatar(initials = friend.initials, palette = palette)
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = friend.name,
-                            style = AuraTheme.typography.body,
-                            color = palette.name,
-                            maxLines = 1,
-                        )
-                        Text(
-                            text = stringResource(R.string.handle_format, friend.handle),
-                            style = AuraTheme.typography.body,
-                            color = palette.handle,
-                            maxLines = 1,
-                        )
-                    }
+                    Text(
+                        text = friend.name,
+                        style = AuraTheme.typography.body,
+                        color = palette.name,
+                        maxLines = 1,
+                    )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Earning(
                             value = friend.spark.formatGrouped(),
-                            unit = stringResource(R.string.nodes_unit_spark),
+                            unit = stringResource(R.string.unit_spark),
                             palette = palette,
                         )
                         Earning(
@@ -179,7 +171,6 @@ private fun StatusBadge(
 private data class FriendPalette(
     val avatarBorder: Color,
     val name: Color,
-    val handle: Color,
     val value: Color,
     val valueGlow: Color?,
     val badgeFill: Color,
@@ -191,7 +182,6 @@ private fun AuraColors.paletteFor(status: FriendStatus): FriendPalette = when (s
     FriendStatus.EARNING -> FriendPalette(
         avatarBorder = textSecondary,
         name = textBright,
-        handle = textSecondary,
         value = green,
         valueGlow = green.copy(alpha = 0.80f),
         badgeFill = green.copy(alpha = 0.22f),
@@ -202,7 +192,6 @@ private fun AuraColors.paletteFor(status: FriendStatus): FriendPalette = when (s
     FriendStatus.SPARK_ONLY -> FriendPalette(
         avatarBorder = textSecondary,
         name = textBright,
-        handle = textSecondary,
         value = textBright,
         valueGlow = null,
         badgeFill = iceBlue.copy(alpha = 0.22f),
@@ -213,7 +202,6 @@ private fun AuraColors.paletteFor(status: FriendStatus): FriendPalette = when (s
     FriendStatus.INACTIVE -> FriendPalette(
         avatarBorder = borderMuted,
         name = textDisabled,
-        handle = borderMuted,
         value = textDisabled,
         valueGlow = null,
         badgeFill = iceBlue.copy(alpha = 0.22f),

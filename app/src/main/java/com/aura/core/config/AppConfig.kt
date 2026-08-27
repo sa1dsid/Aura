@@ -18,9 +18,17 @@ data class SocialLink(
 )
 
 @Immutable
+data class IoniConfig(
+    val supportEmail: String = "",
+    val assistantEnabled: Boolean = false,
+    val aiReleased: Boolean = false,
+)
+
+@Immutable
 data class AppConfig(
     val termsUrl: String = "",
     val privacyUrl: String = "",
     val featureFlags: FeatureFlags = FeatureFlags(),
     val socialLinks: List<SocialLink> = emptyList(),
+    val ioni: IoniConfig = IoniConfig(),
 )

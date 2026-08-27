@@ -1,17 +1,19 @@
 package com.aura.feature.network.data.repository
 
 import com.aura.core.common.IoDispatcher
-import com.aura.core.network.NetworkMonitor
+import com.aura.core.common.logFailure
+import com.aura.core.common.runCatchingCancellable
+import com.aura.core.geo.UserLocationSource
 import com.aura.core.session.SessionCache
 import com.aura.feature.network.data.local.NetworkLocalStore
-import com.aura.feature.network.data.mapper.toDomain
+import com.aura.feature.network.data.mapper.protocolOf
+import com.aura.feature.network.data.mapper.toConnection
 import com.aura.feature.network.data.mapper.toMetrics
+import com.aura.feature.network.data.remote.LinkConditionsSource
 import com.aura.feature.network.data.remote.NetworkRemoteDataSource
-import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
 import com.aura.feature.network.domain.model.ConnectionDetails
 import com.aura.feature.network.domain.model.NetworkMetrics
 import com.aura.feature.network.domain.repository.NetworkRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,50 +23,70 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private data class NetworkSnapshot(
+    val connection: ConnectionDetails,
+    val metrics: NetworkMetrics,
+)
+
 @Singleton
 class NetworkRepositoryImpl @Inject constructor(
     private val remote: NetworkRemoteDataSource,
     private val localStore: NetworkLocalStore,
-    private val networkMonitor: NetworkMonitor,
+    private val linkConditions: LinkConditionsSource,
+    private val userLocationSource: UserLocationSource,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : NetworkRepository, SessionCache {
 
-    private val snapshot = MutableStateFlow<NetworkSnapshotDto?>(null)
+    private val snapshot = MutableStateFlow<NetworkSnapshot?>(null)
 
     override suspend fun clearSession() {
         snapshot.value = null
     }
 
     override fun observeConnection(): Flow<ConnectionDetails> =
-        combine(snapshot.filterNotNull(), networkMonitor.status) { dto, status ->
-            dto.copy(networkType = status.type.name)
-                .toDomain(isVpnActive = status.isVpnActive)
+        combine(snapshot.filterNotNull(), linkConditions.conditions) { snapshot, conditions ->
+            snapshot.connection.copy(
+                networkType = conditions.networkType,
+                isVpnActive = conditions.isVpnActive,
+            )
         }
 
     override fun observeMetrics(): Flow<NetworkMetrics> =
-        combine(snapshot, localStore.quality) { dto, quality ->
-            val remoteMetrics = dto?.toMetrics()
-
+        combine(snapshot, localStore.measured) { snapshot, measured ->
             NetworkMetrics(
-                pingMs = remoteMetrics?.pingMs,
-                jitterMs = remoteMetrics?.jitterMs ?: quality?.jitterMs,
-                packetLossPercent = remoteMetrics?.packetLossPercent ?: quality?.packetLossPercent,
+                pingMs = measured.pingMs ?: snapshot?.metrics?.pingMs,
+                jitterMs = measured.jitterMs ?: snapshot?.metrics?.jitterMs,
+                packetLossPercent = measured.packetLossPercent
+                    ?: snapshot?.metrics?.packetLossPercent,
             )
         }
 
     override suspend fun refresh() {
         withContext(ioDispatcher) {
-            load { remote.syncState() }
-            load { remote.summary() }
+            val conditions = linkConditions.current()
+
+            val state = runCatchingCancellable { remote.syncState(conditions) }
+                .logFailure("network state")
+                .getOrNull()
+                ?.also { remember(ip = it.ip, protocol = it.protocol, location = it.location) }
+
+            val summary = runCatchingCancellable { remote.summary() }
+                .logFailure("network summary")
+                .getOrNull()
+                ?.also { remember(ip = it.ip, protocol = it.protocol, location = it.location) }
+
+            val fresh = summary?.let {
+                NetworkSnapshot(it.toConnection(conditions), it.toMetrics())
+            } ?: state?.let {
+                NetworkSnapshot(it.toConnection(conditions), NetworkMetrics.Empty)
+            }
+
+            if (fresh != null) snapshot.value = fresh
         }
     }
 
-    private suspend fun load(request: suspend () -> NetworkSnapshotDto) {
-        try {
-            snapshot.value = request()
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Throwable) {
-        }
+    private fun remember(ip: String?, protocol: String?, location: String?) {
+        linkConditions.remember(protocolOf(ip, protocol))
+        userLocationSource.remember(location)
     }
 }

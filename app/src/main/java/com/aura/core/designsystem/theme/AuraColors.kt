@@ -58,6 +58,9 @@ data class AuraColors(
     val sheetBottom: Color,
     val sheetBorder: Color,
     val sheetMuted: Color,
+    val sheetGrabberSoft: Color,
+    val sheetActionBackground: Color,
+    val sheetActionBorder: Color,
     val sheetCloseBackground: Color,
     val dialogBorder: Color,
     val bonusBadgeBorder: Color,
@@ -65,6 +68,9 @@ data class AuraColors(
     val bonusActionGlow: Color,
     val accountAvatarDot: Color,
     val newsPlanetDot: Color,
+    val ioniHint: Color,
+    val ioniAnswer: Color,
+    val ioniPanel: Color,
 )
 
 val AuraDarkColors = AuraColors(
@@ -121,6 +127,9 @@ val AuraDarkColors = AuraColors(
     sheetBottom = Color(0xFF050506),
     sheetBorder = Color(0xFF17202A),
     sheetMuted = Color(0xFF4C5A6B),
+    sheetGrabberSoft = Color(0xFF2E3235),
+    sheetActionBackground = Color(0xFF171B1E),
+    sheetActionBorder = Color(0xFFAEBFC7),
     sheetCloseBackground = Color(0xFF1E2832),
     dialogBorder = Color(0xFF24282B),
     bonusBadgeBorder = Color(0xFFCFEAF9),
@@ -128,4 +137,7 @@ val AuraDarkColors = AuraColors(
     bonusActionGlow = Color(0xFFE8F8FF),
     accountAvatarDot = Color(0x4DA9B4BF),
     newsPlanetDot = Color(0x44F6FBFF),
+    ioniHint = Color(0xFFA8BDCB),
+    ioniAnswer = Color(0xFF111314),
+    ioniPanel = Color(0xFF16181A),
 )

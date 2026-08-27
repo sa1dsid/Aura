@@ -86,7 +86,7 @@ fun InviteCard(
                         color = colors.textBright,
                     )
                     Text(
-                        text = invite.quote ?: stringResource(R.string.nodes_invite_quote),
+                        text = stringResource(R.string.nodes_invite_quote),
                         style = AuraTheme.typography.body.copy(
                             lineHeight = QuoteLineHeight,
                             textGeometricTransform = NodesItalic,

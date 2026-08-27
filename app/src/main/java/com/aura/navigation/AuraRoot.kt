@@ -12,6 +12,7 @@ import com.aura.core.push.RequestNotificationPermission
 import com.aura.feature.account.presentation.menu.AccountMenuRoute
 import com.aura.feature.home.presentation.HomeRoute
 import com.aura.feature.home.presentation.HomeTab
+import com.aura.feature.ioni.presentation.IoniRoute
 import com.aura.feature.network.presentation.NetworkRoute
 import com.aura.feature.news.presentation.NewsDrawerRoute
 import com.aura.feature.nodes.presentation.NodesRoute
@@ -143,6 +144,11 @@ private fun MainTabs(
                 )
             }
 
+            HomeTab.IONI -> IoniRoute(
+                onTabSelected = selectTab,
+                modifier = Modifier.fillMaxSize(),
+            )
+
             else -> HomeRoute(
                 onMenuClick = openMenu,
                 onNewsClick = openNews,
@@ -165,4 +171,4 @@ private fun MainTabs(
 }
 
 private val IMPLEMENTED_TABS =
-    setOf(HomeTab.HOME, HomeTab.NODES, HomeTab.TERMINAL, HomeTab.NETWORK)
+    setOf(HomeTab.HOME, HomeTab.NODES, HomeTab.IONI, HomeTab.TERMINAL, HomeTab.NETWORK)

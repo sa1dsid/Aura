@@ -27,4 +27,5 @@ data class HomeState(
     val invite: InviteState,
     val tapCount: Int,
     val batteryOptimization: BatteryOptimizationState = BatteryOptimizationState(),
+    val ioni: IoniCard = IoniCard(),
 )

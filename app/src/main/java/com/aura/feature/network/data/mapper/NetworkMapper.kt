@@ -1,47 +1,80 @@
 package com.aura.feature.network.data.mapper
 
+import com.aura.core.api.dto.NetworkStateDto
+import com.aura.core.api.dto.NetworkSummaryDto
 import com.aura.core.api.dto.PingDto
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.network.NetworkType
-import com.aura.feature.network.data.remote.dto.NetworkSnapshotDto
 import com.aura.feature.network.domain.model.ConnectionDetails
 import com.aura.feature.network.domain.model.IpProtocol
+import com.aura.feature.network.domain.model.LinkConditions
 import com.aura.feature.network.domain.model.NetworkMetrics
 import com.aura.feature.network.domain.model.PingRecord
 
-private const val PROTOCOL_IPV6 = "IPV6"
-
-fun NetworkSnapshotDto.toDomain(isVpnActive: Boolean): ConnectionDetails = ConnectionDetails(
-    networkType = networkType.toNetworkType(),
+fun NetworkStateDto.toConnection(conditions: LinkConditions): ConnectionDetails = connectionOf(
+    ip = ip,
     operator = operator,
-    ipAddress = ipAddress,
-    protocol = protocol?.toProtocol(),
+    protocol = protocol,
     location = location,
-    isVpnActive = isVpnActive,
+    conditions = conditions,
 )
 
-fun NetworkSnapshotDto.toMetrics(): NetworkMetrics = NetworkMetrics(
+fun NetworkSummaryDto.toConnection(conditions: LinkConditions): ConnectionDetails = connectionOf(
+    ip = ip,
+    operator = operator,
+    protocol = protocol,
+    location = location,
+    conditions = conditions,
+)
+
+fun NetworkSummaryDto.toMetrics(): NetworkMetrics = NetworkMetrics(
     pingMs = pingMs?.toDoubleOrNull()?.toInt(),
     jitterMs = jitterMs?.toDoubleOrNull()?.toInt(),
-    packetLossPercent = packetLossPercent?.toDoubleOrNull(),
+    packetLossPercent = packetLossPct?.toDoubleOrNull(),
 )
 
-fun PingDto.toDomain(): PingRecord? {
+fun PingDto.toRecord(): PingRecord? {
     val timestamp = measuredAt.parseIsoMillis() ?: return null
     val ping = pingMs.toDoubleOrNull()?.toInt() ?: return null
 
     return PingRecord(
         timestamp = timestamp,
-        ipAddress = ip,
-        operator = operator,
+        ipAddress = ip.orNull(),
+        operator = operator.orNull(),
         pingMs = ping,
-        location = location,
+        location = location.orNull(),
         vpnActive = vpn,
     )
 }
 
-private fun String.toProtocol(): IpProtocol =
-    if (uppercase() == PROTOCOL_IPV6) IpProtocol.IPV6 else IpProtocol.IPV4
+fun protocolOf(ip: String?, named: String?): IpProtocol? = when {
+    !ip.isNullOrBlank() -> if (ip.contains(':')) IpProtocol.IPV6 else IpProtocol.IPV4
+    else -> named?.toProtocol()
+}
 
-private fun String.toNetworkType(): NetworkType =
-    NetworkType.entries.firstOrNull { it.name == this } ?: NetworkType.NONE
+fun NetworkType.toWire(): String? = if (this == NetworkType.NONE) null else name
+
+fun IpProtocol.toWire(): String = when (this) {
+    IpProtocol.IPV4 -> "IPv4"
+    IpProtocol.IPV6 -> "IPv6"
+}
+
+private fun connectionOf(
+    ip: String?,
+    operator: String?,
+    protocol: String?,
+    location: String?,
+    conditions: LinkConditions,
+): ConnectionDetails = ConnectionDetails(
+    networkType = conditions.networkType,
+    operator = operator ?: conditions.operator,
+    ipAddress = ip,
+    protocol = protocolOf(ip, protocol),
+    location = location,
+    isVpnActive = conditions.isVpnActive,
+)
+
+private fun String.toProtocol(): IpProtocol? =
+    IpProtocol.entries.firstOrNull { it.toWire().equals(trim(), ignoreCase = true) }
+
+private fun String?.orNull(): String? = this?.takeIf(String::isNotBlank)

@@ -34,7 +34,7 @@ import com.aura.core.designsystem.component.AuraToastKind
 import com.aura.core.designsystem.component.AuraToastState
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
-import com.aura.core.system.openSocialLink
+import com.aura.core.system.openUrl
 import com.aura.core.system.shareText
 import com.aura.feature.home.presentation.HomeTab
 import com.aura.feature.home.presentation.components.AuraBottomBar
@@ -79,7 +79,7 @@ fun NodesRoute(
             onMenuClick = onMenuClick,
             onNewsClick = onNewsClick,
             onCodeClick = {
-                val code = invite?.code ?: return@NodesActions
+                val code = invite?.code?.takeIf { it.isNotBlank() } ?: return@NodesActions
                 clipboard.setText(AnnotatedString(code))
                 toastState.show(
                     text = context.getString(R.string.nodes_code_copied),
@@ -88,11 +88,14 @@ fun NodesRoute(
             },
             onShareClick = {
                 val offer = invite ?: return@NodesActions
-                context.shareText(
-                    offer.shareText ?: context.getString(R.string.nodes_share_text, offer.link),
-                )
+                val text = offer.shareText
+                    ?: offer.link
+                        .takeIf { it.isNotBlank() }
+                        ?.let { context.getString(R.string.nodes_share_text, it) }
+                    ?: return@NodesActions
+                context.shareText(text)
             },
-            onSocialClick = { link -> context.openSocialLink(link.appUrl, link.webUrl) },
+            onSocialClick = { link -> context.openUrl(link.webUrl) },
         ),
         onTabSelected = onTabSelected,
         toastState = toastState,

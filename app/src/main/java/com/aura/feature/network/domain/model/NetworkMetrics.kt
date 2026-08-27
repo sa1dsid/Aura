@@ -8,7 +8,11 @@ data class NetworkMetrics(
     val pingMs: Int?,
     val jitterMs: Int?,
     val packetLossPercent: Double?,
-)
+) {
+    companion object {
+        val Empty = NetworkMetrics(pingMs = null, jitterMs = null, packetLossPercent = null)
+    }
+}
 
 data class ConnectionDetails(
     val networkType: NetworkType,
@@ -17,12 +21,11 @@ data class ConnectionDetails(
     val protocol: IpProtocol?,
     val location: String?,
     val isVpnActive: Boolean,
-) {
-    val isVpnCardClickable: Boolean get() = isVpnActive
-}
+)
 
-data class NetworkState(
-    val metrics: NetworkMetrics,
-    val connection: ConnectionDetails,
-    val lastTestedAt: Long?,
+data class LinkConditions(
+    val networkType: NetworkType,
+    val operator: String?,
+    val protocol: IpProtocol?,
+    val isVpnActive: Boolean,
 )

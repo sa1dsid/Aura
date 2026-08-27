@@ -2,19 +2,28 @@ package com.aura.feature.onboarding.presentation.invite
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -82,64 +91,72 @@ fun InviteScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = AuraTheme.colors
+    val density = LocalDensity.current
+    var actionsHeight by remember { mutableStateOf(0.dp) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(colors.authBackground)
-            .statusBarsPadding()
-            .imePadding(),
+            .statusBarsPadding(),
     ) {
-        Spacer(Modifier.height(185.5.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .consumeWindowInsets(PaddingValues(bottom = actionsHeight))
+                .imePadding()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Spacer(Modifier.height(185.5.dp))
 
-        Column(modifier = Modifier.padding(horizontal = 25.7.dp)) {
-            Text(
-                text = stringResource(R.string.invite_title),
-                style = AuraTheme.typography.screenHeading,
-                color = colors.textPrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+            Column(modifier = Modifier.padding(horizontal = 25.7.dp)) {
+                Text(
+                    text = stringResource(R.string.invite_title),
+                    style = AuraTheme.typography.screenHeading,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                Text(
+                    text = stringResource(R.string.invite_sub),
+                    style = AuraTheme.typography.screenSubheading,
+                    color = colors.authTextMuted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            Spacer(Modifier.height(33.5.dp))
+
+            InviteCodeField(
+                code = uiState.code,
+                onCodeChange = actions.onCodeChange,
+                onPaste = actions.onPaste,
+                locked = uiState.locked,
+                modifier = Modifier.padding(horizontal = 33.5.dp),
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.5.dp))
 
             Text(
-                text = stringResource(R.string.invite_sub),
-                style = AuraTheme.typography.screenSubheading,
-                color = colors.authTextMuted,
+                text = uiState.failure?.let { stringResource(it.textRes()) }
+                    ?: stringResource(R.string.invite_once_note),
+                style = AuraTheme.typography.screenHint,
+                color = if (uiState.failure == null) colors.authTextDim else colors.danger,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 25.7.dp),
             )
         }
-
-        Spacer(Modifier.height(33.5.dp))
-
-        InviteCodeField(
-            code = uiState.code,
-            onCodeChange = actions.onCodeChange,
-            onPaste = actions.onPaste,
-            locked = uiState.locked,
-            modifier = Modifier.padding(horizontal = 33.5.dp),
-        )
-
-        Spacer(Modifier.height(12.5.dp))
-
-        Text(
-            text = uiState.failure?.let { stringResource(it.textRes()) }
-                ?: stringResource(R.string.invite_once_note),
-            style = AuraTheme.typography.screenHint,
-            color = if (uiState.failure == null) colors.authTextDim else colors.danger,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.7.dp),
-        )
-
-        Spacer(Modifier.weight(1f))
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .onSizeChanged { actionsHeight = with(density) { it.height.toDp() } }
                 .padding(horizontal = 25.dp)
                 .padding(bottom = designBottomGap(29.dp))
                 .auraGlow(

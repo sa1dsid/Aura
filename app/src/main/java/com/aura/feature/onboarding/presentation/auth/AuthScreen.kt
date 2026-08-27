@@ -7,7 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,11 +23,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -112,18 +118,21 @@ fun AuthScreen(
     toastState: AuraToastState = rememberAuraToastState(),
 ) {
     val colors = AuraTheme.colors
+    val density = LocalDensity.current
+    var actionsHeight by remember { mutableStateOf(0.dp) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.authBackground)
-                .statusBarsPadding()
-                .imePadding(),
+                .statusBarsPadding(),
         ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .consumeWindowInsets(PaddingValues(bottom = actionsHeight))
+                    .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 15.5.dp),
             ) {
@@ -194,6 +203,7 @@ fun AuthScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .onSizeChanged { actionsHeight = with(density) { it.height.toDp() } }
                     .padding(horizontal = 17.5.dp)
                     .padding(bottom = designBottomGap(28.dp))
                     .auraGlow(

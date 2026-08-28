@@ -7,7 +7,7 @@ data class IonBalances(
 )
 
 data class InviteState(
-    val friendsJoined: Int,
+    val activeFriends: Int,
     val friendsTarget: Int,
     val referralRatePercent: Int,
     val inviteLink: String,

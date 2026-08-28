@@ -14,6 +14,7 @@ import com.aura.feature.home.domain.model.InviteState
 import com.aura.feature.home.domain.model.IonBalances
 import com.aura.feature.home.domain.model.IoniCard
 import com.aura.feature.home.domain.model.IoniState
+import com.aura.feature.home.domain.model.NETWORK_SYNC_FRIENDS
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SPARK_COUPON_THRESHOLD
@@ -79,8 +80,8 @@ fun DashboardDto.toDomain(
     ),
     session = session,
     invite = InviteState(
-        friendsJoined = nodes?.friendsJoined ?: 0,
-        friendsTarget = nodes?.friendsToNextTier ?: 0,
+        activeFriends = bonus.networkSync.coerceIn(0, NETWORK_SYNC_FRIENDS),
+        friendsTarget = NETWORK_SYNC_FRIENDS,
         referralRatePercent = node.sparkReferralPercent,
         inviteLink = nodes?.invite?.link.orEmpty(),
     ),

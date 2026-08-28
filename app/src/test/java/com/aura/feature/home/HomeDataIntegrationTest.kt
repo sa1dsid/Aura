@@ -179,13 +179,12 @@ class HomeDataIntegrationTest : HomeTestCase() {
     }
 
     @Test
-    fun `the invite row stays empty until the nodes feature answers`() = home { stack ->
+    fun `the invite link stays empty until the nodes feature answers`() = home { stack ->
         val (viewModel, states) = screenOf(stack)
 
         viewModel.onScreenResumed()
         val invite = awaitContent(states).home.invite
 
-        assertEquals(0, invite.friendsJoined)
         assertEquals("", invite.inviteLink)
         assertEquals(1, stack.nodesRepository.refreshes)
     }

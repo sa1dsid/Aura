@@ -9,6 +9,7 @@ import com.aura.core.config.FeatureFlags
 import com.aura.core.network.NetworkStatus
 import com.aura.core.network.NetworkType
 import com.aura.feature.home.domain.model.BatteryOptimizationState
+import com.aura.feature.home.domain.model.NETWORK_SYNC_FRIENDS
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.SPARK_COUPON_THRESHOLD
 import com.aura.feature.home.domain.model.SparkWindow
@@ -187,22 +188,33 @@ class HomeMapperTest {
     }
 
     @Test
-    fun `the invite row is empty until the nodes feature answers`() {
-        val home = dashboard(DashboardDto(node = NodeStatusDto(sparkReferralPercent = 5)))
+    fun `the invite row counts the network sync friends against a fixed target`() {
+        val home = dashboard(
+            DashboardDto(
+                node = NodeStatusDto(sparkReferralPercent = 5),
+                bonus = BonusProgressDto(networkSync = 2),
+            ),
+        )
 
-        assertEquals(0, home.invite.friendsJoined)
-        assertEquals(0, home.invite.friendsTarget)
-        assertEquals("", home.invite.inviteLink)
+        assertEquals(2, home.invite.activeFriends)
+        assertEquals(NETWORK_SYNC_FRIENDS, home.invite.friendsTarget)
         assertEquals(5, home.invite.referralRatePercent)
     }
 
     @Test
-    fun `the invite row fills in from the nodes feature`() {
-        val home = dashboard(DashboardDto(), nodes = nodesState())
+    fun `the invite row never overfills its slots`() {
+        val home = dashboard(DashboardDto(bonus = BonusProgressDto(networkSync = 9)))
 
-        assertEquals(3, home.invite.friendsJoined)
-        assertEquals(2, home.invite.friendsTarget)
-        assertEquals("https://ioaura.app/i/SYREX482", home.invite.inviteLink)
+        assertEquals(NETWORK_SYNC_FRIENDS, home.invite.activeFriends)
+    }
+
+    @Test
+    fun `the invite link waits for the nodes feature`() {
+        assertEquals("", dashboard(DashboardDto()).invite.inviteLink)
+        assertEquals(
+            "https://ioaura.app/i/SYREX482",
+            dashboard(DashboardDto(), nodes = nodesState()).invite.inviteLink,
+        )
     }
 
     @Test

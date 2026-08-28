@@ -1,6 +1,7 @@
 package com.aura.feature.home.domain.model
 
 const val SPARK_COUPON_THRESHOLD = 240_000L
+const val NETWORK_SYNC_FRIENDS = 4
 
 data class Teasers(
     val bonusWithdrawal: BonusWithdrawalTeaser,

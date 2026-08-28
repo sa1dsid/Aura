@@ -12,6 +12,7 @@ import com.aura.feature.home.domain.model.IoniState
 import com.aura.feature.home.domain.model.MeshCity
 import com.aura.feature.home.domain.model.MeshState
 import com.aura.core.network.NetworkType
+import com.aura.feature.home.domain.model.NETWORK_SYNC_FRIENDS
 import com.aura.feature.home.domain.model.NodeStatus
 import com.aura.feature.home.domain.model.NodeTier
 import com.aura.feature.home.domain.model.NodesOnline
@@ -66,8 +67,8 @@ object HomePreviewData {
                 rewardIon = 20,
             ),
             invite = InviteState(
-                friendsJoined = 3,
-                friendsTarget = 4,
+                activeFriends = 3,
+                friendsTarget = NETWORK_SYNC_FRIENDS,
                 referralRatePercent = 10,
                 inviteLink = "https://ioaura.app/i/syrex",
             ),

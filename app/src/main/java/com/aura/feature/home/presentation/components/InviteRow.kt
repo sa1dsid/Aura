@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aura.R
@@ -41,14 +44,14 @@ fun InviteRow(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FriendAvatars(count = invite.friendsTarget)
+            FriendAvatars(filled = invite.activeFriends, total = invite.friendsTarget)
 
             Spacer(Modifier.width(12.dp))
 
             Text(
                 text = stringResource(
                     R.string.invite_progress,
-                    invite.friendsJoined,
+                    invite.activeFriends,
                     invite.friendsTarget,
                     invite.referralRatePercent,
                 ),
@@ -77,20 +80,35 @@ private const val AvatarBodyFraction = 24f / 44f
 
 private val AvatarStep = 11.dp
 
+private val AvatarRimFilled = 0.2.dp
+private val AvatarRimEmpty = 0.5.dp
+private val AvatarDash = 6.dp
+
 @Composable
-private fun FriendAvatars(count: Int, modifier: Modifier = Modifier) {
+private fun FriendAvatars(filled: Int, total: Int, modifier: Modifier = Modifier) {
     val colors = AuraTheme.colors
+    val density = LocalDensity.current
+    val dash = remember(density) {
+        val length = with(density) { AvatarDash.toPx() }
+        PathEffect.dashPathEffect(floatArrayOf(length, length))
+    }
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(AvatarStep - AvatarCellSize),
     ) {
-        repeat(count) { index ->
+        repeat(total) { index ->
+            val isFilled = index < filled
+
             Box(
                 Modifier
                     .size(AvatarCellSize)
                     .auraGlowLayers(
-                        shadows = if (index == 0) colors.leadAvatarShadows else colors.avatarShadows,
+                        shadows = if (index == 0 && isFilled) {
+                            colors.leadAvatarShadows
+                        } else {
+                            colors.avatarShadows
+                        },
                         coreSize = AvatarCellSize * AvatarBodyFraction,
                     )
                     .drawBehind {
@@ -105,11 +123,18 @@ private fun FriendAvatars(count: Int, modifier: Modifier = Modifier) {
                             haloAlpha = 0f,
                         )
 
-                        val rimWidth = if (index == count - 1) 0.5.dp.toPx() else 0.2.dp.toPx()
+                        val rimWidth = if (isFilled) {
+                            AvatarRimFilled.toPx()
+                        } else {
+                            AvatarRimEmpty.toPx()
+                        }
                         drawCircle(
                             color = colors.textBright,
                             radius = bodyRadius - rimWidth / 2f,
-                            style = Stroke(width = rimWidth),
+                            style = Stroke(
+                                width = rimWidth,
+                                pathEffect = if (isFilled) null else dash,
+                            ),
                         )
                     }
             )

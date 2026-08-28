@@ -54,6 +54,12 @@ private val ICON_GLOW_SIZE = 19.5.dp
 
 private val ICON_GLOW_BLUR = 6.dp
 
+private val BAR_PADDING = 16.dp
+
+private const val SIDE_TAB_WEIGHT = 71.8f
+
+private const val IONI_TAB_WEIGHT = 56f
+
 @Composable
 fun AuraBottomBar(
     selected: HomeTab,
@@ -77,42 +83,42 @@ fun AuraBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
+                .padding(horizontal = BAR_PADDING)
                 .padding(top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             TabItem(
                 tab = HomeTab.HOME,
                 iconRes = R.drawable.ic_home,
                 isSelected = selected == HomeTab.HOME,
                 onClick = onTabSelected,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(SIDE_TAB_WEIGHT),
             )
             TabItem(
                 tab = HomeTab.NODES,
                 iconRes = R.drawable.ic_users,
                 isSelected = selected == HomeTab.NODES,
                 onClick = onTabSelected,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(SIDE_TAB_WEIGHT),
             )
             IoniTab(
                 isSelected = selected == HomeTab.IONI,
                 onClick = { onTabSelected(HomeTab.IONI) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(IONI_TAB_WEIGHT),
             )
             TabItem(
                 tab = HomeTab.TERMINAL,
                 iconRes = R.drawable.ic_wallet,
                 isSelected = selected == HomeTab.TERMINAL,
                 onClick = onTabSelected,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(SIDE_TAB_WEIGHT),
             )
             TabItem(
                 tab = HomeTab.NETWORK,
                 iconRes = R.drawable.ic_wifi,
                 isSelected = selected == HomeTab.NETWORK,
                 onClick = onTabSelected,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(SIDE_TAB_WEIGHT),
             )
         }
     }

@@ -254,7 +254,7 @@ private fun HomeContent(
                 onNewsClick = actions.onNewsClick,
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
 
             MeshMapCard(mesh = state.mesh)
 

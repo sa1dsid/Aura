@@ -30,6 +30,7 @@ const val MIN_PASSWORD_LENGTH = 8
 data class EmailVerification(
     val email: String,
     val codeLifetime: Duration = DEFAULT_CODE_LIFETIME,
+    val codeJustSent: Boolean = false,
 ) {
     companion object {
         val DEFAULT_CODE_LIFETIME = 10.minutes
@@ -37,9 +38,12 @@ data class EmailVerification(
         fun of(email: String, expiresInSeconds: Int) = EmailVerification(
             email = email,
             codeLifetime = expiresInSeconds.takeIf { it > 0 }?.seconds ?: DEFAULT_CODE_LIFETIME,
+            codeJustSent = true,
         )
     }
 }
+
+val EMAIL_CODE_RESEND_COOLDOWN = 60.seconds
 
 enum class EmailVerificationFailure {
     CODE_REJECTED,

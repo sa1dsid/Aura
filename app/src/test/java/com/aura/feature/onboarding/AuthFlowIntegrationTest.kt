@@ -36,13 +36,11 @@ class AuthFlowIntegrationTest : OnboardingTestCase() {
         awaitEvent(events)
 
         assertEquals(
-            listOf(
-                AuthEvent.OpenEmailVerification(
-                    EmailVerification(email = EMAIL, codeLifetime = 10.minutes),
-                )
-            ),
+            listOf(AuthEvent.OpenEmailVerification(EmailVerification.of(EMAIL, 600))),
             events,
         )
+        assertEquals(10.minutes, verificationOf(events).codeLifetime)
+        assertTrue(verificationOf(events).codeJustSent)
         assertEquals(
             """{"email":"$EMAIL","password":"$PASSWORD"}""",
             stack.server.bodyOf(Paths.REGISTER),
@@ -70,6 +68,7 @@ class AuthFlowIntegrationTest : OnboardingTestCase() {
                 listOf(AuthEvent.OpenEmailVerification(EmailVerification(EMAIL))),
                 events,
             )
+            assertFalse(verificationOf(events).codeJustSent)
             assertNull(viewModel.uiState.value.invalidField)
             assertNull(stack.savedToken)
         }
@@ -370,6 +369,9 @@ class AuthFlowIntegrationTest : OnboardingTestCase() {
         assertEquals(EMAIL, viewModel.uiState.value.email)
         assertEquals(PASSWORD, viewModel.uiState.value.password)
     }
+
+    private fun verificationOf(events: List<AuthEvent>): EmailVerification =
+        events.filterIsInstance<AuthEvent.OpenEmailVerification>().single().verification
 
     private fun AuthViewModel.submitAs(
         mode: AuthMode,

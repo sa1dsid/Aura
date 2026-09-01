@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ fun AuraRoot(modifier: Modifier = Modifier) {
     var codeLifetimeMinutes by rememberSaveable {
         mutableIntStateOf(EmailVerification.DEFAULT_CODE_LIFETIME.inWholeMinutes.toInt())
     }
+    var codeJustSent by remember { mutableStateOf(false) }
 
     when (stage) {
         AuraStage.SPLASH -> SplashRoute(
@@ -57,6 +59,7 @@ fun AuraRoot(modifier: Modifier = Modifier) {
             onOpenEmailVerification = { verification ->
                 pendingEmail = verification.email
                 codeLifetimeMinutes = verification.codeLifetime.inWholeMinutes.toInt()
+                codeJustSent = verification.codeJustSent
                 stage = AuraStage.EMAIL_VERIFICATION
             },
             modifier = modifier,
@@ -66,6 +69,7 @@ fun AuraRoot(modifier: Modifier = Modifier) {
             verification = EmailVerification(
                 email = pendingEmail,
                 codeLifetime = codeLifetimeMinutes.minutes,
+                codeJustSent = codeJustSent,
             ),
             onConfirmed = { invitePending ->
                 stage = if (invitePending) AuraStage.INVITE else AuraStage.HOME

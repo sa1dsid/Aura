@@ -312,6 +312,8 @@
     <string name="verify_expiry_note">The code expires in %1$d min · check spam if it hasn\'t arrived</string>
     <string name="verify_confirm">Confirm Email</string>
     <string name="verify_resend">Resend code</string>
+    <!-- Сервер даёт просить новый код не чаще раза в минуту, %1$d — остаток. -->
+    <string name="verify_resend_in">Resend in %1$ds</string>
     <!-- ДЛИННАЯ: сервер отвечает 400 «Invalid or expired confirmation code». -->
     <string name="verify_code_invalid">Invalid or expired code · request a new one</string>
     <!-- ДЛИННАЯ: сервер отвечает 429, если код просят чаще раза в минуту. -->

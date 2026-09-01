@@ -48,6 +48,8 @@ import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.isWholeEmailCode
 import com.aura.feature.onboarding.presentation.components.EmailCodeField
 import com.aura.feature.onboarding.presentation.components.designBottomGap
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun EmailVerificationRoute(
@@ -200,9 +202,12 @@ fun EmailVerificationScreen(
                 Spacer(Modifier.height(12.dp))
 
                 AuraOutlinedButton(
-                    text = stringResource(R.string.verify_resend),
+                    text = uiState.resendCooldown
+                        .takeIf { it > Duration.ZERO }
+                        ?.let { stringResource(R.string.verify_resend_in, it.inWholeSeconds) }
+                        ?: stringResource(R.string.verify_resend),
                     onClick = actions.onResendClick,
-                    enabled = !uiState.submitting,
+                    enabled = uiState.canResend,
                 )
             }
         }
@@ -245,6 +250,20 @@ private fun EmailVerificationFilledPreview() {
             uiState = EmailVerificationUiState(
                 verification = EmailVerification("said@ioaura.app"),
                 code = "482913",
+            ),
+            actions = EmailVerificationActions(),
+        )
+    }
+}
+
+@Preview(widthDp = 375, heightDp = 820)
+@Composable
+private fun EmailVerificationCooldownPreview() {
+    AuraTheme {
+        EmailVerificationScreen(
+            uiState = EmailVerificationUiState(
+                verification = EmailVerification("said@ioaura.app"),
+                resendCooldown = 45.seconds,
             ),
             actions = EmailVerificationActions(),
         )

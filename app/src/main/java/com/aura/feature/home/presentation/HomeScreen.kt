@@ -5,10 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
@@ -23,8 +26,10 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,7 +57,7 @@ import com.aura.core.system.shareText
 import com.aura.feature.home.domain.model.TestSessionState
 import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
-import com.aura.feature.home.presentation.components.BatteryOptimizationDialog
+import com.aura.feature.home.presentation.components.BatteryOptimizationSheet
 import com.aura.feature.home.presentation.components.BalanceCardsRow
 import com.aura.feature.home.presentation.components.BonusStepsSheet
 import com.aura.feature.home.presentation.components.CardGap
@@ -64,6 +69,7 @@ import com.aura.feature.home.presentation.components.IoniSheet
 import com.aura.feature.home.presentation.components.IoniSheetKind
 import com.aura.feature.home.presentation.components.MeshMapCard
 import com.aura.feature.home.presentation.components.NodeStatusCard
+import com.aura.feature.home.presentation.components.SparkSheet
 import com.aura.feature.home.presentation.components.TeaserCards
 import com.aura.feature.home.presentation.components.TestRingButton
 import com.aura.feature.home.presentation.format.formatHoursMinutes
@@ -88,8 +94,12 @@ fun HomeRoute(
     }
     var ioniSheet by rememberSaveable { mutableStateOf<IoniSheetKind?>(null) }
     var bonusSheetVisible by rememberSaveable { mutableStateOf(false) }
+    var isSparkSheetOpen by rememberSaveable { mutableStateOf(false) }
     var isIoniInstalled by remember { mutableStateOf(false) }
     val ioniPackage = stringResource(R.string.ioni_app_package)
+    val sigmaDropPackage = stringResource(R.string.sigmadrop_app_package)
+    val clipboard = LocalClipboardManager.current
+    val sheetToastState = rememberAuraToastState()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (batteryRequestPending) {
@@ -133,19 +143,6 @@ fun HomeRoute(
         }
     }
 
-    BatteryOptimizationDialog(
-        visible = batteryDialogVisible,
-        onDismiss = {
-            batteryDialogVisible = false
-            viewModel.onBatteryOptimizationDeclined()
-        },
-        onAllowClick = {
-            batteryDialogVisible = false
-            batteryRequestPending = context.requestIgnoreBatteryOptimization()
-            if (!batteryRequestPending) viewModel.onBatteryOptimizationDeclined()
-        },
-    )
-
     HomeScreen(
         uiState = uiState,
         actions = HomeActions(
@@ -156,6 +153,7 @@ fun HomeRoute(
                 bonusSheetVisible = true
                 viewModel.onBonusTeaserOpened()
             },
+            onSparkClick = { isSparkSheetOpen = true },
             onConnectionBadgeClick = {
                 if (content?.home?.connection?.isVpnActive == true) context.openVpnSettings()
             },
@@ -202,6 +200,50 @@ fun HomeRoute(
         },
         onCongratulationSeen = viewModel::onBonusCongratulationSeen,
     )
+
+    SparkSheet(
+        spark = if (isSparkSheetOpen) content?.home?.teasers?.spark else null,
+        onDismissRequest = {
+            isSparkSheetOpen = false
+            if (content?.home?.teasers?.spark?.isCodeReady == true) viewModel.onSparkCodeSeen()
+        },
+        onCopyCodeClick = { code ->
+            clipboard.setText(AnnotatedString(code))
+            sheetToastState.show(
+                text = context.getString(R.string.spark_sheet_copied),
+                kind = AuraToastKind.SUCCESS,
+            )
+        },
+        onOpenSigmaDropClick = {
+            if (!context.openApp(sigmaDropPackage)) context.openStorePage(sigmaDropPackage)
+        },
+    )
+
+    BatteryOptimizationSheet(
+        visible = batteryDialogVisible,
+        onDismissRequest = {
+            batteryDialogVisible = false
+            viewModel.onBatteryOptimizationDeclined()
+        },
+        onDisableClick = {
+            batteryDialogVisible = false
+            batteryRequestPending = context.requestIgnoreBatteryOptimization()
+            if (!batteryRequestPending) viewModel.onBatteryOptimizationDeclined()
+        },
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars),
+    ) {
+        AuraToastHost(
+            state = sheetToastState,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
 }
 
 @Composable

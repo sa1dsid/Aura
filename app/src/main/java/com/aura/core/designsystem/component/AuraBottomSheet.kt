@@ -7,6 +7,7 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,7 +27,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,14 +48,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.aura.R
 import com.aura.core.designsystem.theme.AuraTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 private val SheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+
+private val CloseSize = 26.dp
+
+private val CloseIconSize = 12.dp
 
 private val GrabberShape = RoundedCornerShape(percent = 50)
 
@@ -202,4 +211,31 @@ fun AuraBottomSheet(
 private fun sheetBottomGap(designGap: Dp): Dp {
     val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     return maxOf(designGap, navigationBar + MIN_GAP_ABOVE_NAVIGATION_BAR)
+}
+
+@Composable
+fun AuraSheetCloseButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .size(CloseSize)
+            .clip(CircleShape)
+            .background(AuraTheme.colors.sheetCloseBackground)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_close),
+            contentDescription = null,
+            modifier = Modifier.size(CloseIconSize),
+        )
+    }
 }

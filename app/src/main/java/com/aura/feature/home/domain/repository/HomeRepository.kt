@@ -20,6 +20,8 @@ interface HomeRepository {
     suspend fun markBonusTeaserSeen()
 
     suspend fun markBonusCongratulationSeen()
+
+    suspend fun markSparkCouponSeen()
 }
 
 interface MeshRepository {

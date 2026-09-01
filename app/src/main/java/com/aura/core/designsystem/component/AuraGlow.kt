@@ -6,13 +6,14 @@ import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.NativePaint
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -188,61 +189,51 @@ fun Modifier.auraDropShadow(
     val blur = blurRadius.toPx()
     val grow = spread.toPx()
     val corner = cornerRadius.toPx() + grow
-    val cutout = Path()
+    val shapeCorner = cornerRadius.toPx()
+    val shape = Path()
 
     onDrawBehind {
         val fraction = alpha()
         if (fraction <= 0f) return@onDrawBehind
 
         if (outsideOnly) {
-            cutout.reset()
-            cutout.addRoundRect(
+            shape.reset()
+            shape.addRoundRect(
                 RoundRect(
-                    left = 0f,
-                    top = 0f,
-                    right = size.width,
-                    bottom = size.height,
-                    cornerRadius = CornerRadius(cornerRadius.toPx()),
+                    rect = Rect(Offset.Zero, size),
+                    cornerRadius = CornerRadius(shapeCorner),
                 )
             )
-            clipPath(cutout, ClipOp.Difference) { drawGlow(paint, color, fraction, grow, corner, blur, cornerRadius.toPx()) }
+        }
+
+        fun draw(block: DrawScope.() -> Unit) {
+            if (outsideOnly) clipPath(shape, ClipOp.Difference) { block() } else block()
+        }
+
+        if (paint != null) {
+            paint.alpha = (color.alpha * fraction * 255f).roundToInt().coerceIn(0, 255)
+            draw {
+                drawIntoCanvas { canvas ->
+                    canvas.nativeCanvas.drawRoundRect(
+                        -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
+                    )
+                }
+            }
             return@onDrawBehind
         }
 
-        drawGlow(paint, color, fraction, grow, corner, blur, cornerRadius.toPx())
-    }
-}
-
-private fun DrawScope.drawGlow(
-    paint: NativePaint?,
-    color: Color,
-    fraction: Float,
-    grow: Float,
-    corner: Float,
-    blur: Float,
-    baseCorner: Float,
-) {
-    run {
-        if (paint != null) {
-            paint.alpha = (color.alpha * fraction * 255f).roundToInt().coerceIn(0, 255)
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawRoundRect(
-                    -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
+        draw {
+            for (ring in FALLBACK_RING_COUNT downTo 1) {
+                val offset = grow + blur * ring / FALLBACK_RING_COUNT
+                val fade = 1f - ring.toFloat() / FALLBACK_RING_COUNT
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(-offset, -offset),
+                    size = Size(size.width + offset * 2, size.height + offset * 2),
+                    cornerRadius = CornerRadius(cornerRadius.toPx() + offset),
+                    alpha = color.alpha * fade * 0.09f * fraction,
                 )
             }
-            return@run
-        }
-
-        for (ring in FALLBACK_RING_COUNT downTo 1) {
-            val offset = grow + blur * ring / FALLBACK_RING_COUNT
-            val fade = 1f - ring.toFloat() / FALLBACK_RING_COUNT
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(-offset, -offset),
-                size = Size(size.width + offset * 2, size.height + offset * 2),
-                cornerRadius = CornerRadius(baseCorner + offset),
-                alpha = color.alpha * fade * 0.09f * fraction,
-            )
         }
     }
 }
@@ -254,11 +245,11 @@ fun Modifier.auraDropShadows(
     alpha: () -> Float = { 1f },
 ): Modifier = shadows.fold(this) { chain, shadow ->
     chain.auraDropShadow(
-        outsideOnly = outsideOnly,
         color = shadow.color,
         blurRadius = shadow.blurRadius,
         cornerRadius = cornerRadius,
         spread = shadow.spread,
+        outsideOnly = outsideOnly,
         alpha = alpha,
     )
 }

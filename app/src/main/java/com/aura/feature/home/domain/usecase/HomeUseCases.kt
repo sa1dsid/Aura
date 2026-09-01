@@ -64,3 +64,9 @@ class MarkBonusCongratulationSeenUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.markBonusCongratulationSeen()
 }
+
+class MarkSparkCouponSeenUseCase @Inject constructor(
+    private val repository: HomeRepository,
+) {
+    suspend operator fun invoke() = repository.markSparkCouponSeen()
+}

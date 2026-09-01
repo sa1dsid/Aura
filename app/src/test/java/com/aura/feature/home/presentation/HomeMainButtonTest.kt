@@ -19,6 +19,7 @@ import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUs
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusCongratulationSeenUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
+import com.aura.feature.home.domain.usecase.MarkSparkCouponSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
 import com.aura.feature.home.domain.usecase.RefreshBatteryOptimizationUseCase
@@ -188,6 +189,7 @@ class HomeMainButtonTest {
         refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
         markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
         markBonusCongratulationSeen = MarkBonusCongratulationSeenUseCase(homeRepository),
+        markSparkCouponSeen = MarkSparkCouponSeenUseCase(homeRepository),
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
@@ -224,6 +226,7 @@ class HomeMainButtonTest {
         override suspend fun markBonusTeaserSeen() = Unit
 
         override suspend fun markBonusCongratulationSeen() = Unit
+        override suspend fun markSparkCouponSeen() = Unit
     }
 
     private class StaticMeshRepository : MeshRepository {

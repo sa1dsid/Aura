@@ -46,6 +46,8 @@ interface HomeRemoteDataSource {
     suspend fun markBonusTeaserSeen()
 
     suspend fun markBonusCongratulationSeen()
+
+    suspend fun markSparkCouponSeen()
 }
 
 @Singleton
@@ -113,5 +115,9 @@ class ApiHomeRemoteDataSource @Inject constructor(
 
     override suspend fun markBonusCongratulationSeen() {
         api.markBonusCongratulationSeen()
+    }
+
+    override suspend fun markSparkCouponSeen() {
+        api.markSparkCouponSeen()
     }
 }

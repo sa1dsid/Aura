@@ -175,7 +175,20 @@ class HomeMapperTest {
         assertEquals(SPARK_COUPON_THRESHOLD, home.teasers.spark.target)
         assertEquals(1, home.teasers.spark.issuedCoupons)
         assertEquals(4, home.teasers.spark.couponLimit)
-        assertTrue(home.teasers.spark.isCodeReady)
+        assertTrue(home.teasers.spark.isTargetReached)
+    }
+
+    @Test
+    fun `the spark teaser carries the issued code and drops a blank one`() {
+        val issued = dashboard(
+            DashboardDto(sparkCoupon = SparkCouponDto(issued = 1, limit = 4, readyCode = "A8X4-KP92-QW01")),
+        )
+        val blank = dashboard(DashboardDto(sparkCoupon = SparkCouponDto(readyCode = "  ")))
+
+        assertEquals("A8X4-KP92-QW01", issued.teasers.spark.readyCode)
+        assertTrue(issued.teasers.spark.isCodeReady)
+        assertNull(blank.teasers.spark.readyCode)
+        assertFalse(blank.teasers.spark.isCodeReady)
     }
 
     @Test

@@ -300,4 +300,23 @@
     <string name="toast_email_copied">Email copied</string>
     <string name="cd_ioni_send">Send</string>
 
+    <!-- Подтверждение почты кодом. Бэкенд включил его 31.08.2026: register больше
+         не отдаёт токен, а шлёт шестизначный код на почту. Ни в ТЗ по онбордингу,
+         ни в макете экрана нет — верстается по образцу экрана инвайт-кода,
+         поэтому и ключей в поставке заказчика под него нет. -->
+    <string name="verify_title">Confirm your email</string>
+    <!-- ДЛИННАЯ: %1$s — адрес, на который ушёл код. -->
+    <string name="verify_sub">We sent a 6-digit code to %1$s. Enter it to finish creating your account.</string>
+    <string name="verify_code_placeholder" translatable="false">000000</string>
+    <!-- ДЛИННАЯ: %1$d — expires_in из ответа register, в минутах. -->
+    <string name="verify_expiry_note">The code expires in %1$d min · check spam if it hasn\'t arrived</string>
+    <string name="verify_confirm">Confirm Email</string>
+    <string name="verify_resend">Resend code</string>
+    <!-- ДЛИННАЯ: сервер отвечает 400 «Invalid or expired confirmation code». -->
+    <string name="verify_code_invalid">Invalid or expired code · request a new one</string>
+    <!-- ДЛИННАЯ: сервер отвечает 429, если код просят чаще раза в минуту. -->
+    <string name="verify_resend_soon">Too soon · wait a minute before asking for a new code</string>
+    <!-- ДЛИННАЯ: зелёный тост после успешного повторного запроса кода. -->
+    <string name="toast_code_sent">New code sent · check your email</string>
+
 </resources>

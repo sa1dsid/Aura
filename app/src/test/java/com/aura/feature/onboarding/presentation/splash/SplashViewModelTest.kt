@@ -9,6 +9,7 @@ import com.aura.feature.onboarding.domain.usecase.BootstrapUseCase
 import com.aura.feature.onboarding.domain.usecase.ResolveStartDestinationUseCase
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -192,7 +193,13 @@ class SplashViewModelTest {
         override suspend fun signIn(email: String, password: String): Result<AuthSession> =
             throw UnsupportedOperationException()
 
-        override suspend fun signUp(email: String, password: String): Result<AuthSession> =
+        override suspend fun signUp(email: String, password: String): Result<EmailVerification> =
+            throw UnsupportedOperationException()
+
+        override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> =
+            throw UnsupportedOperationException()
+
+        override suspend fun resendEmailCode(email: String): Result<Unit> =
             throw UnsupportedOperationException()
 
         override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =

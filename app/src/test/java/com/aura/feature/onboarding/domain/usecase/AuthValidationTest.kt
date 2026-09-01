@@ -5,6 +5,7 @@ import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.test.runTest
@@ -123,10 +124,16 @@ class AuthValidationTest {
             return session(invitePending = false)
         }
 
-        override suspend fun signUp(email: String, password: String): Result<AuthSession> {
+        override suspend fun signUp(email: String, password: String): Result<EmailVerification> {
             signUpEmail = email
-            return session(invitePending = true)
+            return failWith?.let { Result.failure(AuthException(it)) }
+                ?: Result.success(EmailVerification(email))
         }
+
+        override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> =
+            session(invitePending = true)
+
+        override suspend fun resendEmailCode(email: String): Result<Unit> = Result.success(Unit)
 
         override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
             session(invitePending = true)

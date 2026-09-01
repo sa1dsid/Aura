@@ -6,6 +6,9 @@ import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
+import com.aura.feature.onboarding.domain.model.EmailVerification
+import com.aura.feature.onboarding.domain.model.EmailVerificationException
+import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
@@ -93,6 +96,39 @@ class OnboardingUseCaseTest {
     }
 
     @Test
+    fun `a confirmation code is stripped to its digits before it is sent`() = runTest {
+        ConfirmEmailUseCase(auth)("said@ioaura.app", " 482 913 ")
+
+        assertEquals("said@ioaura.app", auth.confirmEmailAddress)
+        assertEquals("482913", auth.confirmedCode)
+    }
+
+    @Test
+    fun `a code shorter than six digits never leaves the device`() = runTest {
+        val refused = listOf("48291", "4829a", "abcdef", "")
+
+        for (code in refused) {
+            val result = ConfirmEmailUseCase(auth)("said@ioaura.app", code)
+            assertEquals(code, EmailVerificationFailure.CODE_REJECTED, result.codeFailure())
+        }
+        assertNull(auth.confirmedCode)
+    }
+
+    @Test
+    fun `a code pasted with its tail is cut to six digits rather than refused`() = runTest {
+        ConfirmEmailUseCase(auth)("said@ioaura.app", "4829135")
+
+        assertEquals("482913", auth.confirmedCode)
+    }
+
+    @Test
+    fun `a resend passes the address on untouched`() = runTest {
+        ResendEmailCodeUseCase(auth)("said@ioaura.app")
+
+        assertEquals("said@ioaura.app", auth.resendEmail)
+    }
+
+    @Test
     fun `a reset asks for an email before anything else`() = runTest {
         assertEquals(
             AuthFailure.EMAIL_REQUIRED,
@@ -175,11 +211,17 @@ class OnboardingUseCaseTest {
     private fun Result<*>.inviteFailure(): InviteFailure? =
         (exceptionOrNull() as? InviteException)?.failure
 
+    private fun Result<*>.codeFailure(): EmailVerificationFailure? =
+        (exceptionOrNull() as? EmailVerificationException)?.failure
+
     private class RecordingAuthRepository : AuthRepository {
         var signInEmail: String? = null
         var signInPassword: String? = null
         var signUpEmail: String? = null
         var signUpPassword: String? = null
+        var confirmEmailAddress: String? = null
+        var confirmedCode: String? = null
+        var resendEmail: String? = null
         var resetEmail: String? = null
 
         override suspend fun currentAccount(): Account? = null
@@ -192,10 +234,21 @@ class OnboardingUseCaseTest {
             return Result.success(session())
         }
 
-        override suspend fun signUp(email: String, password: String): Result<AuthSession> {
+        override suspend fun signUp(email: String, password: String): Result<EmailVerification> {
             signUpEmail = email
             signUpPassword = password
+            return Result.success(EmailVerification(email))
+        }
+
+        override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> {
+            confirmEmailAddress = email
+            confirmedCode = code
             return Result.success(session())
+        }
+
+        override suspend fun resendEmailCode(email: String): Result<Unit> {
+            resendEmail = email
+            return Result.success(Unit)
         }
 
         override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =

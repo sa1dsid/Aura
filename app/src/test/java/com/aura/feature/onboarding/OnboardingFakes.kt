@@ -8,10 +8,12 @@ import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
 import com.aura.feature.onboarding.data.remote.dto.BootConfigDto
+import com.aura.feature.onboarding.data.remote.dto.EmailVerificationDto
 import com.aura.feature.onboarding.data.remote.dto.OnboardingFlagsDto
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.OnboardingFlags
 import com.aura.feature.onboarding.domain.model.StartDestination
@@ -47,6 +49,11 @@ internal fun testSessionDto(invitePending: Boolean = false) = AuthSessionDto(
     invitePending = invitePending,
 )
 
+internal fun testPendingDto(
+    email: String = "said@ioaura.app",
+    expiresInSeconds: Int = 600,
+) = EmailVerificationDto(email = email, expiresInSeconds = expiresInSeconds)
+
 internal class FakeAuthRepository(var account: Account? = testAccount("1")) : AuthRepository {
 
     override suspend fun currentAccount(): Account? = account
@@ -56,7 +63,13 @@ internal class FakeAuthRepository(var account: Account? = testAccount("1")) : Au
     override suspend fun signIn(email: String, password: String): Result<AuthSession> =
         throw UnsupportedOperationException()
 
-    override suspend fun signUp(email: String, password: String): Result<AuthSession> =
+    override suspend fun signUp(email: String, password: String): Result<EmailVerification> =
+        throw UnsupportedOperationException()
+
+    override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> =
+        throw UnsupportedOperationException()
+
+    override suspend fun resendEmailCode(email: String): Result<Unit> =
         throw UnsupportedOperationException()
 
     override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
@@ -118,12 +131,15 @@ internal class FakeInviteAttributionStorage(
 internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
 
     var session = testSessionDto()
+    var pending = testPendingDto()
     var flags = OnboardingFlagsDto(bonusPopupShown = false, reservedBonusIon = 3_000L)
     var bootConfig = BootConfigDto(nodeCount = 4_210)
 
     var restoreError: Throwable? = null
     var signInError: Throwable? = null
     var signUpError: Throwable? = null
+    var confirmError: Throwable? = null
+    var resendError: Throwable? = null
     var resetError: Throwable? = null
     var applyError: Throwable? = null
     var skipError: Throwable? = null
@@ -141,6 +157,8 @@ internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
     var markBonusPopupShownCalls = 0
     val sentIdTokens = mutableListOf<String>()
     val appliedCodes = mutableListOf<String>()
+    val confirmedCodes = mutableListOf<String>()
+    val resendEmails = mutableListOf<String>()
     val resetEmails = mutableListOf<String>()
 
     override suspend fun bootstrap(): BootConfigDto {
@@ -154,10 +172,21 @@ internal class FakeOnboardingRemoteDataSource : OnboardingRemoteDataSource {
         return session
     }
 
-    override suspend fun signUp(email: String, password: String): AuthSessionDto {
+    override suspend fun signUp(email: String, password: String): EmailVerificationDto {
         signUpCalls++
         signUpError?.let { throw it }
+        return pending
+    }
+
+    override suspend fun confirmEmail(email: String, code: String): AuthSessionDto {
+        confirmedCodes += code
+        confirmError?.let { throw it }
         return session
+    }
+
+    override suspend fun resendEmailCode(email: String) {
+        resendEmails += email
+        resendError?.let { throw it }
     }
 
     override suspend fun signInWithGoogle(idToken: String): AuthSessionDto {

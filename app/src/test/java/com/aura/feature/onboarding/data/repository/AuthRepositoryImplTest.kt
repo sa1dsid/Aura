@@ -5,9 +5,13 @@ import com.aura.feature.onboarding.FakePushTokenRepository
 import com.aura.feature.onboarding.FakeTokenStore
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.onboarding.testAccount
+import com.aura.feature.onboarding.testPendingDto
 import com.aura.feature.onboarding.testSessionDto
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
+import com.aura.feature.onboarding.domain.model.EmailVerification
+import com.aura.feature.onboarding.domain.model.EmailVerificationException
+import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.StartDestination
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +30,7 @@ import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
 import java.net.SocketTimeoutException
+import kotlin.time.Duration.Companion.minutes
 
 private const val TOKEN = "header.payload.signature"
 
@@ -160,6 +165,72 @@ class AuthRepositoryImplTest {
     }
 
     @Test
+    fun `sign up opens no session and reports the code lifetime`() = runTest {
+        remote.pending = testPendingDto(email = "said@ioaura.app", expiresInSeconds = 600)
+
+        val verification = repository().signUp("said@ioaura.app", "Password123").getOrThrow()
+
+        assertEquals("said@ioaura.app", verification.email)
+        assertEquals(10.minutes, verification.codeLifetime)
+        assertNull(sessionStore.account.value)
+        assertEquals(0, push.refreshes)
+    }
+
+    @Test
+    fun `a lifetime the server leaves out falls back to ten minutes`() = runTest {
+        remote.pending = testPendingDto(expiresInSeconds = 0)
+
+        val verification = repository().signUp("said@ioaura.app", "Password123").getOrThrow()
+
+        assertEquals(EmailVerification.DEFAULT_CODE_LIFETIME, verification.codeLifetime)
+    }
+
+    @Test
+    fun `confirming the code opens the session`() = runTest {
+        remote.session = testSessionDto(invitePending = true)
+
+        val session = repository().confirmEmail("said@ioaura.app", "482913").getOrThrow()
+
+        assertTrue(session.invitePending)
+        assertEquals(listOf("482913"), remote.confirmedCodes)
+        assertEquals("39", sessionStore.account.value?.id)
+        assertEquals(1, push.refreshes)
+    }
+
+    @Test
+    fun `a rejected code is told apart from a dead network`() = runTest {
+        remote.confirmError =
+            httpError(400, """{"detail":"Invalid or expired confirmation code"}""")
+
+        assertEquals(
+            EmailVerificationFailure.CODE_REJECTED,
+            repository().confirmEmail("said@ioaura.app", "482913").verificationFailure(),
+        )
+        assertNull(sessionStore.account.value)
+    }
+
+    @Test
+    fun `a resend the server throttles is reported as too soon`() = runTest {
+        remote.resendError =
+            httpError(429, """{"detail":"Please wait before requesting another code"}""")
+
+        assertEquals(
+            EmailVerificationFailure.RESEND_TOO_SOON,
+            repository().resendEmailCode("said@ioaura.app").verificationFailure(),
+        )
+    }
+
+    @Test
+    fun `a dropped resend reads as a network failure`() = runTest {
+        remote.resendError = IOException("offline")
+
+        assertEquals(
+            EmailVerificationFailure.NETWORK,
+            repository().resendEmailCode("said@ioaura.app").verificationFailure(),
+        )
+    }
+
+    @Test
     fun `a cancelled sign in is not swallowed as a failed result`() {
         remote.signInError = CancellationException("gone")
 
@@ -261,6 +332,9 @@ class AuthRepositoryImplTest {
 
     private fun Result<*>.failure(): AuthFailure? =
         (exceptionOrNull() as? AuthException)?.failure
+
+    private fun Result<*>.verificationFailure(): EmailVerificationFailure? =
+        (exceptionOrNull() as? EmailVerificationException)?.failure
 
     private fun httpError(code: Int, body: String = "{}") = HttpException(
         Response.error<Unit>(code, body.toResponseBody("application/json".toMediaType()))

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.aura.R
 import com.aura.core.designsystem.component.PRESS_FADE_MILLIS
 import com.aura.core.designsystem.component.rememberPressedState
 import com.aura.core.designsystem.theme.AuraTheme
+import com.aura.feature.onboarding.domain.model.toEmailCode
 import com.aura.feature.onboarding.domain.model.toInviteCode
 
 private val FieldShape = RoundedCornerShape(16.dp)
@@ -46,6 +48,69 @@ fun InviteCodeField(
     onPaste: () -> Unit,
     locked: Boolean,
     modifier: Modifier = Modifier,
+) {
+    CodeField(
+        code = code,
+        onCodeChange = { raw -> onCodeChange(raw.toInviteCode()) },
+        placeholder = stringResource(R.string.invite_code_placeholder),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Ascii,
+            capitalization = KeyboardCapitalization.Characters,
+            imeAction = ImeAction.Done,
+        ),
+        readOnly = locked,
+        modifier = modifier,
+    ) {
+        if (locked) {
+            Box(
+                modifier = Modifier.padding(horizontal = 15.dp, vertical = 9.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.invite_applied_hint),
+                    style = AuraTheme.typography.chipLabel,
+                    color = AuraTheme.colors.authTextMuted,
+                )
+            }
+        } else {
+            PasteChip(onClick = onPaste)
+        }
+    }
+}
+
+@Composable
+fun EmailCodeField(
+    code: String,
+    onCodeChange: (String) -> Unit,
+    onPaste: () -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    CodeField(
+        code = code,
+        onCodeChange = { raw -> onCodeChange(raw.toEmailCode()) },
+        placeholder = stringResource(R.string.verify_code_placeholder),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.NumberPassword,
+            imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+        modifier = modifier,
+    ) {
+        PasteChip(onClick = onPaste)
+    }
+}
+
+@Composable
+private fun CodeField(
+    code: String,
+    onCodeChange: (String) -> Unit,
+    placeholder: String,
+    keyboardOptions: KeyboardOptions,
+    modifier: Modifier = Modifier,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    readOnly: Boolean = false,
+    trailing: @Composable () -> Unit,
 ) {
     val colors = AuraTheme.colors
 
@@ -66,21 +131,18 @@ fun InviteCodeField(
         ) {
             BasicTextField(
                 value = code,
-                onValueChange = { raw -> onCodeChange(raw.toInviteCode()) },
+                onValueChange = onCodeChange,
                 singleLine = true,
-                readOnly = locked,
+                readOnly = readOnly,
                 textStyle = AuraTheme.typography.inviteCode.copy(color = colors.textPrimary),
                 cursorBrush = SolidColor(colors.textPrimary),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Ascii,
-                    capitalization = KeyboardCapitalization.Characters,
-                    imeAction = ImeAction.Done,
-                ),
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { innerTextField ->
                     if (code.isEmpty()) {
                         Text(
-                            text = stringResource(R.string.invite_code_placeholder),
+                            text = placeholder,
                             style = AuraTheme.typography.inviteCode,
                             color = colors.authCodePlaceholder,
                         )
@@ -90,20 +152,7 @@ fun InviteCodeField(
             )
         }
 
-        if (locked) {
-            Box(
-                modifier = Modifier.padding(horizontal = 15.dp, vertical = 9.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.invite_applied_hint),
-                    style = AuraTheme.typography.chipLabel,
-                    color = colors.authTextMuted,
-                )
-            }
-        } else {
-            PasteChip(onClick = onPaste)
-        }
+        trailing()
     }
 }
 

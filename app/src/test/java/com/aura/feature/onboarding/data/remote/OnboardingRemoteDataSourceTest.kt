@@ -44,12 +44,45 @@ class OnboardingRemoteDataSourceTest {
     }
 
     @Test
-    fun `signing up stores the token as well`() = runTest {
-        server.next(Paths.REGISTER, code = 201, body = Server.token(accessToken = "fresh.token"))
+    fun `signing up stores no token and reports the code lifetime`() = runTest {
+        server.next(
+            Paths.REGISTER,
+            code = 201,
+            body = Server.verificationPending(email = "said@ioaura.app", expiresIn = 600),
+        )
 
-        remote.signUp("said@ioaura.app", "Password123")
+        val pending = remote.signUp("said@ioaura.app", "Password123")
+
+        assertNull(tokenStore.token)
+        assertEquals("said@ioaura.app", pending.email)
+        assertEquals(600, pending.expiresInSeconds)
+    }
+
+    @Test
+    fun `confirming the code stores the token the server issues`() = runTest {
+        server.next(
+            Paths.EMAIL_CONFIRM,
+            body = Server.token(accessToken = "fresh.token", expiresIn = 3_600),
+        )
+
+        remote.confirmEmail("said@ioaura.app", "482913")
 
         assertEquals("fresh.token", tokenStore.token)
+        assertEquals(3_600, tokenStore.expiresIn)
+        assertEquals(
+            """{"email":"said@ioaura.app","code":"482913"}""",
+            server.bodyOf(Paths.EMAIL_CONFIRM),
+        )
+    }
+
+    @Test
+    fun `resending the code posts only the address`() = runTest {
+        server.next(Paths.EMAIL_RESEND, body = Server.message())
+
+        remote.resendEmailCode("said@ioaura.app")
+
+        assertNull(tokenStore.token)
+        assertEquals("""{"email":"said@ioaura.app"}""", server.bodyOf(Paths.EMAIL_RESEND))
     }
 
     @Test

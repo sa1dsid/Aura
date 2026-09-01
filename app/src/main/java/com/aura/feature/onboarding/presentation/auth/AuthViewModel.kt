@@ -8,6 +8,7 @@ import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthMode
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.usecase.ContinueWithGoogleUseCase
 import com.aura.feature.onboarding.domain.usecase.RequestPasswordResetUseCase
 import com.aura.feature.onboarding.domain.usecase.SignInUseCase
@@ -69,10 +70,11 @@ class AuthViewModel @Inject constructor(
         val state = _uiState.value
         if (state.submitting) return
 
-        submit {
-            when (state.mode) {
-                AuthMode.SIGN_IN -> signIn(state.email, state.password)
-                AuthMode.SIGN_UP -> signUp(state.email, state.password)
+        when (state.mode) {
+            AuthMode.SIGN_IN -> submit { signIn(state.email, state.password) }
+
+            AuthMode.SIGN_UP -> request({ signUp(state.email, state.password) }) { verification ->
+                eventChannel.send(AuthEvent.OpenEmailVerification(verification))
             }
         }
     }
@@ -126,6 +128,13 @@ class AuthViewModel @Inject constructor(
 
     private suspend fun reportFailure(failure: AuthFailure) {
         _uiState.update { it.copy(submitting = false, invalidField = failure.toField()) }
+
+        if (failure == AuthFailure.EMAIL_NOT_VERIFIED) {
+            val email = _uiState.value.email.trim()
+            eventChannel.send(AuthEvent.OpenEmailVerification(EmailVerification(email)))
+            return
+        }
+
         failure.toToast()?.let { eventChannel.send(AuthEvent.ShowToast(it)) }
     }
 }
@@ -143,7 +152,9 @@ private fun AuthFailure.toToast(): AuthToast? = when (this) {
     AuthFailure.WRONG_PASSWORD -> AuthToast.WRONG_CREDENTIALS
     AuthFailure.GOOGLE_UNAVAILABLE -> AuthToast.GOOGLE_UNAVAILABLE
     AuthFailure.NETWORK -> AuthToast.NO_CONNECTION
-    AuthFailure.GOOGLE_CANCELLED -> null
+    AuthFailure.EMAIL_NOT_VERIFIED,
+    AuthFailure.GOOGLE_CANCELLED,
+    -> null
 }
 
 private fun AuthFailure.toField(): AuthField? = when (this) {
@@ -159,6 +170,7 @@ private fun AuthFailure.toField(): AuthField? = when (this) {
     -> AuthField.PASSWORD
 
     AuthFailure.NETWORK,
+    AuthFailure.EMAIL_NOT_VERIFIED,
     AuthFailure.GOOGLE_UNAVAILABLE,
     AuthFailure.GOOGLE_CANCELLED,
     -> null

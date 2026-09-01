@@ -59,6 +59,10 @@ object Bodies {
         "is_new_account":true,"user":$USER}
     """
 
+    const val VERIFICATION_PENDING = """
+        {"message":"Confirmation code sent","email":"a@b.dev","expires_in":600}
+    """
+
     const val INVITE_STATE = """
         {"decision":"applied","applied_code":"IDF46VS0","source":"manual",
         "personal_code":"K69VL9R7","personal_url":"https://io-aura.example/invite?code=K69VL9R7",

@@ -4,6 +4,8 @@ import com.aura.core.common.parseIsoMillis
 import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
+import com.aura.feature.onboarding.domain.model.EmailVerificationException
+import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
 import kotlinx.serialization.json.Json
@@ -18,11 +20,15 @@ private const val BAD_REQUEST = 400
 
 private const val UNAUTHORIZED = 401
 
+private const val FORBIDDEN = 403
+
 private const val NOT_FOUND = 404
 
 private const val CONFLICT = 409
 
 private const val UNPROCESSABLE = 422
+
+private const val TOO_MANY_REQUESTS = 429
 
 private const val TOO_LONG = "too_long"
 
@@ -78,6 +84,12 @@ fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
                 AuthFailure.WRONG_PASSWORD
             }
 
+            FORBIDDEN -> if (googleSignIn) {
+                AuthFailure.GOOGLE_UNAVAILABLE
+            } else {
+                AuthFailure.EMAIL_NOT_VERIFIED
+            }
+
             CONFLICT -> AuthFailure.EMAIL_ALREADY_REGISTERED
             UNPROCESSABLE -> when {
                 "password" in error.fields -> if (error.types.any { it.contains(TOO_LONG) }) {
@@ -92,6 +104,23 @@ fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
 
             SERVICE_UNAVAILABLE -> AuthFailure.GOOGLE_UNAVAILABLE
             else -> AuthFailure.NETWORK
+        }
+    )
+}
+
+fun Throwable.toEmailVerificationFailure(): EmailVerificationException {
+    if (this is EmailVerificationException) return this
+    val error = apiError() ?: return EmailVerificationException(EmailVerificationFailure.NETWORK)
+
+    return EmailVerificationException(
+        when (error.code) {
+            BAD_REQUEST,
+            NOT_FOUND,
+            UNPROCESSABLE,
+            -> EmailVerificationFailure.CODE_REJECTED
+
+            TOO_MANY_REQUESTS -> EmailVerificationFailure.RESEND_TOO_SOON
+            else -> EmailVerificationFailure.NETWORK
         }
     )
 }

@@ -22,9 +22,11 @@ import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.usecase.ApplyInviteCodeUseCase
 import com.aura.feature.onboarding.domain.usecase.BootstrapUseCase
+import com.aura.feature.onboarding.domain.usecase.ConfirmEmailUseCase
 import com.aura.feature.onboarding.domain.usecase.ContinueWithGoogleUseCase
 import com.aura.feature.onboarding.domain.usecase.ObserveInviteAttributionUseCase
 import com.aura.feature.onboarding.domain.usecase.RequestPasswordResetUseCase
+import com.aura.feature.onboarding.domain.usecase.ResendEmailCodeUseCase
 import com.aura.feature.onboarding.domain.usecase.ResolveStartDestinationUseCase
 import com.aura.feature.onboarding.domain.usecase.SignInUseCase
 import com.aura.feature.onboarding.domain.usecase.SignUpUseCase
@@ -32,6 +34,7 @@ import com.aura.feature.onboarding.domain.usecase.SkipInviteUseCase
 import com.aura.feature.onboarding.presentation.auth.AuthViewModel
 import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusViewModel
 import com.aura.feature.onboarding.presentation.invite.InviteViewModel
+import com.aura.feature.onboarding.presentation.verification.EmailVerificationViewModel
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -168,6 +171,14 @@ internal class OnboardingStack(referrerCode: String? = null) {
             continueWithGoogle = ContinueWithGoogleUseCase(authRepository),
             requestPasswordReset = RequestPasswordResetUseCase(authRepository),
             googleSignInClient = googleSignInClient,
+        ),
+    )
+
+    fun emailVerificationViewModel(): EmailVerificationViewModel = track(
+        "verification",
+        EmailVerificationViewModel(
+            confirmEmail = ConfirmEmailUseCase(authRepository),
+            resendEmailCode = ResendEmailCodeUseCase(authRepository),
         ),
     )
 

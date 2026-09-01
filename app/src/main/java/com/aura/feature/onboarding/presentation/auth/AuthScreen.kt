@@ -54,6 +54,7 @@ import com.aura.core.designsystem.component.auraGlow
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.onboarding.domain.model.AuthMode
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.presentation.components.AuthSegmentedControl
 import com.aura.feature.onboarding.presentation.components.AuthTextField
 import com.aura.feature.onboarding.presentation.components.BrandLogoRow
@@ -66,6 +67,7 @@ import com.aura.feature.onboarding.presentation.components.PASSWORD_PLACEHOLDER
 fun AuthRoute(
     onOpenHome: () -> Unit,
     onOpenInvite: () -> Unit,
+    onOpenEmailVerification: (EmailVerification) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
@@ -78,6 +80,7 @@ fun AuthRoute(
             when (event) {
                 AuthEvent.OpenHome -> onOpenHome()
                 AuthEvent.OpenInvite -> onOpenInvite()
+                is AuthEvent.OpenEmailVerification -> onOpenEmailVerification(event.verification)
                 is AuthEvent.ShowToast -> toastState.show(
                     text = context.getString(event.toast.textRes()),
                     kind = event.toast.kind(),

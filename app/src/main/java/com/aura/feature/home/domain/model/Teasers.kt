@@ -28,8 +28,16 @@ data class SparkTeaser(
     val issuedCoupons: Int = 0,
     val couponLimit: Int = 0,
     val isCampaignComplete: Boolean = false,
+    val readyCode: String? = null,
 ) {
-    val isCodeReady: Boolean get() = collected >= target
+    val isTargetReached: Boolean get() = collected >= target
+
+    val isCodeReady: Boolean get() = !readyCode.isNullOrBlank()
+
+    val progress: Float
+        get() = if (target <= 0L) 0f else (collected.toDouble() / target).toFloat().coerceIn(0f, 1f)
+
+    val percentToCode: Int get() = (progress * 100f).toInt()
 }
 
 data class VpnCodeTeaser(

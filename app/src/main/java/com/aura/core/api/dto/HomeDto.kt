@@ -34,6 +34,7 @@ data class SparkCouponDto(
     val issued: Int = 0,
     val limit: Int = 0,
     val completed: Boolean = false,
+    @SerialName("ready_code") val readyCode: String? = null,
 )
 
 @Serializable

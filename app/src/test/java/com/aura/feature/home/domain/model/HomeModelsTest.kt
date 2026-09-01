@@ -77,10 +77,31 @@ class HomeModelsTest {
     }
 
     @Test
-    fun `the spark code is ready at the threshold, not after it`() {
-        assertFalse(SparkTeaser(collected = 239_999, target = SPARK_COUPON_THRESHOLD).isCodeReady)
-        assertTrue(SparkTeaser(collected = 240_000, target = SPARK_COUPON_THRESHOLD).isCodeReady)
+    fun `the spark target is reached at the threshold, not after it`() {
+        val short = SparkTeaser(collected = 239_999, target = SPARK_COUPON_THRESHOLD)
+        val full = SparkTeaser(collected = 240_000, target = SPARK_COUPON_THRESHOLD)
+
+        assertFalse(short.isTargetReached)
+        assertTrue(full.isTargetReached)
         assertEquals(240_000L, SPARK_COUPON_THRESHOLD)
+    }
+
+    @Test
+    fun `the spark code is ready only when the server issued one`() {
+        val reached = SparkTeaser(collected = 240_000, target = SPARK_COUPON_THRESHOLD)
+        val issued = SparkTeaser(collected = 0, target = SPARK_COUPON_THRESHOLD, readyCode = "A8X4")
+
+        assertFalse(reached.isCodeReady)
+        assertFalse(reached.copy(readyCode = " ").isCodeReady)
+        assertTrue(issued.isCodeReady)
+    }
+
+    @Test
+    fun `the spark percent floors the ratio and never leaves the scale`() {
+        assertEquals(0, SparkTeaser(collected = 0, target = 240_000).percentToCode)
+        assertEquals(59, SparkTeaser(collected = 142_800, target = 240_000).percentToCode)
+        assertEquals(100, SparkTeaser(collected = 480_000, target = 240_000).percentToCode)
+        assertEquals(0, SparkTeaser(collected = 100, target = 0).percentToCode)
     }
 
     @Test

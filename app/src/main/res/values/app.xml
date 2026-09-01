@@ -241,12 +241,35 @@
          string_too_long. В поставке заказчика есть только ключ про короткий пароль. -->
     <string name="toast_pass_long">Password too long — 128 characters max</string>
 
-    <!-- ДЛИННЫЕ: свой попап оптимизации батареи по Вёрстке Home 7.1. Точные тексты
-         заказчика на руках нет — эти на замену из поставки локализации. -->
-    <string name="battery_dialog_title">Disable Battery Optimization</string>
-    <string name="battery_dialog_text">Android may stop background tests to save power. Turn optimization off so your node keeps earning while the app is closed.</string>
-    <string name="battery_dialog_allow">Turn it off</string>
-    <string name="battery_dialog_later">Later</string>
+    <!-- Попап оптимизации батареи по Вёрстке Home 7.1, тексты сняты с макета
+         «Disable Battery Optimization». Перенос строки в battery_sheet_text —
+         из макета, там две смысловые строки. -->
+    <string name="battery_sheet_title">Disable Battery Optimization</string>
+    <string name="battery_sheet_text">⚠️ Required: disable battery optimization!\nOtherwise Android will stop IO Aura in the background — ION, Spark and Data Share will pause</string>
+    <string name="battery_sheet_action">Disable Battery Optimization</string>
+
+    <!-- Попап Spark по Вёрстке Home 5.2, оба состояния сняты с макетов
+         «Spark Progress». Цифры в подписях подставляются с сервера, поэтому
+         240,000 в spark_sheet_ready_subtitle и spark_sheet_hint — аргументы.
+         spark_sheet_percent и spark_sheet_code_label в макете набраны капсом. -->
+    <string name="spark_sheet_title">Spark</string>
+    <string name="spark_sheet_subtitle">Collect Spark by testing your connection. Reach the target to unlock a Spark top-up code for SigmaDrop.</string>
+    <string name="spark_sheet_target">/ %1$s</string>
+    <string name="spark_sheet_percent">%1$d%% TO CODE</string>
+    <string name="spark_sheet_note">Keep testing every 12h to fill this up. No weekly reset — progress only resets after you claim a code.</string>
+    <string name="spark_sheet_ready_subtitle">You reached %1$s Spark. Your top-up code is ready.</string>
+    <string name="spark_sheet_code_label">YOUR SPARK TOP-UP CODE</string>
+    <string name="spark_sheet_copy">Copy code</string>
+    <string name="spark_sheet_copied">Code copied</string>
+    <string name="spark_sheet_hint">Enter this code in the %1$s app to receive %2$s there.</string>
+    <string name="spark_sheet_hint_app">SigmaDrop</string>
+    <string name="spark_sheet_hint_amount">%1$s Spark</string>
+    <string name="spark_sheet_open">Open SigmaDrop</string>
+    <string name="spark_sheet_reset_note">Your Spark has reset to 0 and is building toward the next code</string>
+
+    <!-- ЗАГЛУШКА: реальный applicationId приложения SigmaDrop заказчик ещё не дал.
+         Значение продублировано в <queries> манифеста — менять оба места разом. -->
+    <string name="sigmadrop_app_package" translatable="false">com.sigmadrop.app</string>
 
     <!-- Пуши. push_channel_id — системный идентификатор канала, не переводится и не
          меняется: смена значения создаёт новый канал и сбрасывает настройки звука.

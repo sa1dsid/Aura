@@ -18,6 +18,8 @@ interface HomeRepository {
     suspend fun sendHeartbeat()
 
     suspend fun markBonusTeaserSeen()
+
+    suspend fun markSparkCouponSeen()
 }
 
 interface MeshRepository {

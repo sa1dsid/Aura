@@ -44,6 +44,8 @@ interface HomeRemoteDataSource {
     suspend fun mesh(): MeshDto
 
     suspend fun markBonusTeaserSeen()
+
+    suspend fun markSparkCouponSeen()
 }
 
 @Singleton
@@ -107,5 +109,9 @@ class ApiHomeRemoteDataSource @Inject constructor(
 
     override suspend fun markBonusTeaserSeen() {
         api.markBonusTeaserSeen()
+    }
+
+    override suspend fun markSparkCouponSeen() {
+        api.markSparkCouponSeen()
     }
 }

@@ -8,11 +8,13 @@
     <uses-permission android:name="android.permission.READ_BASIC_PHONE_STATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- ЗАГЛУШКА: applicationId приложения IONI AI. Дублирует ioni_app_package
-         в values/app.xml — менять оба места разом. Без этой записи PackageManager
-         на Android 11+ не видит установленное приложение. -->
+    <!-- ЗАГЛУШКИ: applicationId приложений IONI AI и SigmaDrop. Дублируют
+         ioni_app_package и sigmadrop_app_package в values/app.xml — менять оба
+         места разом. Без этих записей PackageManager на Android 11+ не видит
+         установленное приложение. -->
     <queries>
         <package android:name="com.ionica.ioni" />
+        <package android:name="com.sigmadrop.app" />
     </queries>
 
     <application

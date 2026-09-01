@@ -10,6 +10,7 @@ import com.aura.feature.home.domain.model.testStartRejection
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
+import com.aura.feature.home.domain.usecase.MarkSparkCouponSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
 import com.aura.feature.home.domain.usecase.RefreshBatteryOptimizationUseCase
@@ -41,6 +42,7 @@ class HomeViewModel @Inject constructor(
     private val confirmBatteryOptimizationDisabled: ConfirmBatteryOptimizationDisabledUseCase,
     private val refreshBatteryOptimization: RefreshBatteryOptimizationUseCase,
     private val markBonusTeaserSeen: MarkBonusTeaserSeenUseCase,
+    private val markSparkCouponSeen: MarkSparkCouponSeenUseCase,
     private val sessionEngine: TestSessionEngine,
     newsRepository: NewsRepository,
     networkMonitor: NetworkMonitor,
@@ -138,6 +140,10 @@ class HomeViewModel @Inject constructor(
 
     fun onBonusTeaserOpened() {
         viewModelScope.launch { markBonusTeaserSeen() }
+    }
+
+    fun onSparkCodeSeen() {
+        viewModelScope.launch { markSparkCouponSeen() }
     }
 
     private suspend fun onSessionEvent(event: TestSessionEvent) {

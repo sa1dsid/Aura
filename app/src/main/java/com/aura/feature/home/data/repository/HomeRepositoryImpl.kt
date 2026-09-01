@@ -110,6 +110,11 @@ class HomeRepositoryImpl @Inject constructor(
         refresh()
     }
 
+    override suspend fun markSparkCouponSeen() {
+        withContext(ioDispatcher) { runCatchingCancellable { remote.markSparkCouponSeen() } }
+        refresh()
+    }
+
     private fun extras(): Flow<HomeExtras> = combine(
         appConfigRepository.config,
         nodesRepository.observeNodes().map<NodesState, NodesState?> { it }.onStart { emit(null) },

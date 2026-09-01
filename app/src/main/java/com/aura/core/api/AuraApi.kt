@@ -32,6 +32,7 @@ import com.aura.core.api.dto.PushTokenDeleteDto
 import com.aura.core.api.dto.PushTokenDeleteResponseDto
 import com.aura.core.api.dto.PushTokenRegisterDto
 import com.aura.core.api.dto.PushTokenResponseDto
+import com.aura.core.api.dto.SparkCouponDto
 import com.aura.core.api.dto.TapFinishDto
 import com.aura.core.api.dto.TapStartDto
 import com.aura.core.api.dto.TapStateDto
@@ -90,6 +91,9 @@ interface AuraApi {
 
     @GET("api/v1/home/dashboard")
     suspend fun dashboard(): DashboardDto
+
+    @POST("api/v1/home/spark-coupon/seen")
+    suspend fun markSparkCouponSeen(): SparkCouponDto
 
     @POST("api/v1/home/tap/start")
     suspend fun startTap(@Body request: TapStartDto): TapStateDto

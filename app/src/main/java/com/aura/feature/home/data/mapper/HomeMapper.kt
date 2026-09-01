@@ -66,6 +66,7 @@ fun DashboardDto.toDomain(
             issuedCoupons = sparkCoupon.issued,
             couponLimit = sparkCoupon.limit,
             isCampaignComplete = sparkCoupon.completed,
+            readyCode = sparkCoupon.readyCode?.takeIf(String::isNotBlank),
         ),
         vpnCode = VpnCodeTeaser(
             isEnabled = flags.vpnCode,

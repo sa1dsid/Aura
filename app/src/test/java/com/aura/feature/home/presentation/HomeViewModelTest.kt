@@ -16,6 +16,7 @@ import com.aura.feature.home.data.session.FakeTapSessionStore
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
+import com.aura.feature.home.domain.usecase.MarkSparkCouponSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
 import com.aura.feature.home.domain.usecase.RefreshBatteryOptimizationUseCase
@@ -309,6 +310,18 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `marks the spark coupon once its code has been shown`() = homeTest {
+        val viewModel = viewModel(watchedEngine())
+        viewModel.onScreenResumed()
+        runCurrent()
+
+        viewModel.onSparkCodeSeen()
+        runCurrent()
+
+        assertEquals(1, homeRepository.sparkCouponSeen)
+    }
+
+    @Test
     fun `a completed session reloads the screen behind the toast`() = homeTest {
         val engine = watchedEngine()
         val viewModel = viewModel(engine)
@@ -385,6 +398,7 @@ class HomeViewModelTest {
             ConfirmBatteryOptimizationDisabledUseCase(homeRepository),
         refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
         markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
+        markSparkCouponSeen = MarkSparkCouponSeenUseCase(homeRepository),
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
@@ -420,6 +434,8 @@ class HomeViewModelTest {
             private set
         var bonusTeaserSeen = 0
             private set
+        var sparkCouponSeen = 0
+            private set
 
         fun set(home: HomeState?) {
             state.value = home
@@ -451,6 +467,10 @@ class HomeViewModelTest {
 
         override suspend fun markBonusTeaserSeen() {
             bonusTeaserSeen++
+        }
+
+        override suspend fun markSparkCouponSeen() {
+            sparkCouponSeen++
         }
     }
 

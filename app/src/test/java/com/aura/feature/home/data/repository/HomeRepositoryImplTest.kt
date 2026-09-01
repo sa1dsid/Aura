@@ -262,6 +262,26 @@ class HomeRepositoryImplTest {
     }
 
     @Test
+    fun `seeing the spark code marks the coupon and reloads the screen`() = runTest {
+        val repository = repository()
+
+        repository.markSparkCouponSeen()
+
+        assertEquals(1, remote.sparkCouponSeen)
+        assertEquals(1, remote.dashboards)
+    }
+
+    @Test
+    fun `a spark mark the server refuses still reloads the screen`() = runTest {
+        remote.sparkCouponError = IOException("offline")
+        val repository = repository()
+
+        repository.markSparkCouponSeen()
+
+        assertEquals(1, remote.dashboards)
+    }
+
+    @Test
     fun `logging out empties the screen`() = runTest {
         val repository = repository()
         repository.refresh()
@@ -296,12 +316,16 @@ class HomeRepositoryImplTest {
         var batteryError: Throwable? = null
         var heartbeatError: Throwable? = null
         var bonusTeaserError: Throwable? = null
+        var sparkCouponError: Throwable? = null
 
         var dashboards = 0
         var heartbeats = 0
         var declines = 0
         var confirms = 0
         var bonusTeaserSeen = 0
+        var sparkCouponSeen = 0
+
+        var congratulationSeen = 0
 
         override suspend fun dashboard(): DashboardDto {
             dashboards++
@@ -358,6 +382,15 @@ class HomeRepositoryImplTest {
         override suspend fun markBonusTeaserSeen() {
             bonusTeaserSeen++
             bonusTeaserError?.let { throw it }
+        }
+
+        override suspend fun markBonusCongratulationSeen() {
+            congratulationSeen++
+        }
+
+        override suspend fun markSparkCouponSeen() {
+            sparkCouponSeen++
+            sparkCouponError?.let { throw it }
         }
     }
 }

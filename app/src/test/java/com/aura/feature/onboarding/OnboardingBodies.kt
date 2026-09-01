@@ -36,6 +36,16 @@ internal object Server {
         "is_new_account":$isNewAccount,"user":$user}
     """.trimIndent()
 
+    fun verificationPending(
+        email: String = "smoke@auratest.dev",
+        expiresIn: Int = 600,
+    ): String = """
+        {"message":"Confirmation code sent","email":"$email","expires_in":$expiresIn}
+    """.trimIndent()
+
+    fun message(text: String = "If the account needs verification, a code was sent"): String =
+        """{"message":"$text"}"""
+
     fun inviteState(decision: String = APPLIED, appliedCode: String? = "IDF46VS0"): String = """
         {"decision":"$decision","applied_code":${appliedCode?.let { "\"$it\"" } ?: "null"},
         "source":"manual","personal_code":"K69VL9R7",

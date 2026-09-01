@@ -6,6 +6,7 @@ import com.aura.core.api.dto.NodeStatusDto
 import com.aura.core.common.parseIsoMillis
 import com.aura.core.config.FeatureFlags
 import com.aura.core.network.NetworkStatus
+import com.aura.feature.home.domain.model.BONUS_TOTAL_STEPS
 import com.aura.feature.home.domain.model.BatteryOptimizationState
 import com.aura.feature.home.domain.model.BonusWithdrawalTeaser
 import com.aura.feature.home.domain.model.ConnectionState
@@ -52,13 +53,14 @@ fun DashboardDto.toDomain(
     teasers = Teasers(
         bonusWithdrawal = BonusWithdrawalTeaser(
             completedSteps = bonus.completed,
-            totalSteps = bonus.total,
+            totalSteps = if (bonus.total > 0) bonus.total else BONUS_TOTAL_STEPS,
             signalLockTaps = bonus.signalLock,
             networkSyncFriends = bonus.networkSync,
             fullUplinkDays = bonus.fullUplink,
             dataShareGb = bonus.dataShareGb,
             isDataShareSoon = bonus.dataShareSoon || !flags.dataShare,
             isBlinking = bonusTeaserShouldBlink,
+            congratulatedSteps = bonus.congratulatedSteps ?: bonus.completed,
         ),
         spark = SparkTeaser(
             collected = spark.balance.toLong(),
@@ -66,6 +68,7 @@ fun DashboardDto.toDomain(
             issuedCoupons = sparkCoupon.issued,
             couponLimit = sparkCoupon.limit,
             isCampaignComplete = sparkCoupon.completed,
+            readyCode = sparkCoupon.readyCode?.takeIf(String::isNotBlank),
         ),
         vpnCode = VpnCodeTeaser(
             isEnabled = flags.vpnCode,

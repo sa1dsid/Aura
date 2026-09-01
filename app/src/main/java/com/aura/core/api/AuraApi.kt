@@ -1,12 +1,16 @@
 package com.aura.core.api
 
 import com.aura.core.api.dto.BatteryOptimizationDto
+import com.aura.core.api.dto.BonusCongratulationsSeenDto
 import com.aura.core.api.dto.BonusTeaserSeenDto
 import com.aura.core.api.dto.CityDto
 import com.aura.core.api.dto.DashboardDto
 import com.aura.core.api.dto.EarningStateDto
 import com.aura.core.api.dto.EarningStateUpdateDto
 import com.aura.core.api.dto.EmailCredentialsDto
+import com.aura.core.api.dto.EmailVerificationConfirmDto
+import com.aura.core.api.dto.EmailVerificationPendingDto
+import com.aura.core.api.dto.EmailVerificationResendDto
 import com.aura.core.api.dto.GiftPopupSeenDto
 import com.aura.core.api.dto.GoogleSignInRequestDto
 import com.aura.core.api.dto.HeartbeatDto
@@ -32,6 +36,7 @@ import com.aura.core.api.dto.PushTokenDeleteDto
 import com.aura.core.api.dto.PushTokenDeleteResponseDto
 import com.aura.core.api.dto.PushTokenRegisterDto
 import com.aura.core.api.dto.PushTokenResponseDto
+import com.aura.core.api.dto.SparkCouponDto
 import com.aura.core.api.dto.TapFinishDto
 import com.aura.core.api.dto.TapStartDto
 import com.aura.core.api.dto.TapStateDto
@@ -53,7 +58,17 @@ import retrofit2.http.Query
 interface AuraApi {
 
     @POST("api/v1/auth/register")
-    suspend fun register(@Body credentials: EmailCredentialsDto): TokenResponseDto
+    suspend fun register(@Body credentials: EmailCredentialsDto): EmailVerificationPendingDto
+
+    @POST("api/v1/auth/email-verification/confirm")
+    suspend fun confirmEmailVerification(
+        @Body request: EmailVerificationConfirmDto,
+    ): TokenResponseDto
+
+    @POST("api/v1/auth/email-verification/resend")
+    suspend fun resendEmailVerification(
+        @Body request: EmailVerificationResendDto,
+    ): MessageResponseDto
 
     @POST("api/v1/auth/login")
     suspend fun login(@Body credentials: EmailCredentialsDto): TokenResponseDto
@@ -88,8 +103,14 @@ interface AuraApi {
     @POST("api/v1/onboarding/bonus-teaser/seen")
     suspend fun markBonusTeaserSeen(): BonusTeaserSeenDto
 
+    @POST("api/v1/onboarding/bonus-congratulations/seen")
+    suspend fun markBonusCongratulationSeen(): BonusCongratulationsSeenDto
+
     @GET("api/v1/home/dashboard")
     suspend fun dashboard(): DashboardDto
+
+    @POST("api/v1/home/spark-coupon/seen")
+    suspend fun markSparkCouponSeen(): SparkCouponDto
 
     @POST("api/v1/home/tap/start")
     suspend fun startTap(@Body request: TapStartDto): TapStateDto

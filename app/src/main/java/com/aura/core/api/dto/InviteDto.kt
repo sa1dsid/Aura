@@ -29,3 +29,8 @@ data class GiftPopupSeenDto(
 data class BonusTeaserSeenDto(
     @SerialName("bonus_teaser_seen") val bonusTeaserSeen: Boolean = true,
 )
+
+@Serializable
+data class BonusCongratulationsSeenDto(
+    @SerialName("congratulated_steps") val congratulatedSteps: Int = 0,
+)

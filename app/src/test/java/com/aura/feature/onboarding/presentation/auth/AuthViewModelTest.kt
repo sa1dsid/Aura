@@ -8,6 +8,7 @@ import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthMode
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import com.aura.feature.onboarding.domain.usecase.ContinueWithGoogleUseCase
@@ -81,6 +82,7 @@ class AuthViewModelTest {
             AuthFailure.PASSWORD_TOO_LONG to (AuthField.PASSWORD to AuthToast.PASSWORD_TOO_LONG),
             AuthFailure.WRONG_PASSWORD to (AuthField.PASSWORD to AuthToast.WRONG_CREDENTIALS),
             AuthFailure.NETWORK to (null to AuthToast.NO_CONNECTION),
+            AuthFailure.EMAIL_NOT_VERIFIED to (null to null),
             AuthFailure.GOOGLE_UNAVAILABLE to (null to AuthToast.GOOGLE_UNAVAILABLE),
             AuthFailure.GOOGLE_CANCELLED to (null to null),
         )
@@ -97,9 +99,41 @@ class AuthViewModelTest {
             viewModel.onSubmit()
 
             assertEquals(failure.name, field, viewModel.uiState.value.invalidField)
-            assertEquals(failure.name, listOfNotNull(toast?.let(AuthEvent::ShowToast)), events)
+            assertEquals(failure.name, expectedEvents(failure, toast), events)
             assertFalse(failure.name, viewModel.uiState.value.submitting)
         }
+    }
+
+    @Test
+    fun `an unconfirmed email sends the typed address on to the code screen`() = runTest {
+        repository.failWith = AuthFailure.EMAIL_NOT_VERIFIED
+        val viewModel = viewModel()
+        val events = events(viewModel)
+
+        viewModel.onEmailChange("  $EMAIL  ")
+        viewModel.onPasswordChange(PASSWORD)
+        viewModel.onSubmit()
+
+        assertEquals(
+            listOf(AuthEvent.OpenEmailVerification(EmailVerification(EMAIL))),
+            events,
+        )
+    }
+
+    @Test
+    fun `signing up opens the code screen without a session`() = runTest {
+        val viewModel = viewModel()
+        val events = events(viewModel)
+
+        viewModel.onModeChange(AuthMode.SIGN_UP)
+        viewModel.fill()
+        viewModel.onSubmit()
+
+        assertEquals(
+            listOf(AuthEvent.OpenEmailVerification(EmailVerification(EMAIL))),
+            events,
+        )
+        assertEquals(listOf("signUp"), repository.calls)
     }
 
     @Test
@@ -238,6 +272,13 @@ class AuthViewModelTest {
         return viewModel
     }
 
+    private fun expectedEvents(failure: AuthFailure, toast: AuthToast?): List<AuthEvent> =
+        if (failure == AuthFailure.EMAIL_NOT_VERIFIED) {
+            listOf(AuthEvent.OpenEmailVerification(EmailVerification(EMAIL)))
+        } else {
+            listOfNotNull(toast?.let(AuthEvent::ShowToast))
+        }
+
     private fun AuthViewModel.fill() {
         onEmailChange(EMAIL)
         onPasswordChange(PASSWORD)
@@ -267,9 +308,22 @@ class AuthViewModelTest {
             return answer()
         }
 
-        override suspend fun signUp(email: String, password: String): Result<AuthSession> {
+        override suspend fun signUp(email: String, password: String): Result<EmailVerification> {
             calls += "signUp"
+            gate?.await()
+            failWithRaw?.let { return Result.failure(it) }
+            failWith?.let { return Result.failure(AuthException(it)) }
+            return Result.success(EmailVerification(email))
+        }
+
+        override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> {
+            calls += "confirmEmail"
             return answer()
+        }
+
+        override suspend fun resendEmailCode(email: String): Result<Unit> {
+            calls += "resendEmailCode"
+            return Result.success(Unit)
         }
 
         override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> {

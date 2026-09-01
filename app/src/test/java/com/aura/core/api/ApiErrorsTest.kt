@@ -2,6 +2,7 @@ package com.aura.core.api
 
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
+import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
 import okhttp3.MediaType.Companion.toMediaType
@@ -26,6 +27,60 @@ class ApiErrorsTest {
         val failure = httpError(409, """{"detail":"Account already exists"}""").toAuthFailure()
 
         assertEquals(AuthFailure.EMAIL_ALREADY_REGISTERED, failure.failure)
+    }
+
+    @Test
+    fun `login on an unconfirmed account reads as an unverified email`() {
+        val body = """{"detail":"Email verification required"}"""
+
+        assertEquals(AuthFailure.EMAIL_NOT_VERIFIED, httpError(403, body).toAuthFailure().failure)
+    }
+
+    @Test
+    fun `a google sign in the server forbids never asks for an email code`() {
+        val body = """{"detail":"Email verification required"}"""
+
+        assertEquals(
+            AuthFailure.GOOGLE_UNAVAILABLE,
+            httpError(403, body).toAuthFailure(googleSignIn = true).failure,
+        )
+    }
+
+    @Test
+    fun `an expired confirmation code reads as a rejected code`() {
+        val body = """{"detail":"Invalid or expired confirmation code"}"""
+
+        assertEquals(
+            EmailVerificationFailure.CODE_REJECTED,
+            httpError(400, body).toEmailVerificationFailure().failure,
+        )
+    }
+
+    @Test
+    fun `a code that is not six digits reads as a rejected code`() {
+        val body = """
+            {"detail":[{"type":"string_pattern_mismatch","loc":["body","code"],
+            "msg":"String should match pattern"}]}
+        """.trimIndent()
+
+        assertEquals(
+            EmailVerificationFailure.CODE_REJECTED,
+            httpError(422, body).toEmailVerificationFailure().failure,
+        )
+    }
+
+    @Test
+    fun `a throttled resend is told apart from a dead network`() {
+        val body = """{"detail":"Please wait before requesting another code"}"""
+
+        assertEquals(
+            EmailVerificationFailure.RESEND_TOO_SOON,
+            httpError(429, body).toEmailVerificationFailure().failure,
+        )
+        assertEquals(
+            EmailVerificationFailure.NETWORK,
+            IOException("offline").toEmailVerificationFailure().failure,
+        )
     }
 
     @Test

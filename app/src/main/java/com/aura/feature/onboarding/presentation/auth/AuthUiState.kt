@@ -1,6 +1,7 @@
 package com.aura.feature.onboarding.presentation.auth
 
 import com.aura.feature.onboarding.domain.model.AuthMode
+import com.aura.feature.onboarding.domain.model.EmailVerification
 
 data class AuthUiState(
     val mode: AuthMode = AuthMode.SIGN_IN,
@@ -29,6 +30,8 @@ sealed interface AuthEvent {
     data object OpenHome : AuthEvent
 
     data object OpenInvite : AuthEvent
+
+    data class OpenEmailVerification(val verification: EmailVerification) : AuthEvent
 
     data class ShowToast(val toast: AuthToast) : AuthEvent
 }

@@ -34,6 +34,7 @@ data class SparkCouponDto(
     val issued: Int = 0,
     val limit: Int = 0,
     val completed: Boolean = false,
+    @SerialName("ready_code") val readyCode: String? = null,
 )
 
 @Serializable
@@ -57,6 +58,7 @@ data class BonusProgressDto(
     @SerialName("full_uplink") val fullUplink: Int = 0,
     @SerialName("data_share_gb") val dataShareGb: Int = 0,
     @SerialName("data_share_soon") val dataShareSoon: Boolean = true,
+    @SerialName("congratulated_steps") val congratulatedSteps: Int? = null,
 )
 
 @Serializable

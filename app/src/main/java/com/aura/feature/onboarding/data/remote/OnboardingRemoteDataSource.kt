@@ -2,6 +2,8 @@ package com.aura.feature.onboarding.data.remote
 
 import com.aura.core.api.AuraApi
 import com.aura.core.api.dto.EmailCredentialsDto
+import com.aura.core.api.dto.EmailVerificationConfirmDto
+import com.aura.core.api.dto.EmailVerificationResendDto
 import com.aura.core.api.dto.GoogleSignInRequestDto
 import com.aura.core.api.dto.InviteApplyDto
 import com.aura.core.api.dto.PasswordResetRequestDto
@@ -13,6 +15,7 @@ import com.aura.core.config.AppConfigRepository
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
 import com.aura.feature.onboarding.data.remote.dto.BootConfigDto
+import com.aura.feature.onboarding.data.remote.dto.EmailVerificationDto
 import com.aura.feature.onboarding.data.remote.dto.OnboardingFlagsDto
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,7 +31,11 @@ interface OnboardingRemoteDataSource {
 
     suspend fun signIn(email: String, password: String): AuthSessionDto
 
-    suspend fun signUp(email: String, password: String): AuthSessionDto
+    suspend fun signUp(email: String, password: String): EmailVerificationDto
+
+    suspend fun confirmEmail(email: String, code: String): AuthSessionDto
+
+    suspend fun resendEmailCode(email: String)
 
     suspend fun signInWithGoogle(idToken: String): AuthSessionDto
 
@@ -62,8 +69,18 @@ class ApiOnboardingRemoteDataSource @Inject constructor(
     override suspend fun signIn(email: String, password: String): AuthSessionDto =
         api.login(EmailCredentialsDto(email = email, password = password)).toSession()
 
-    override suspend fun signUp(email: String, password: String): AuthSessionDto =
-        api.register(EmailCredentialsDto(email = email, password = password)).toSession()
+    override suspend fun signUp(email: String, password: String): EmailVerificationDto {
+        val pending = api.register(EmailCredentialsDto(email = email, password = password))
+        return EmailVerificationDto(email = pending.email, expiresInSeconds = pending.expiresIn)
+    }
+
+    override suspend fun confirmEmail(email: String, code: String): AuthSessionDto =
+        api.confirmEmailVerification(EmailVerificationConfirmDto(email = email, code = code))
+            .toSession()
+
+    override suspend fun resendEmailCode(email: String) {
+        api.resendEmailVerification(EmailVerificationResendDto(email = email))
+    }
 
     override suspend fun signInWithGoogle(idToken: String): AuthSessionDto =
         api.googleSignIn(GoogleSignInRequestDto(idToken = idToken)).toSession()

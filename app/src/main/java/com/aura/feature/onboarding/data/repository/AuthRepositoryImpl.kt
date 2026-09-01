@@ -1,6 +1,7 @@
 package com.aura.feature.onboarding.data.repository
 
 import com.aura.core.api.toAuthFailure
+import com.aura.core.api.toEmailVerificationFailure
 import com.aura.core.auth.TokenStore
 import com.aura.core.common.ApplicationScope
 import com.aura.core.common.IoDispatcher
@@ -12,6 +13,7 @@ import com.aura.feature.onboarding.data.mapper.toDomain
 import com.aura.feature.onboarding.data.remote.OnboardingRemoteDataSource
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthSession
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import kotlinx.coroutines.CancellationException
@@ -60,8 +62,24 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signIn(email: String, password: String): Result<AuthSession> =
         authenticate { remote.signIn(email, password).toDomain() }
 
-    override suspend fun signUp(email: String, password: String): Result<AuthSession> =
-        authenticate { remote.signUp(email, password).toDomain() }
+    override suspend fun signUp(email: String, password: String): Result<EmailVerification> =
+        withContext(ioDispatcher) {
+            runCatchingCancellable { remote.signUp(email, password).toDomain() }
+                .mapFailure(Throwable::toAuthFailure)
+        }
+
+    override suspend fun confirmEmail(email: String, code: String): Result<AuthSession> =
+        withContext(ioDispatcher) {
+            runCatchingCancellable { remote.confirmEmail(email, code).toDomain() }
+                .onSuccess(::openSession)
+                .mapFailure(Throwable::toEmailVerificationFailure)
+        }
+
+    override suspend fun resendEmailCode(email: String): Result<Unit> =
+        withContext(ioDispatcher) {
+            runCatchingCancellable { remote.resendEmailCode(email) }
+                .mapFailure(Throwable::toEmailVerificationFailure)
+        }
 
     override suspend fun continueWithGoogle(idToken: String): Result<AuthSession> =
         authenticate(googleSignIn = true) {

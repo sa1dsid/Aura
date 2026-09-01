@@ -31,6 +31,7 @@ data class AuraColors(
     val iceBlue: Color,
     val progressValue: Color,
     val progressTarget: Color,
+    val sparkArcEdge: Color,
     val accentBlue: Color,
     val accentBlueSoft: Color,
     val danger: Color,
@@ -71,6 +72,7 @@ data class AuraColors(
     val ioniHint: Color,
     val ioniAnswer: Color,
     val ioniPanel: Color,
+    val stepDotIdle: Color,
 )
 
 val AuraDarkColors = AuraColors(
@@ -100,6 +102,7 @@ val AuraDarkColors = AuraColors(
     iceBlue = Color(0xFFA8E6FF),
     progressValue = Color(0xFFA7F3D0),
     progressTarget = Color(0xFFD1C4E9),
+    sparkArcEdge = Color(0xFF658193),
     accentBlue = Color(0xFFA8D6F0),
     accentBlueSoft = Color(0xFFD3EDF9),
     danger = Color(0xFFE5484D),
@@ -140,4 +143,5 @@ val AuraDarkColors = AuraColors(
     ioniHint = Color(0xFFA8BDCB),
     ioniAnswer = Color(0xFF111314),
     ioniPanel = Color(0xFF16181A),
+    stepDotIdle = Color(0xFF1F2326),
 )

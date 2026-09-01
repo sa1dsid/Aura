@@ -141,6 +141,9 @@ internal class FakeHomeRemoteDataSource(
     override suspend fun mesh(): MeshDto = MeshDto()
 
     override suspend fun markBonusTeaserSeen() = Unit
+
+    override suspend fun markBonusCongratulationSeen() = Unit
+    override suspend fun markSparkCouponSeen() = Unit
 }
 
 internal class FakeTapSessionStore : TapSessionStore {

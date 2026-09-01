@@ -2,6 +2,8 @@ package com.aura.feature.onboarding
 
 internal object Paths {
     const val REGISTER = "/api/v1/auth/register"
+    const val EMAIL_CONFIRM = "/api/v1/auth/email-verification/confirm"
+    const val EMAIL_RESEND = "/api/v1/auth/email-verification/resend"
     const val LOGIN = "/api/v1/auth/login"
     const val GOOGLE = "/api/v1/auth/google"
     const val PASSWORD_RESET = "/api/v1/auth/password-reset/request"

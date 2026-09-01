@@ -1,6 +1,8 @@
 package com.aura.core.api
 
 import com.aura.core.api.dto.EmailCredentialsDto
+import com.aura.core.api.dto.EmailVerificationConfirmDto
+import com.aura.core.api.dto.EmailVerificationResendDto
 import com.aura.core.api.dto.GoogleSignInRequestDto
 import com.aura.core.api.dto.InviteApplyDto
 import com.aura.core.api.dto.LocationUpdateDto
@@ -32,15 +34,31 @@ class AuraApiContractTest {
     fun tearDown() = server.shutdown()
 
     @Test
-    fun `register posts credentials and reads the token envelope`() = runTest {
-        server.enqueue(201, Bodies.TOKEN)
+    fun `register posts credentials and answers with a pending confirmation`() = runTest {
+        server.enqueue(201, Bodies.VERIFICATION_PENDING)
 
-        val token = api.register(EmailCredentialsDto("a@b.dev", "Password123"))
+        val pending = api.register(EmailCredentialsDto("a@b.dev", "Password123"))
         val request = server.take()
 
         assertEquals("POST", request.method)
         assertEquals("/api/v1/auth/register", request.path)
         assertEquals("""{"email":"a@b.dev","password":"Password123"}""", request.body.readUtf8())
+        assertEquals("a@b.dev", pending.email)
+        assertEquals(600, pending.expiresIn)
+        assertTrue(pending.message.isNotBlank())
+    }
+
+    @Test
+    fun `confirming the email code reads the token envelope`() = runTest {
+        server.enqueue(200, Bodies.TOKEN)
+
+        val token = api.confirmEmailVerification(
+            EmailVerificationConfirmDto("a@b.dev", "482913"),
+        )
+        val request = server.take()
+
+        assertEquals("/api/v1/auth/email-verification/confirm", request.path)
+        assertEquals("""{"email":"a@b.dev","code":"482913"}""", request.body.readUtf8())
         assertEquals("header.payload.signature", token.accessToken)
         assertEquals(604800, token.expiresIn)
         assertTrue(token.isNewAccount)
@@ -51,7 +69,19 @@ class AuraApiContractTest {
     }
 
     @Test
-    fun `login reuses the register envelope`() = runTest {
+    fun `resending the email code posts only the address`() = runTest {
+        server.enqueue(200, """{"message":"If the account needs verification, a code was sent"}""")
+
+        val response = api.resendEmailVerification(EmailVerificationResendDto("a@b.dev"))
+        val request = server.take()
+
+        assertEquals("/api/v1/auth/email-verification/resend", request.path)
+        assertEquals("""{"email":"a@b.dev"}""", request.body.readUtf8())
+        assertTrue(response.message.isNotBlank())
+    }
+
+    @Test
+    fun `login reuses the confirmation envelope`() = runTest {
         server.enqueue(200, Bodies.TOKEN)
 
         val token = api.login(EmailCredentialsDto("a@b.dev", "Password123"))

@@ -105,8 +105,20 @@ class HomeRepositoryImpl @Inject constructor(
         withContext(ioDispatcher) { runCatchingCancellable { remote.heartbeat() } }
     }
 
+    override suspend fun markBonusCongratulationSeen() {
+        withContext(ioDispatcher) {
+            runCatchingCancellable { remote.markBonusCongratulationSeen() }
+        }
+        refresh()
+    }
+
     override suspend fun markBonusTeaserSeen() {
         withContext(ioDispatcher) { runCatchingCancellable { remote.markBonusTeaserSeen() } }
+        refresh()
+    }
+
+    override suspend fun markSparkCouponSeen() {
+        withContext(ioDispatcher) { runCatchingCancellable { remote.markSparkCouponSeen() } }
         refresh()
     }
 

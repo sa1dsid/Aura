@@ -1,6 +1,6 @@
 package com.aura.core.api
 
-import com.aura.core.api.dto.EmailCredentialsDto
+import com.aura.core.api.dto.EmailVerificationConfirmDto
 import com.aura.core.api.dto.TapFinishDto
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -26,14 +26,16 @@ class DecimalIonContractTest {
     """
 
     @Test
-    fun `register survives the decimal string ion the server sends now`() = runTest {
+    fun `email confirmation survives the decimal string ion the server sends now`() = runTest {
         server.enqueue(
-            201,
+            200,
             """{"access_token":"a.b.c","token_type":"bearer","expires_in":604800,
             "is_new_account":true,"user":$userWithDecimalIon}""",
         )
 
-        val token = api.register(EmailCredentialsDto("a@b.dev", "Password123"))
+        val token = api.confirmEmailVerification(
+            EmailVerificationConfirmDto("a@b.dev", "482913"),
+        )
 
         assertEquals(3000L, token.user.bonusReservedIon.toLong())
         assertEquals(0L, token.user.accruedIon.toLong())

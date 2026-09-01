@@ -3,11 +3,13 @@ package com.aura.feature.onboarding.data.mapper
 import com.aura.feature.onboarding.data.remote.dto.AccountDto
 import com.aura.feature.onboarding.data.remote.dto.AuthSessionDto
 import com.aura.feature.onboarding.data.remote.dto.BootConfigDto
+import com.aura.feature.onboarding.data.remote.dto.EmailVerificationDto
 import com.aura.feature.onboarding.data.remote.dto.OnboardingFlagsDto
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthProvider
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.OnboardingFlags
 
 fun AccountDto.toDomain() = Account(
@@ -22,6 +24,8 @@ fun AuthSessionDto.toDomain() = AuthSession(
     account = account.toDomain(),
     invitePending = invitePending,
 )
+
+fun EmailVerificationDto.toDomain() = EmailVerification.of(email, expiresInSeconds)
 
 fun OnboardingFlagsDto.toDomain() = OnboardingFlags(
     bonusPopupShown = bonusPopupShown,

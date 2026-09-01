@@ -3,6 +3,7 @@ package com.aura.feature.onboarding
 import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthMode
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.presentation.auth.AuthEvent
 import com.aura.feature.onboarding.presentation.auth.AuthField
 import com.aura.feature.onboarding.presentation.auth.AuthToast
@@ -13,6 +14,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.time.Duration.Companion.minutes
 
 private const val EMAIL = "smoke@auratest.dev"
 
@@ -21,11 +23,11 @@ private const val PASSWORD = "Password123"
 class AuthFlowIntegrationTest : OnboardingTestCase() {
 
     @Test
-    fun `signing up walks to the invite screen and keeps the issued token`() = onboarding { stack ->
+    fun `signing up walks to the code screen and opens no session yet`() = onboarding { stack ->
         stack.server.next(
             Paths.REGISTER,
             code = 201,
-            body = Server.token(isNewAccount = true, expiresIn = 604_800),
+            body = Server.verificationPending(email = EMAIL, expiresIn = 600),
         )
         val viewModel = stack.authViewModel()
         val events = stack.eventsOf(viewModel.events)
@@ -33,16 +35,43 @@ class AuthFlowIntegrationTest : OnboardingTestCase() {
         viewModel.submitAs(AuthMode.SIGN_UP)
         awaitEvent(events)
 
-        assertEquals(listOf(AuthEvent.OpenInvite), events)
+        assertEquals(
+            listOf(AuthEvent.OpenEmailVerification(EmailVerification.of(EMAIL, 600))),
+            events,
+        )
+        assertEquals(10.minutes, verificationOf(events).codeLifetime)
+        assertTrue(verificationOf(events).codeJustSent)
         assertEquals(
             """{"email":"$EMAIL","password":"$PASSWORD"}""",
             stack.server.bodyOf(Paths.REGISTER),
         )
-        assertEquals("header.payload.signature", stack.savedToken)
-        assertEquals(604_800, stack.storedExpiresIn)
-        assertEquals("smoke", stack.sessionStore.account.value?.handle)
-        assertEquals(1, stack.pushRefreshes)
+        assertNull(stack.savedToken)
+        assertNull(stack.sessionStore.account.value)
+        assertEquals(0, stack.pushRefreshes)
     }
+
+    @Test
+    fun `signing in on an unconfirmed account reopens the code screen instead of an error`() =
+        onboarding { stack ->
+            stack.server.next(
+                Paths.LOGIN,
+                code = 403,
+                body = Server.detail("Email verification required"),
+            )
+            val viewModel = stack.authViewModel()
+            val events = stack.eventsOf(viewModel.events)
+
+            viewModel.submitAs(AuthMode.SIGN_IN)
+            awaitEvent(events)
+
+            assertEquals(
+                listOf(AuthEvent.OpenEmailVerification(EmailVerification(EMAIL))),
+                events,
+            )
+            assertFalse(verificationOf(events).codeJustSent)
+            assertNull(viewModel.uiState.value.invalidField)
+            assertNull(stack.savedToken)
+        }
 
     @Test
     fun `signing in on a settled account goes straight home`() = onboarding { stack ->
@@ -340,6 +369,9 @@ class AuthFlowIntegrationTest : OnboardingTestCase() {
         assertEquals(EMAIL, viewModel.uiState.value.email)
         assertEquals(PASSWORD, viewModel.uiState.value.password)
     }
+
+    private fun verificationOf(events: List<AuthEvent>): EmailVerification =
+        events.filterIsInstance<AuthEvent.OpenEmailVerification>().single().verification
 
     private fun AuthViewModel.submitAs(
         mode: AuthMode,

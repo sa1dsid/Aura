@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aura.R
 import com.aura.core.designsystem.component.AuraBottomSheet
@@ -60,6 +62,10 @@ import com.aura.feature.home.presentation.format.annotatedFormat
 import com.aura.feature.home.presentation.format.formatGrouped
 
 private val HeaderGap = 8.dp
+
+private val HeadingSlot = 15.dp
+
+private val HintSlot = 26.dp
 
 private val GaugeSize = 185.dp
 
@@ -198,7 +204,9 @@ private fun ColumnScope.CodeBody(
         style = AuraTheme.typography.title,
         color = colors.textBright,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .textSlot(HintSlot),
     )
 
     Spacer(Modifier.height(24.dp))
@@ -241,6 +249,7 @@ private fun Header(
                 text = stringResource(R.string.spark_sheet_title),
                 style = AuraTheme.typography.sheetHeading,
                 color = colors.textBright,
+                modifier = Modifier.textSlot(HeadingSlot),
             )
 
             Spacer(Modifier.height(HeaderGap))
@@ -381,7 +390,11 @@ private fun ColumnScope.CodeTicket(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .auraDropShadows(colors.activeDotShadows, cornerRadius = TicketCorner)
+            .auraDropShadows(
+                shadows = colors.activeDotShadows,
+                cornerRadius = TicketCorner,
+                outsideOnly = true,
+            )
             .clip(TicketShape)
             .background(colors.green.copy(alpha = TICKET_FILL_ALPHA))
             .border(TICKET_BORDER_WIDTH.dp, colors.green, TicketShape)
@@ -492,6 +505,9 @@ private fun ColumnScope.OpenAppAction(
         )
     }
 }
+
+private fun Modifier.textSlot(height: Dp): Modifier =
+    height(height).wrapContentHeight(unbounded = true)
 
 private val AuraColors.sparkArcShadows: List<AuraShadow>
     get() = listOf(

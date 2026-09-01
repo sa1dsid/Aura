@@ -6,15 +6,20 @@ import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.NativePaint
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
@@ -177,37 +182,56 @@ fun Modifier.auraDropShadow(
     blurRadius: Dp,
     cornerRadius: Dp,
     spread: Dp = 0.dp,
+    outsideOnly: Boolean = false,
     alpha: () -> Float = { 1f },
 ): Modifier = drawWithCache {
     val paint = if (HARDWARE_BLUR_SUPPORTED) blurPaint(color, blurRadius.toPx()) else null
     val blur = blurRadius.toPx()
     val grow = spread.toPx()
     val corner = cornerRadius.toPx() + grow
+    val shapeCorner = cornerRadius.toPx()
 
     onDrawBehind {
         val fraction = alpha()
         if (fraction <= 0f) return@onDrawBehind
 
+        val shape = Path().apply {
+            addRoundRect(
+                RoundRect(
+                    rect = Rect(Offset.Zero, size),
+                    cornerRadius = CornerRadius(shapeCorner),
+                )
+            )
+        }
+
+        fun draw(block: DrawScope.() -> Unit) {
+            if (outsideOnly) clipPath(shape, ClipOp.Difference) { block() } else block()
+        }
+
         if (paint != null) {
             paint.alpha = (color.alpha * fraction * 255f).roundToInt().coerceIn(0, 255)
-            drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawRoundRect(
-                    -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
-                )
+            draw {
+                drawIntoCanvas { canvas ->
+                    canvas.nativeCanvas.drawRoundRect(
+                        -grow, -grow, size.width + grow, size.height + grow, corner, corner, paint,
+                    )
+                }
             }
             return@onDrawBehind
         }
 
-        for (ring in FALLBACK_RING_COUNT downTo 1) {
-            val offset = grow + blur * ring / FALLBACK_RING_COUNT
-            val fade = 1f - ring.toFloat() / FALLBACK_RING_COUNT
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(-offset, -offset),
-                size = Size(size.width + offset * 2, size.height + offset * 2),
-                cornerRadius = CornerRadius(cornerRadius.toPx() + offset),
-                alpha = color.alpha * fade * 0.09f * fraction,
-            )
+        draw {
+            for (ring in FALLBACK_RING_COUNT downTo 1) {
+                val offset = grow + blur * ring / FALLBACK_RING_COUNT
+                val fade = 1f - ring.toFloat() / FALLBACK_RING_COUNT
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(-offset, -offset),
+                    size = Size(size.width + offset * 2, size.height + offset * 2),
+                    cornerRadius = CornerRadius(cornerRadius.toPx() + offset),
+                    alpha = color.alpha * fade * 0.09f * fraction,
+                )
+            }
         }
     }
 }
@@ -215,6 +239,7 @@ fun Modifier.auraDropShadow(
 fun Modifier.auraDropShadows(
     shadows: List<AuraShadow>,
     cornerRadius: Dp,
+    outsideOnly: Boolean = false,
     alpha: () -> Float = { 1f },
 ): Modifier = shadows.fold(this) { chain, shadow ->
     chain.auraDropShadow(
@@ -222,6 +247,7 @@ fun Modifier.auraDropShadows(
         blurRadius = shadow.blurRadius,
         cornerRadius = cornerRadius,
         spread = shadow.spread,
+        outsideOnly = outsideOnly,
         alpha = alpha,
     )
 }

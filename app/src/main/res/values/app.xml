@@ -261,9 +261,9 @@
     <string name="spark_sheet_code_label">YOUR SPARK TOP-UP CODE</string>
     <string name="spark_sheet_copy">Copy code</string>
     <string name="spark_sheet_copied">Code copied</string>
-    <string name="spark_sheet_hint">Enter this code in the %1$s app to receive %2$s there.</string>
+    <string name="spark_sheet_hint">Enter this code in the&#160;%1$s&#160;app to receive&#160;%2$s&#160;there.</string>
     <string name="spark_sheet_hint_app">SigmaDrop</string>
-    <string name="spark_sheet_hint_amount">%1$s Spark</string>
+    <string name="spark_sheet_hint_amount">%1$s&#160;Spark</string>
     <string name="spark_sheet_open">Open SigmaDrop</string>
     <string name="spark_sheet_reset_note">Your Spark has reset to 0 and is building toward the next code</string>
 

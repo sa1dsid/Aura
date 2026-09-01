@@ -50,6 +50,15 @@ android {
         localeFilters += "en"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("boolean", "ALLOW_EMULATOR", "true")

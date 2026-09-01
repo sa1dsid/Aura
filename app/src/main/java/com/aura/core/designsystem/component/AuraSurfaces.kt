@@ -1,7 +1,12 @@
 package com.aura.core.designsystem.component
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,9 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +42,8 @@ private val CARD_GLOW_BLUR = 8.dp
 
 private val CARD_CORNER = 16.dp
 
+private const val BLINK_HALF_CYCLE_MILLIS = 550
+
 @Composable
 fun AuraCard(
     modifier: Modifier = Modifier,
@@ -46,7 +53,9 @@ fun AuraCard(
     flat: Boolean = false,
     glow: Boolean = false,
     glowOnPress: Boolean = false,
+    blinking: Boolean = false,
     containerColor: Color? = null,
+    accentBorderColor: Color? = null,
     borderWidth: Dp = 0.5.dp,
     content: @Composable () -> Unit,
 ) {
@@ -67,10 +76,26 @@ fun AuraCard(
         label = "card-glow",
     )
 
+    val pulse = rememberInfiniteTransition(label = "card-blink").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(BLINK_HALF_CYCLE_MILLIS, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "card-blink-alpha",
+    )
+
+    val isBlinking = rememberUpdatedState(blinking)
+
+    val glowFraction = remember(glowAlpha, pulse, isBlinking) {
+        { maxOf(glowAlpha.value, if (isBlinking.value) pulse.value else 0f) }
+    }
+
     val glowModifier = rememberAuraCardGlow(
-        enabled = glow || glowOnPress,
+        enabled = glow || glowOnPress || blinking,
         color = colors.glowIce,
-        alpha = glowAlpha,
+        alpha = glowFraction,
     )
 
     val topColor by animateColorAsState(
@@ -93,7 +118,11 @@ fun AuraCard(
         label = "card-background-bottom",
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isHighlighted) colors.borderStrong else colors.border,
+        targetValue = when {
+            isHighlighted -> colors.borderStrong
+            accentBorderColor != null -> accentBorderColor
+            else -> colors.border
+        },
         animationSpec = tween(PRESS_FADE_MILLIS),
         label = "card-border",
     )
@@ -126,7 +155,7 @@ fun AuraCard(
 private fun rememberAuraCardGlow(
     enabled: Boolean,
     color: Color,
-    alpha: State<Float>,
+    alpha: () -> Float,
 ): Modifier = remember(enabled, color, alpha) {
     if (!enabled) {
         Modifier
@@ -135,7 +164,7 @@ private fun rememberAuraCardGlow(
             color = color.copy(alpha = CARD_GLOW_ALPHA),
             blurRadius = CARD_GLOW_BLUR,
             cornerRadius = CARD_CORNER,
-            alpha = alpha::value,
+            alpha = alpha,
         )
     }
 }

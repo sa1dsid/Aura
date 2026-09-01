@@ -71,6 +71,7 @@ data class AuraColors(
     val ioniHint: Color,
     val ioniAnswer: Color,
     val ioniPanel: Color,
+    val stepDotIdle: Color,
 )
 
 val AuraDarkColors = AuraColors(
@@ -140,4 +141,5 @@ val AuraDarkColors = AuraColors(
     ioniHint = Color(0xFFA8BDCB),
     ioniAnswer = Color(0xFF111314),
     ioniPanel = Color(0xFF16181A),
+    stepDotIdle = Color(0xFF1F2326),
 )

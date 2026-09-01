@@ -2,7 +2,6 @@ package com.aura.feature.home.presentation
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,6 +54,7 @@ import com.aura.feature.home.domain.model.TestStartRejection
 import com.aura.feature.home.presentation.components.AuraBottomBar
 import com.aura.feature.home.presentation.components.BatteryOptimizationDialog
 import com.aura.feature.home.presentation.components.BalanceCardsRow
+import com.aura.feature.home.presentation.components.BonusStepsSheet
 import com.aura.feature.home.presentation.components.CardGap
 import com.aura.feature.home.presentation.components.ConnectionBadge
 import com.aura.feature.home.presentation.components.HomeTopBar
@@ -87,6 +87,7 @@ fun HomeRoute(
         mutableStateOf(context.isBatteryOptimizationIgnored())
     }
     var ioniSheet by rememberSaveable { mutableStateOf<IoniSheetKind?>(null) }
+    var bonusSheetVisible by rememberSaveable { mutableStateOf(false) }
     var isIoniInstalled by remember { mutableStateOf(false) }
     val ioniPackage = stringResource(R.string.ioni_app_package)
 
@@ -151,7 +152,10 @@ fun HomeRoute(
             onMenuClick = onMenuClick,
             onNewsClick = onNewsClick,
             onMainButtonClick = viewModel::onMainButtonClick,
-            onBonusWithdrawalClick = viewModel::onBonusTeaserOpened,
+            onBonusWithdrawalClick = {
+                bonusSheetVisible = true
+                viewModel.onBonusTeaserOpened()
+            },
             onConnectionBadgeClick = {
                 if (content?.home?.connection?.isVpnActive == true) context.openVpnSettings()
             },
@@ -185,6 +189,18 @@ fun HomeRoute(
             val opened = isIoniInstalled && context.openApp(ioniPackage)
             if (!opened) context.openStorePage(ioniPackage)
         },
+    )
+
+    BonusStepsSheet(
+        teaser = content?.home?.teasers?.bonusWithdrawal.takeIf { bonusSheetVisible },
+        onDismissRequest = { bonusSheetVisible = false },
+        onShareInvite = {
+            val link = content?.home?.invite?.inviteLink.orEmpty()
+            if (link.isNotBlank()) {
+                context.shareText(context.getString(R.string.nodes_share_text, link))
+            }
+        },
+        onCongratulationSeen = viewModel::onBonusCongratulationSeen,
     )
 }
 

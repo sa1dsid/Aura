@@ -157,6 +157,14 @@ class HomeMapperTest {
     }
 
     @Test
+    fun `a silent server does not collapse the bonus card to zero steps`() {
+        val home = dashboard(DashboardDto(bonus = BonusProgressDto(completed = 1, total = 0)))
+
+        assertEquals(4, home.teasers.bonusWithdrawal.totalSteps)
+        assertFalse(home.teasers.bonusWithdrawal.isComplete)
+    }
+
+    @Test
     fun `the spark teaser counts the running window against the coupon threshold`() {
         val home = dashboard(
             DashboardDto(sparkCoupon = SparkCouponDto(issued = 1, limit = 4)),

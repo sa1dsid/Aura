@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.aura.R
 import com.aura.core.designsystem.component.AuraCard
+import com.aura.core.designsystem.component.AuraPill
 import com.aura.core.designsystem.component.activeDotShadows
+import com.aura.core.designsystem.component.auraDropShadows
 import com.aura.core.designsystem.component.auraGlowLayers
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.domain.model.NodeTier
@@ -47,6 +49,20 @@ private val IconSize = 24.dp
 private val ArrowBoxSize = 48.dp
 
 private val ProgressHeight = 1.dp
+
+private val CardCorner = 16.dp
+
+private val BadgeSidePadding = 8.dp
+
+private val BadgeTopPadding = 5.dp
+
+private val BadgeBottomPadding = 4.dp
+
+private val BadgeBorder = 0.5.dp
+
+private const val BADGE_FILL_ALPHA = 0.22f
+
+private const val BADGE_BORDER_ALPHA = 0.55f
 
 val CardGap = 12.dp
 
@@ -90,6 +106,12 @@ fun TeaserCards(
                 gapStyle = CounterGap,
             ),
             subtitleStyle = counterLine,
+            badgeText = if (teasers.bonusWithdrawal.isComplete) {
+                stringResource(R.string.teaser_complete)
+            } else {
+                null
+            },
+            blinking = teasers.bonusWithdrawal.isBlinking,
             onClick = onBonusWithdrawalClick,
         )
 
@@ -144,16 +166,29 @@ private fun TeaserCard(
     iconTint: Color? = null,
     leadingDotColor: Color? = null,
     progress: Float? = null,
+    badgeText: String? = null,
+    blinking: Boolean = false,
 ) {
     val colors = AuraTheme.colors
     val contentAlpha = if (enabled) 1f else 0.4f
+    val isComplete = badgeText != null
 
     AuraCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (isComplete) {
+                    Modifier.auraDropShadows(colors.activeDotShadows, CardCorner)
+                } else {
+                    Modifier
+                }
+            ),
         onClick = onClick,
         enabled = enabled,
         flat = true,
         glowOnPress = true,
+        blinking = blinking,
+        accentBorderColor = if (isComplete) colors.green else null,
     ) {
         Row(
             modifier = Modifier
@@ -184,24 +219,38 @@ private fun TeaserCard(
 
                 Spacer(Modifier.height(6.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    if (leadingDotColor != null) {
-                        Box(
-                            Modifier
-                                .size(6.dp)
-                                .auraGlowLayers(colors.activeDotShadows)
-                                .clip(CircleShape)
-                                .background(leadingDotColor)
+                if (badgeText != null) {
+                    AuraPill(
+                        text = badgeText,
+                        contentColor = colors.green,
+                        borderColor = colors.green.copy(alpha = BADGE_BORDER_ALPHA),
+                        backgroundColor = colors.green.copy(alpha = BADGE_FILL_ALPHA),
+                        horizontalPadding = BadgeSidePadding,
+                        topPadding = BadgeTopPadding,
+                        bottomPadding = BadgeBottomPadding,
+                        borderWidth = BadgeBorder,
+                        textStyle = AuraTheme.typography.listValue,
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        if (leadingDotColor != null) {
+                            Box(
+                                Modifier
+                                    .size(6.dp)
+                                    .auraGlowLayers(colors.activeDotShadows)
+                                    .clip(CircleShape)
+                                    .background(leadingDotColor)
+                            )
+                        }
+                        Text(
+                            text = subtitle,
+                            style = subtitleStyle,
+                            color = colors.textSecondary.copy(alpha = contentAlpha),
                         )
                     }
-                    Text(
-                        text = subtitle,
-                        style = subtitleStyle,
-                        color = colors.textSecondary.copy(alpha = contentAlpha),
-                    )
                 }
 
                 if (progress != null) {

@@ -1,6 +1,7 @@
 package com.aura.core.api
 
 import com.aura.core.api.dto.BatteryOptimizationDto
+import com.aura.core.api.dto.BonusCongratulationsSeenDto
 import com.aura.core.api.dto.BonusTeaserSeenDto
 import com.aura.core.api.dto.CityDto
 import com.aura.core.api.dto.DashboardDto
@@ -87,6 +88,9 @@ interface AuraApi {
 
     @POST("api/v1/onboarding/bonus-teaser/seen")
     suspend fun markBonusTeaserSeen(): BonusTeaserSeenDto
+
+    @POST("api/v1/onboarding/bonus-congratulations/seen")
+    suspend fun markBonusCongratulationSeen(): BonusCongratulationsSeenDto
 
     @GET("api/v1/home/dashboard")
     suspend fun dashboard(): DashboardDto

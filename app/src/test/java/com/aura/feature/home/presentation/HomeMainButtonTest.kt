@@ -17,6 +17,7 @@ import com.aura.feature.home.domain.repository.HomeRepository
 import com.aura.feature.home.domain.repository.MeshRepository
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
+import com.aura.feature.home.domain.usecase.MarkBonusCongratulationSeenUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
@@ -186,6 +187,7 @@ class HomeMainButtonTest {
             ConfirmBatteryOptimizationDisabledUseCase(homeRepository),
         refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
         markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
+        markBonusCongratulationSeen = MarkBonusCongratulationSeenUseCase(homeRepository),
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
@@ -220,6 +222,8 @@ class HomeMainButtonTest {
         override suspend fun sendHeartbeat() = Unit
 
         override suspend fun markBonusTeaserSeen() = Unit
+
+        override suspend fun markBonusCongratulationSeen() = Unit
     }
 
     private class StaticMeshRepository : MeshRepository {

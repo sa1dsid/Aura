@@ -15,6 +15,7 @@ import com.aura.feature.home.data.session.FakeHomeRemoteDataSource
 import com.aura.feature.home.data.session.FakeTapSessionStore
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
+import com.aura.feature.home.domain.usecase.MarkBonusCongratulationSeenUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
@@ -385,6 +386,7 @@ class HomeViewModelTest {
             ConfirmBatteryOptimizationDisabledUseCase(homeRepository),
         refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
         markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
+        markBonusCongratulationSeen = MarkBonusCongratulationSeenUseCase(homeRepository),
         sessionEngine = engine,
         newsRepository = FakeNewsRepository(),
         networkMonitor = networkMonitor,
@@ -419,6 +421,8 @@ class HomeViewModelTest {
         var heartbeats = 0
             private set
         var bonusTeaserSeen = 0
+
+        var congratulationSeen = 0
             private set
 
         fun set(home: HomeState?) {
@@ -451,6 +455,10 @@ class HomeViewModelTest {
 
         override suspend fun markBonusTeaserSeen() {
             bonusTeaserSeen++
+        }
+
+        override suspend fun markBonusCongratulationSeen() {
+            congratulationSeen++
         }
     }
 

@@ -303,6 +303,8 @@ class HomeRepositoryImplTest {
         var confirms = 0
         var bonusTeaserSeen = 0
 
+        var congratulationSeen = 0
+
         override suspend fun dashboard(): DashboardDto {
             dashboards++
             dashboardError?.let { throw it }
@@ -358,6 +360,10 @@ class HomeRepositoryImplTest {
         override suspend fun markBonusTeaserSeen() {
             bonusTeaserSeen++
             bonusTeaserError?.let { throw it }
+        }
+
+        override suspend fun markBonusCongratulationSeen() {
+            congratulationSeen++
         }
     }
 }

@@ -13,6 +13,46 @@
     <string name="bonus_text_accent">reserved</string>
     <string name="timer_paused_vpn">PAUSED · VPN ON</string>
 
+    <!-- Попап шагов Bonus Withdrawal. Макет — девять SVG от 21.08.2026 (step 1/2/3,
+         final step, complete, final 2). Показывается по одному шагу: следующий
+         раскрывается после закрытия предыдущего. -->
+    <string name="bonus_step_eyebrow">STEP %1$d OF %2$d · %3$s</string>
+    <string name="bonus_step_signal_lock_caps">SIGNAL LOCK</string>
+    <string name="bonus_step_network_sync_caps">NETWORK SYNC</string>
+    <string name="bonus_step_full_uplink_caps">FULL UPLINK</string>
+    <string name="bonus_step_data_share_caps">DATA SHARE</string>
+    <string name="bonus_step_signal_lock">Signal Lock</string>
+    <string name="bonus_step_network_sync">Network Sync</string>
+    <string name="bonus_step_full_uplink">Full Uplink</string>
+    <string name="bonus_step_data_share">Data Share</string>
+    <string name="bonus_step_signal_lock_title">Complete %1$d taps</string>
+    <string name="bonus_step_network_sync_title">Bring %1$d active friends</string>
+    <string name="bonus_step_full_uplink_title">Collect %1$d days with a tap</string>
+    <string name="bonus_step_data_share_title">The final step</string>
+    <string name="bonus_step_ratio">%1$d/%2$d</string>
+    <string name="bonus_step_unit_taps">TAPS</string>
+    <string name="bonus_step_unit_friends">FRIENDS</string>
+    <string name="bonus_step_unit_days">DAYS</string>
+    <!-- [LONG] --> <string name="bonus_step_signal_lock_body">One finished 3-minute test = one tap. Press the button on Home %1$s.</string>
+    <string name="bonus_step_signal_lock_accent">every 12 hours</string>
+    <!-- [LONG] --> <string name="bonus_step_network_sync_body">Share your code on the %1$s screen. A&#160;friend counts once they reach %2$s.</string>
+    <string name="bonus_step_network_sync_accent_screen">Nodes</string>
+    <string name="bonus_step_network_sync_accent_tier">Active&#160;Signal</string>
+    <!-- [LONG] --> <string name="bonus_step_full_uplink_body">Any days count — %1$s. Progress never resets.</string>
+    <string name="bonus_step_full_uplink_accent">not in a row</string>
+    <!-- [LONG] --> <string name="bonus_step_data_share_body">Step 4 unlocks once the network goes live. Your progress on steps 1–3 is %1$s and waiting.</string>
+    <string name="bonus_step_data_share_accent">saved</string>
+    <string name="bonus_step_data_share_pill">COMING WITH THE NEXT UPDATE</string>
+    <string name="bonus_step_action_start">Start tapping</string>
+    <string name="bonus_step_action_got_it">Got it</string>
+    <string name="bonus_step_action_share">Share invite link</string>
+    <string name="bonus_step_action_next">Next step</string>
+    <string name="bonus_step_reveal_hint">Next step reveals when this one is done</string>
+    <string name="bonus_step_done_title">%1$s complete</string>
+    <string name="bonus_step_done_ratio">%1$d / %2$d %3$s ✓</string>
+    <string name="bonus_step_done_body_1">Step %1$d is unlocked.</string>
+    <string name="bonus_step_done_body_2">Ready to see it?</string>
+
     <!-- Шторка NEWS & EVENTS. Заголовки, даты и тексты новостей приходят с сервера
          и не переводятся. Пустого состояния в ТЗ и макете нет — news_empty
          добавлен клиентом, текст на замену. -->

@@ -22,6 +22,7 @@ import com.aura.feature.home.data.repository.MeshRepositoryImpl
 import com.aura.feature.home.data.session.TestSessionEngine
 import com.aura.feature.home.domain.usecase.ConfirmBatteryOptimizationDisabledUseCase
 import com.aura.feature.home.domain.usecase.DeclineBatteryOptimizationUseCase
+import com.aura.feature.home.domain.usecase.MarkBonusCongratulationSeenUseCase
 import com.aura.feature.home.domain.usecase.MarkBonusTeaserSeenUseCase
 import com.aura.feature.home.domain.usecase.ObserveHomeStateUseCase
 import com.aura.feature.home.domain.usecase.ObserveMeshStateUseCase
@@ -260,6 +261,7 @@ internal class HomeStack(isEmulator: Boolean = false) {
                 ConfirmBatteryOptimizationDisabledUseCase(homeRepository),
             refreshBatteryOptimization = RefreshBatteryOptimizationUseCase(homeRepository),
             markBonusTeaserSeen = MarkBonusTeaserSeenUseCase(homeRepository),
+            markBonusCongratulationSeen = MarkBonusCongratulationSeenUseCase(homeRepository),
             sessionEngine = sessionEngine,
             newsRepository = newsRepository,
             networkMonitor = networkMonitor,

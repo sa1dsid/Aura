@@ -28,6 +28,24 @@ data class PasswordResetConfirmDto(
 )
 
 @Serializable
+data class EmailVerificationConfirmDto(
+    val email: String,
+    val code: String,
+)
+
+@Serializable
+data class EmailVerificationResendDto(
+    val email: String,
+)
+
+@Serializable
+data class EmailVerificationPendingDto(
+    val message: String,
+    val email: String,
+    @SerialName("expires_in") val expiresIn: Int,
+)
+
+@Serializable
 data class MessageResponseDto(
     val message: String,
 )

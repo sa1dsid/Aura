@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -16,20 +18,28 @@ import com.aura.feature.ioni.presentation.IoniRoute
 import com.aura.feature.network.presentation.NetworkRoute
 import com.aura.feature.news.presentation.NewsDrawerRoute
 import com.aura.feature.nodes.presentation.NodesRoute
+import com.aura.feature.onboarding.domain.model.EmailVerification
 import com.aura.feature.onboarding.domain.model.StartDestination
 import com.aura.feature.onboarding.presentation.auth.AuthRoute
 import com.aura.feature.onboarding.presentation.bonus.WelcomeBonusRoute
 import com.aura.feature.onboarding.presentation.invite.InviteRoute
 import com.aura.feature.onboarding.presentation.splash.SplashRoute
+import com.aura.feature.onboarding.presentation.verification.EmailVerificationRoute
 import com.aura.feature.promo.presentation.PromoCodesRoute
 import com.aura.feature.terminal.presentation.TerminalRoute
 import com.aura.feature.transactions.presentation.TransactionsRoute
+import kotlin.time.Duration.Companion.minutes
 
-enum class AuraStage { SPLASH, AUTH, INVITE, BONUS, HOME }
+enum class AuraStage { SPLASH, AUTH, EMAIL_VERIFICATION, INVITE, BONUS, HOME }
 
 @Composable
 fun AuraRoot(modifier: Modifier = Modifier) {
     var stage by rememberSaveable { mutableStateOf(AuraStage.SPLASH) }
+    var pendingEmail by rememberSaveable { mutableStateOf("") }
+    var codeLifetimeMinutes by rememberSaveable {
+        mutableIntStateOf(EmailVerification.DEFAULT_CODE_LIFETIME.inWholeMinutes.toInt())
+    }
+    var codeJustSent by remember { mutableStateOf(false) }
 
     when (stage) {
         AuraStage.SPLASH -> SplashRoute(
@@ -46,6 +56,25 @@ fun AuraRoot(modifier: Modifier = Modifier) {
         AuraStage.AUTH -> AuthRoute(
             onOpenHome = { stage = AuraStage.HOME },
             onOpenInvite = { stage = AuraStage.INVITE },
+            onOpenEmailVerification = { verification ->
+                pendingEmail = verification.email
+                codeLifetimeMinutes = verification.codeLifetime.inWholeMinutes.toInt()
+                codeJustSent = verification.codeJustSent
+                stage = AuraStage.EMAIL_VERIFICATION
+            },
+            modifier = modifier,
+        )
+
+        AuraStage.EMAIL_VERIFICATION -> EmailVerificationRoute(
+            verification = EmailVerification(
+                email = pendingEmail,
+                codeLifetime = codeLifetimeMinutes.minutes,
+                codeJustSent = codeJustSent,
+            ),
+            onConfirmed = { invitePending ->
+                stage = if (invitePending) AuraStage.INVITE else AuraStage.HOME
+            },
+            onCancelled = { stage = AuraStage.AUTH },
             modifier = modifier,
         )
 

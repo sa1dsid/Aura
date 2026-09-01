@@ -13,6 +13,11 @@ data class AuthSessionDto(
     val invitePending: Boolean,
 )
 
+data class EmailVerificationDto(
+    val email: String,
+    val expiresInSeconds: Int,
+)
+
 data class OnboardingFlagsDto(
     val bonusPopupShown: Boolean,
     val reservedBonusIon: Long,

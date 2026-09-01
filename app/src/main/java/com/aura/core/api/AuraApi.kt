@@ -8,6 +8,9 @@ import com.aura.core.api.dto.DashboardDto
 import com.aura.core.api.dto.EarningStateDto
 import com.aura.core.api.dto.EarningStateUpdateDto
 import com.aura.core.api.dto.EmailCredentialsDto
+import com.aura.core.api.dto.EmailVerificationConfirmDto
+import com.aura.core.api.dto.EmailVerificationPendingDto
+import com.aura.core.api.dto.EmailVerificationResendDto
 import com.aura.core.api.dto.GiftPopupSeenDto
 import com.aura.core.api.dto.GoogleSignInRequestDto
 import com.aura.core.api.dto.HeartbeatDto
@@ -54,7 +57,17 @@ import retrofit2.http.Query
 interface AuraApi {
 
     @POST("api/v1/auth/register")
-    suspend fun register(@Body credentials: EmailCredentialsDto): TokenResponseDto
+    suspend fun register(@Body credentials: EmailCredentialsDto): EmailVerificationPendingDto
+
+    @POST("api/v1/auth/email-verification/confirm")
+    suspend fun confirmEmailVerification(
+        @Body request: EmailVerificationConfirmDto,
+    ): TokenResponseDto
+
+    @POST("api/v1/auth/email-verification/resend")
+    suspend fun resendEmailVerification(
+        @Body request: EmailVerificationResendDto,
+    ): MessageResponseDto
 
     @POST("api/v1/auth/login")
     suspend fun login(@Body credentials: EmailCredentialsDto): TokenResponseDto

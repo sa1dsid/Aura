@@ -4,12 +4,17 @@ import com.aura.feature.onboarding.domain.model.AuthException
 import com.aura.feature.onboarding.domain.model.AuthFailure
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.BootConfig
+import com.aura.feature.onboarding.domain.model.EmailVerification
+import com.aura.feature.onboarding.domain.model.EmailVerificationException
+import com.aura.feature.onboarding.domain.model.EmailVerificationFailure
 import com.aura.feature.onboarding.domain.model.InviteAttribution
 import com.aura.feature.onboarding.domain.model.InviteException
 import com.aura.feature.onboarding.domain.model.InviteFailure
 import com.aura.feature.onboarding.domain.model.MIN_PASSWORD_LENGTH
 import com.aura.feature.onboarding.domain.model.StartDestination
+import com.aura.feature.onboarding.domain.model.isWholeEmailCode
 import com.aura.feature.onboarding.domain.model.isWholeInviteCode
+import com.aura.feature.onboarding.domain.model.toEmailCode
 import com.aura.feature.onboarding.domain.model.toInviteCode
 import com.aura.feature.onboarding.domain.repository.AuthRepository
 import com.aura.feature.onboarding.domain.repository.BootRepository
@@ -47,13 +52,32 @@ class SignInUseCase @Inject constructor(
 class SignUpUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
+    suspend operator fun invoke(email: String, password: String): Result<EmailVerification> {
         val address = email.asEmailAddress() ?: return rejected(AuthFailure.EMAIL_INVALID)
         if (password.length < MIN_PASSWORD_LENGTH) {
             return rejected(AuthFailure.PASSWORD_TOO_SHORT)
         }
         return authRepository.signUp(address, password)
     }
+}
+
+class ConfirmEmailUseCase @Inject constructor(
+    private val authRepository: AuthRepository,
+) {
+    suspend operator fun invoke(email: String, code: String): Result<AuthSession> {
+        val digits = code.toEmailCode()
+        if (!digits.isWholeEmailCode) {
+            return Result.failure(EmailVerificationException(EmailVerificationFailure.CODE_REJECTED))
+        }
+        return authRepository.confirmEmail(email, digits)
+    }
+}
+
+class ResendEmailCodeUseCase @Inject constructor(
+    private val authRepository: AuthRepository,
+) {
+    suspend operator fun invoke(email: String): Result<Unit> =
+        authRepository.resendEmailCode(email)
 }
 
 class ContinueWithGoogleUseCase @Inject constructor(

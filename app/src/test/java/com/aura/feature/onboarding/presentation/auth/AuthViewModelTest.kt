@@ -1,6 +1,7 @@
 package com.aura.feature.onboarding.presentation.auth
 
 import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.SavedStateHandle
 import com.aura.core.auth.GoogleSignInClient
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthException
@@ -261,13 +262,29 @@ class AuthViewModelTest {
         assertEquals(listOf(AuthEvent.ShowToast(AuthToast.GOOGLE_UNAVAILABLE)), events)
     }
 
-    private fun viewModel(): AuthViewModel {
+    @Test
+    fun `the chosen mode and the typed email survive a recreated screen`() {
+        val savedStateHandle = SavedStateHandle()
+        viewModel(savedStateHandle).apply {
+            onModeChange(AuthMode.SIGN_UP)
+            onEmailChange("qa@ioaura.app")
+        }
+
+        val restored = viewModel(savedStateHandle).uiState.value
+
+        assertEquals(AuthMode.SIGN_UP, restored.mode)
+        assertEquals("qa@ioaura.app", restored.email)
+        assertEquals("", restored.password)
+    }
+
+    private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()): AuthViewModel {
         val viewModel = AuthViewModel(
             signIn = SignInUseCase(repository),
             signUp = SignUpUseCase(repository),
             continueWithGoogle = ContinueWithGoogleUseCase(repository),
             requestPasswordReset = RequestPasswordResetUseCase(repository),
             googleSignInClient = googleSignInClient,
+            savedStateHandle = savedStateHandle,
         )
         viewModelStore.put("auth${created++}", viewModel)
         return viewModel

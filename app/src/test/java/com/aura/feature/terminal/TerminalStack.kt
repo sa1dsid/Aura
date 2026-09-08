@@ -3,6 +3,7 @@ package com.aura.feature.terminal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.SavedStateHandle
 import com.aura.core.api.RoutingApiServer
 import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.news.domain.model.NewsItem
@@ -106,6 +107,7 @@ internal class TerminalStack(news: List<NewsItem> = emptyList()) {
             terminalRepository = repository,
             newsRepository = newsRepository,
             sessionStore = sessionStore,
+            savedStateHandle = SavedStateHandle(),
         ),
     )
 

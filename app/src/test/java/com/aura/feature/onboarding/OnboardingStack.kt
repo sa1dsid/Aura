@@ -10,6 +10,8 @@ import com.aura.core.auth.GoogleSignInClient
 import com.aura.core.auth.TokenStore
 import com.aura.core.config.AppConfigRepository
 import com.aura.core.push.PushTokenRepository
+import androidx.lifecycle.SavedStateHandle
+import com.aura.core.common.TimeSource
 import com.aura.feature.onboarding.data.attribution.InstallReferrerSource
 import com.aura.feature.onboarding.data.attribution.InviteAttributionStore
 import com.aura.feature.onboarding.data.local.SessionStore
@@ -171,6 +173,7 @@ internal class OnboardingStack(referrerCode: String? = null) {
             continueWithGoogle = ContinueWithGoogleUseCase(authRepository),
             requestPasswordReset = RequestPasswordResetUseCase(authRepository),
             googleSignInClient = googleSignInClient,
+            savedStateHandle = SavedStateHandle(),
         ),
     )
 
@@ -179,6 +182,8 @@ internal class OnboardingStack(referrerCode: String? = null) {
         EmailVerificationViewModel(
             confirmEmail = ConfirmEmailUseCase(authRepository),
             resendEmailCode = ResendEmailCodeUseCase(authRepository),
+            timeSource = TimeSource { System.currentTimeMillis() },
+            savedStateHandle = SavedStateHandle(),
         ),
     )
 

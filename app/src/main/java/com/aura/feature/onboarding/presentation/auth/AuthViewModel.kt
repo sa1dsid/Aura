@@ -1,6 +1,7 @@
 package com.aura.feature.onboarding.presentation.auth
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aura.core.auth.GoogleSignInClient
@@ -25,6 +26,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val KEY_MODE = "auth_mode"
+
+private const val KEY_EMAIL = "auth_email"
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val signIn: SignInUseCase,
@@ -32,9 +37,15 @@ class AuthViewModel @Inject constructor(
     private val continueWithGoogle: ContinueWithGoogleUseCase,
     private val requestPasswordReset: RequestPasswordResetUseCase,
     private val googleSignInClient: GoogleSignInClient,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AuthUiState())
+    private val _uiState = MutableStateFlow(
+        AuthUiState(
+            mode = savedStateHandle[KEY_MODE] ?: AuthMode.SIGN_IN,
+            email = savedStateHandle[KEY_EMAIL] ?: "",
+        )
+    )
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     private val eventChannel = Channel<AuthEvent>(Channel.BUFFERED)
@@ -45,10 +56,12 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onModeChange(mode: AuthMode) {
+        savedStateHandle[KEY_MODE] = mode
         _uiState.update { it.copy(mode = mode, invalidField = null) }
     }
 
     fun onEmailChange(email: String) {
+        savedStateHandle[KEY_EMAIL] = email
         _uiState.update {
             it.copy(
                 email = email,

@@ -1,11 +1,13 @@
 package com.aura.feature.transactions.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.aura.core.common.LoadStatus
 import com.aura.feature.news.FakeNewsRepository
 import com.aura.feature.onboarding.data.local.SessionStore
 import com.aura.feature.terminal.FakeTerminalRepository
 import com.aura.feature.transactions.FakeTransactionsRepository
 import com.aura.feature.transactions.domain.model.TransactionEvent
+import com.aura.feature.transactions.domain.model.TransactionFilter
 import com.aura.feature.transactions.domain.model.TransactionKind
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -87,11 +89,22 @@ class TransactionsViewModelTest {
         assertEquals(EVENTS, viewModel.uiState.value.events)
     }
 
-    private fun viewModel() = TransactionsViewModel(
+    @Test
+    fun `the chosen filter survives a recreated screen`() = runTest {
+        val savedStateHandle = SavedStateHandle()
+        collected(viewModel(savedStateHandle)).onFilterClick(TransactionFilter.SPARK)
+
+        val restored = collected(viewModel(savedStateHandle))
+
+        assertEquals(TransactionFilter.SPARK, restored.uiState.value.filter)
+    }
+
+    private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()) = TransactionsViewModel(
         transactionsRepository = transactionsRepository,
         terminalRepository = terminalRepository,
         newsRepository = newsRepository,
         sessionStore = sessionStore,
+        savedStateHandle = savedStateHandle,
     )
 
     private fun TestScope.collected(viewModel: TransactionsViewModel): TransactionsViewModel {

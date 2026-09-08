@@ -151,6 +151,7 @@ private fun AuthFailure.toToast(): AuthToast? = when (this) {
     AuthFailure.ACCOUNT_NOT_FOUND -> AuthToast.NO_ACCOUNT
     AuthFailure.WRONG_PASSWORD -> AuthToast.WRONG_CREDENTIALS
     AuthFailure.GOOGLE_UNAVAILABLE -> AuthToast.GOOGLE_UNAVAILABLE
+    AuthFailure.SERVER_UNAVAILABLE -> AuthToast.SERVER_UNAVAILABLE
     AuthFailure.NETWORK -> AuthToast.NO_CONNECTION
     AuthFailure.EMAIL_NOT_VERIFIED,
     AuthFailure.GOOGLE_CANCELLED,
@@ -170,6 +171,7 @@ private fun AuthFailure.toField(): AuthField? = when (this) {
     -> AuthField.PASSWORD
 
     AuthFailure.NETWORK,
+    AuthFailure.SERVER_UNAVAILABLE,
     AuthFailure.EMAIL_NOT_VERIFIED,
     AuthFailure.GOOGLE_UNAVAILABLE,
     AuthFailure.GOOGLE_CANCELLED,

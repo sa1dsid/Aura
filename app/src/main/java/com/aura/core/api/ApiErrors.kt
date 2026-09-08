@@ -34,6 +34,8 @@ private const val TOO_LONG = "too_long"
 
 private const val SERVICE_UNAVAILABLE = 503
 
+private val SERVER_ERRORS = 500..599
+
 private val errorJson = Json { ignoreUnknownKeys = true }
 
 private class ApiError(
@@ -102,7 +104,13 @@ fun Throwable.toAuthFailure(googleSignIn: Boolean = false): AuthException {
                 else -> AuthFailure.NETWORK
             }
 
-            SERVICE_UNAVAILABLE -> AuthFailure.GOOGLE_UNAVAILABLE
+            SERVICE_UNAVAILABLE -> if (googleSignIn) {
+                AuthFailure.GOOGLE_UNAVAILABLE
+            } else {
+                AuthFailure.SERVER_UNAVAILABLE
+            }
+
+            in SERVER_ERRORS -> AuthFailure.SERVER_UNAVAILABLE
             else -> AuthFailure.NETWORK
         }
     )

@@ -315,6 +315,7 @@ private fun AuthToast.textRes(): Int = when (this) {
     AuthToast.ACCOUNT_EXISTS -> R.string.toast_acc_exists
     AuthToast.NO_ACCOUNT -> R.string.toast_no_account
     AuthToast.NO_CONNECTION -> R.string.toast_no_connection
+    AuthToast.SERVER_UNAVAILABLE -> R.string.toast_server_unavailable
     AuthToast.GOOGLE_UNAVAILABLE -> R.string.toast_google_unavailable
     AuthToast.RESET_LINK_SENT -> R.string.toast_reset_sent
 }

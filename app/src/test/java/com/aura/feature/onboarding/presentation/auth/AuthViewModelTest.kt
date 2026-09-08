@@ -82,6 +82,7 @@ class AuthViewModelTest {
             AuthFailure.PASSWORD_TOO_LONG to (AuthField.PASSWORD to AuthToast.PASSWORD_TOO_LONG),
             AuthFailure.WRONG_PASSWORD to (AuthField.PASSWORD to AuthToast.WRONG_CREDENTIALS),
             AuthFailure.NETWORK to (null to AuthToast.NO_CONNECTION),
+            AuthFailure.SERVER_UNAVAILABLE to (null to AuthToast.SERVER_UNAVAILABLE),
             AuthFailure.EMAIL_NOT_VERIFIED to (null to null),
             AuthFailure.GOOGLE_UNAVAILABLE to (null to AuthToast.GOOGLE_UNAVAILABLE),
             AuthFailure.GOOGLE_CANCELLED to (null to null),

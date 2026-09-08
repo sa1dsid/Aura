@@ -107,7 +107,17 @@ class ApiErrorsTest {
     fun `a failed google verification is not reported as a dead network`() {
         val body = """{"detail":"Google verification unavailable"}"""
 
-        assertEquals(AuthFailure.GOOGLE_UNAVAILABLE, httpError(503, body).toAuthFailure().failure)
+        assertEquals(
+            AuthFailure.GOOGLE_UNAVAILABLE,
+            httpError(503, body).toAuthFailure(googleSignIn = true).failure,
+        )
+    }
+
+    @Test
+    fun `a backend outage on the email path does not blame the network`() {
+        val body = """{"detail":"Service Unavailable"}"""
+
+        assertEquals(AuthFailure.SERVER_UNAVAILABLE, httpError(503, body).toAuthFailure().failure)
     }
 
     @Test
@@ -167,10 +177,15 @@ class ApiErrorsTest {
     @Test
     fun `a status nobody mapped reads as a network failure`() {
         assertEquals(AuthFailure.NETWORK, httpError(418, "{}").toAuthFailure().failure)
-        assertEquals(AuthFailure.NETWORK, httpError(500, "{}").toAuthFailure().failure)
         assertEquals(AuthFailure.NETWORK, httpError(404, "{}").toAuthFailure().failure)
         assertEquals(InviteFailure.NETWORK, httpError(418, "{}").toInviteFailure().failure)
         assertEquals(InviteFailure.NETWORK, httpError(500, "{}").toInviteFailure().failure)
+    }
+
+    @Test
+    fun `a server status reads as an outage and not as a dead network`() {
+        assertEquals(AuthFailure.SERVER_UNAVAILABLE, httpError(500, "{}").toAuthFailure().failure)
+        assertEquals(AuthFailure.SERVER_UNAVAILABLE, httpError(504, "{}").toAuthFailure().failure)
     }
 
     @Test
@@ -182,10 +197,10 @@ class ApiErrorsTest {
     }
 
     @Test
-    fun `an unreadable body on any other status reads as a network failure`() {
+    fun `an unreadable body on any other status keeps the status meaning`() {
         val proxyPage = "<html>bad gateway</html>"
 
-        assertEquals(AuthFailure.NETWORK, httpError(502, proxyPage).toAuthFailure().failure)
+        assertEquals(AuthFailure.SERVER_UNAVAILABLE, httpError(502, proxyPage).toAuthFailure().failure)
         assertEquals(InviteFailure.NETWORK, httpError(500, proxyPage).toInviteFailure().failure)
     }
 

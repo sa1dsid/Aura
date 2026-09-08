@@ -46,7 +46,6 @@ import com.aura.core.designsystem.component.AuraNestedTopBar
 import com.aura.core.designsystem.component.AuraToastHost
 import com.aura.core.designsystem.component.AuraToastKind
 import com.aura.core.designsystem.component.AuraToastState
-import com.aura.core.designsystem.component.keepScrollInside
 import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import com.aura.feature.home.presentation.HomeTab
@@ -260,8 +259,7 @@ private fun PromoSection(
             modifier = Modifier
                 .heightIn(max = WindowHeight)
                 .then(if (overflows) Modifier.fadeOutBottom() else Modifier)
-                .verticalScroll(scrollState, enabled = overflows)
-                .then(if (overflows) Modifier.keepScrollInside() else Modifier),
+                .verticalScroll(scrollState, enabled = overflows),
             verticalArrangement = Arrangement.spacedBy(TicketGap),
         ) {
             codes.forEach { code ->

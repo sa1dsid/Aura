@@ -30,7 +30,6 @@ import com.aura.core.common.logLine
 import com.aura.core.designsystem.component.AuraCard
 import com.aura.core.designsystem.component.AuraLogScrollBar
 import com.aura.core.designsystem.component.auraGlowLayers
-import com.aura.core.designsystem.component.keepScrollInside
 import com.aura.core.designsystem.component.brightDotShadows
 import com.aura.core.designsystem.component.scrollProgress
 import com.aura.core.designsystem.component.visibleFraction
@@ -68,7 +67,6 @@ fun NetworkLogCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .keepScrollInside()
                         .verticalScroll(scrollState)
                         .padding(
                             start = 16.dp,

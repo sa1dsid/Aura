@@ -128,6 +128,7 @@ private val ActionShape = RoundedCornerShape(percent = 50)
 fun BonusStepsSheet(
     teaser: BonusWithdrawalTeaser?,
     onDismissRequest: () -> Unit,
+    onStartTapping: () -> Unit,
     onShareInvite: () -> Unit,
     onCongratulationSeen: () -> Unit,
     modifier: Modifier = Modifier,
@@ -145,6 +146,7 @@ fun BonusStepsSheet(
             is BonusStepPage.Task -> TaskBody(
                 page = page,
                 onDismissRequest = onDismissRequest,
+                onStartTapping = onStartTapping,
                 onShareInvite = onShareInvite,
             )
 
@@ -157,6 +159,7 @@ fun BonusStepsSheet(
 private fun ColumnScope.TaskBody(
     page: BonusStepPage.Task,
     onDismissRequest: () -> Unit,
+    onStartTapping: () -> Unit,
     onShareInvite: () -> Unit,
 ) {
     val step = page.step
@@ -191,7 +194,11 @@ private fun ColumnScope.TaskBody(
 
     PrimaryAction(
         text = stringResource(step.actionRes(page.current)),
-        onClick = if (step == BonusStep.NETWORK_SYNC) onShareInvite else onDismissRequest,
+        onClick = when (step) {
+            BonusStep.NETWORK_SYNC -> onShareInvite
+            BonusStep.SIGNAL_LOCK -> onStartTapping
+            else -> onDismissRequest
+        },
     )
 
     when (step) {
@@ -567,6 +574,7 @@ private fun BonusStepsSheetPreview() {
                 signalLockTaps = 3,
             ),
             onDismissRequest = {},
+            onStartTapping = {},
             onShareInvite = {},
             onCongratulationSeen = {},
         )

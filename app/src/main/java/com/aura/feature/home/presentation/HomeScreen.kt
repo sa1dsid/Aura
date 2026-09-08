@@ -405,7 +405,7 @@ private fun HomeContent(
 
                     Text(
                         text = stringResource(R.string.timer_stay_hint),
-                        style = AuraTheme.typography.caption,
+                        style = AuraTheme.typography.cardCaption,
                         color = colors.textSecondary,
                         textAlign = TextAlign.Center,
                     )

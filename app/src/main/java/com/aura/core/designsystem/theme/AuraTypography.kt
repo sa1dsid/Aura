@@ -21,6 +21,7 @@ private val AuraDisplayFamily = FontFamily(
     Font(R.font.space_grotesk_light, FontWeight.Light),
     Font(R.font.space_grotesk_regular, FontWeight.Normal),
     Font(R.font.space_grotesk_medium, FontWeight.Medium),
+    Font(R.font.space_grotesk_semibold, FontWeight.SemiBold),
     Font(R.font.space_grotesk_bold, FontWeight.Bold),
 )
 
@@ -106,7 +107,7 @@ val AuraDefaultTypography = AuraTypography(
     ),
     counterNumber = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
@@ -295,21 +296,21 @@ val AuraDefaultTypography = AuraTypography(
     ),
     sheetHeading = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 23.sp,
         letterSpacing = 0.sp,
     ),
     sheetBody = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Light,
         fontSize = 15.sp,
         lineHeight = 19.1.sp,
         letterSpacing = 0.sp,
     ),
     sheetActionLabel = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
@@ -332,7 +333,7 @@ val AuraDefaultTypography = AuraTypography(
     ),
     cardTitle = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 20.4.sp,
         letterSpacing = 0.sp,
@@ -381,7 +382,7 @@ val AuraDefaultTypography = AuraTypography(
     ),
     cardCaption = TextStyle(
         fontFamily = AuraDisplayFamily,
-        fontWeight = FontWeight.Light,
+        fontWeight = FontWeight.Normal,
         fontSize = 10.sp,
         lineHeight = 13.sp,
         letterSpacing = 0.sp,

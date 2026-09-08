@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,7 +38,7 @@ fun AuraRoot(modifier: Modifier = Modifier) {
     var codeLifetimeMinutes by rememberSaveable {
         mutableIntStateOf(EmailVerification.DEFAULT_CODE_LIFETIME.inWholeMinutes.toInt())
     }
-    var codeJustSent by remember { mutableStateOf(false) }
+    var codeJustSent by rememberSaveable { mutableStateOf(false) }
 
     when (stage) {
         AuraStage.SPLASH -> SplashRoute(

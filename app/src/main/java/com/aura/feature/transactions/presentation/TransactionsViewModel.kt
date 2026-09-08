@@ -1,5 +1,6 @@
 package com.aura.feature.transactions.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aura.core.common.LoadStatus
@@ -20,15 +21,18 @@ import javax.inject.Inject
 
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
+private const val KEY_FILTER = "transactions_filter"
+
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     private val transactionsRepository: TransactionsRepository,
     private val terminalRepository: TerminalRepository,
     newsRepository: NewsRepository,
     sessionStore: SessionStore,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val filter = MutableStateFlow(TransactionFilter.ALL)
+    private val filter = savedStateHandle.getStateFlow(KEY_FILTER, TransactionFilter.ALL)
 
     private val status = MutableStateFlow(LoadStatus.LOADING)
 
@@ -59,7 +63,7 @@ class TransactionsViewModel @Inject constructor(
     fun onRetryClick() = load()
 
     fun onFilterClick(selected: TransactionFilter) {
-        filter.value = selected
+        savedStateHandle[KEY_FILTER] = selected
     }
 
     private fun load() {

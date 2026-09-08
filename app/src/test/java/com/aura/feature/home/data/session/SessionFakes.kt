@@ -55,6 +55,8 @@ internal class FakeHomeRemoteDataSource(
 
     var startRate = SPARK_RATE_ON_WIFI
 
+    var startError: Throwable? = null
+
     val interruptedSessions = mutableListOf<String>()
 
     val startedSessions = mutableListOf<String>()
@@ -72,6 +74,7 @@ internal class FakeHomeRemoteDataSource(
         emulator: Boolean,
     ): TapStateDto {
         if (startDelay > Duration.ZERO) delay(startDelay)
+        startError?.let { throw it }
         sessions++
         startedSessions += "session-$sessions"
 
@@ -177,6 +180,10 @@ internal class FakeNetworkMonitor : NetworkMonitor {
     override val status = state
 
     override fun current(): NetworkStatus = state.value
+
+    fun goOffline() {
+        state.value = state.value.copy(isOnline = false)
+    }
 }
 
 internal class FakePingHistoryRepository : PingHistoryRepository {

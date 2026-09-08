@@ -29,6 +29,8 @@ import com.aura.feature.news.presentation.preview.NewsPreviewData
 
 private val DrawerPadding = 16.dp
 
+private val TopPadding = 12.dp
+
 private val SectionGap = 10.dp
 
 private val CardGap = 8.dp
@@ -80,7 +82,7 @@ fun NewsDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = DrawerPadding)
-                .padding(bottom = BottomPadding)
+                .padding(top = TopPadding, bottom = BottomPadding)
         ) {
             Text(
                 text = stringResource(R.string.news_title),

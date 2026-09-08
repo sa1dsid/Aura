@@ -22,6 +22,7 @@ enum class AuthFailure {
     EMAIL_NOT_VERIFIED,
     GOOGLE_CANCELLED,
     GOOGLE_UNAVAILABLE,
+    SERVER_UNAVAILABLE,
     NETWORK,
 }
 

@@ -90,9 +90,9 @@ class ApiErrorsLiveBodiesTest {
     }
 
     @Test
-    fun `an unparseable error body falls back to a network failure`() {
+    fun `an unparseable error body still reads as a server outage`() {
         assertEquals(
-            AuthFailure.NETWORK,
+            AuthFailure.SERVER_UNAVAILABLE,
             error(500, "Internal Server Error").toAuthFailure().failure,
         )
     }

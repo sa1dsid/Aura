@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.aura.core.common.ApplicationScope
+import com.aura.core.crash.CrashUserTracker
 import com.aura.core.push.PushNotifier
 import com.aura.feature.home.presentation.components.mesh.MeshMapDefaults
 import com.aura.feature.home.presentation.components.mesh.WorldLandmass
@@ -29,12 +30,16 @@ class AuraApp : Application(), Configuration.Provider {
     @Inject
     lateinit var pushNotifier: PushNotifier
 
+    @Inject
+    lateinit var crashUserTracker: CrashUserTracker
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
         super.onCreate()
 
+        crashUserTracker.track()
         backgroundProbeScheduler.schedule()
         pushNotifier.createChannel()
 

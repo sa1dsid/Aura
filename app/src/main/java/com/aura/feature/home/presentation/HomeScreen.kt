@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +47,7 @@ import com.aura.core.designsystem.component.rememberAuraToastState
 import com.aura.core.designsystem.theme.AuraTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.aura.core.system.isBatteryOptimizationIgnored
@@ -74,6 +77,7 @@ import com.aura.feature.home.presentation.components.TeaserCards
 import com.aura.feature.home.presentation.components.TestRingButton
 import com.aura.feature.home.presentation.format.formatHoursMinutes
 import com.aura.feature.home.presentation.preview.HomePreviewData
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeRoute(
@@ -100,6 +104,8 @@ fun HomeRoute(
     val sigmaDropPackage = stringResource(R.string.sigmadrop_app_package)
     val clipboard = LocalClipboardManager.current
     val sheetToastState = rememberAuraToastState()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         if (batteryRequestPending) {
@@ -176,6 +182,7 @@ fun HomeRoute(
         ),
         isBatteryOptimizationDisabled = batteryOptimizationDisabled,
         toastState = toastState,
+        listState = listState,
         modifier = modifier,
     )
 
@@ -192,6 +199,10 @@ fun HomeRoute(
     BonusStepsSheet(
         teaser = content?.home?.teasers?.bonusWithdrawal.takeIf { bonusSheetVisible },
         onDismissRequest = { bonusSheetVisible = false },
+        onStartTapping = {
+            bonusSheetVisible = false
+            scope.launch { listState.animateScrollToItem(HomeItem.TAP.ordinal) }
+        },
         onShareInvite = {
             val link = content?.home?.invite?.inviteLink.orEmpty()
             if (link.isNotBlank()) {
@@ -253,6 +264,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     isBatteryOptimizationDisabled: Boolean = true,
     toastState: AuraToastState = rememberAuraToastState(),
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val colors = AuraTheme.colors
 
@@ -274,6 +286,7 @@ fun HomeScreen(
                     actions = actions,
                     isBatteryOptimizationDisabled = isBatteryOptimizationDisabled,
                     contentPadding = innerPadding,
+                    listState = listState,
                 )
             }
 
@@ -295,17 +308,19 @@ private fun HomeContent(
     isBatteryOptimizationDisabled: Boolean,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val colors = AuraTheme.colors
     val home = state.home
 
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding),
         contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
-        item {
+        item(key = HomeItem.HEADER.name) {
             HomeTopBar(
                 hasUnreadNews = state.hasUnreadNews,
                 onMenuClick = actions.onMenuClick,
@@ -319,7 +334,7 @@ private fun HomeContent(
             Spacer(Modifier.height(10.dp))
         }
 
-        item {
+        item(key = HomeItem.BALANCES.name) {
             BalanceCardsRow(balances = home.balances)
 
             Spacer(Modifier.height(10.dp))
@@ -329,7 +344,7 @@ private fun HomeContent(
             Spacer(Modifier.height(10.dp))
         }
 
-        item {
+        item(key = HomeItem.TEASERS.name) {
             TeaserCards(
                 teasers = home.teasers,
                 currentTier = home.nodeStatus.currentTier,
@@ -350,7 +365,7 @@ private fun HomeContent(
             Spacer(Modifier.height(20.dp))
         }
 
-        item {
+        item(key = HomeItem.TAP.name) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -390,7 +405,7 @@ private fun HomeContent(
 
                     Text(
                         text = stringResource(R.string.timer_stay_hint),
-                        style = AuraTheme.typography.caption,
+                        style = AuraTheme.typography.cardCaption,
                         color = colors.textSecondary,
                         textAlign = TextAlign.Center,
                     )
@@ -400,7 +415,7 @@ private fun HomeContent(
             Spacer(Modifier.height(16.dp))
         }
 
-        item {
+        item(key = HomeItem.INVITE.name) {
             InviteRow(
                 invite = home.invite,
                 onInviteClick = actions.onInviteClick,
@@ -410,6 +425,8 @@ private fun HomeContent(
         }
     }
 }
+
+private enum class HomeItem { HEADER, BALANCES, TEASERS, TAP, INVITE }
 
 @Composable
 private fun LoadingState(modifier: Modifier = Modifier) {

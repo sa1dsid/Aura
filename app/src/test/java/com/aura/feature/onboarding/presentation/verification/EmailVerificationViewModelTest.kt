@@ -1,5 +1,7 @@
 package com.aura.feature.onboarding.presentation.verification
 
+import androidx.lifecycle.SavedStateHandle
+import com.aura.core.common.TimeSource
 import com.aura.feature.onboarding.domain.model.Account
 import com.aura.feature.onboarding.domain.model.AuthSession
 import com.aura.feature.onboarding.domain.model.EMAIL_CODE_RESEND_COOLDOWN
@@ -121,9 +123,31 @@ class EmailVerificationViewModelTest {
         assertEquals(EMAIL_CODE_RESEND_COOLDOWN, viewModel.uiState.value.resendCooldown)
     }
 
-    private fun TestScope.viewModel() = EmailVerificationViewModel(
+    @Test
+    fun `the typed code and the running cooldown survive a recreated screen`() = runTest {
+        val savedStateHandle = SavedStateHandle()
+        val verification = EmailVerification(EMAIL, codeJustSent = true)
+        viewModel(savedStateHandle).apply {
+            onScreenOpened(verification)
+            onCodeChange("123456")
+        }
+        advanceTimeBy(20.seconds)
+
+        val restored = viewModel(savedStateHandle)
+        restored.onScreenOpened(verification)
+
+        assertEquals("123456", restored.uiState.value.code)
+        assertFalse(restored.uiState.value.canResend)
+        assertTrue(restored.uiState.value.resendCooldown < EMAIL_CODE_RESEND_COOLDOWN)
+    }
+
+    private fun TestScope.viewModel(
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+    ) = EmailVerificationViewModel(
         confirmEmail = ConfirmEmailUseCase(repository),
         resendEmailCode = ResendEmailCodeUseCase(repository),
+        timeSource = TimeSource { testScheduler.currentTime },
+        savedStateHandle = savedStateHandle,
     )
 
     private class ProgrammableVerificationRepository : AuthRepository {

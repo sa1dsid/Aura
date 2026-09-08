@@ -184,7 +184,7 @@ class TestSessionEngine @Inject constructor(
                 mutex.withLock { isStarting = false }
                 throw cancellation
             } catch (error: Throwable) {
-                val rejection = error.toTapRejection()
+                val rejection = error.toTapRejection().unlessStillOnline()
                 val retry = retryOnStuck && rejection == TestStartRejection.SessionStuck
 
                 if (retry) releasePendingSession()
@@ -228,6 +228,13 @@ class TestSessionEngine @Inject constructor(
             tick()
         }
     }
+
+    private fun TestStartRejection.unlessStillOnline(): TestStartRejection =
+        if (this == TestStartRejection.NoConnection && networkMonitor.current().isOnline) {
+            TestStartRejection.Unavailable
+        } else {
+            this
+        }
 
     private fun startHeartbeat(sessionId: String) {
         heartbeat?.cancel()

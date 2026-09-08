@@ -266,12 +266,19 @@
 
     <!-- ДЛИННАЯ: сервер отвечает 409 «ION paused - unsupported device» на запуск
          теста с эмулятора. Антифрод по ТЗ Home п.12 — та же пауза, что и VPN,
-         но ключа под неё в поставке заказчика нет. -->
-    <string name="toast_device_unsupported">ION paused · unsupported device</string>
+         но ключа под неё в поставке заказчика нет. Третья часть строки — как у
+         toast_vpn_block: сама по себе «unsupported device» пользователю ничего
+         не объясняет. -->
+    <string name="toast_device_unsupported">ION paused · unsupported device · tests run on a real phone only</string>
 
     <!-- ДЛИННАЯ: сервер отклонил запуск теста по неизвестной причине либо запрос
          не дошёл. В поставке ключа нет, toast_test_failed относится к диагностике. -->
     <string name="toast_test_unavailable">Test unavailable · try again</string>
+
+    <!-- ДЛИННАЯ: бэкенд ответил 5xx или не ответил вовсе, хотя сеть у пользователя
+         рабочая. В поставке заказчика ключа нет: toast_no_connection врёт про сеть,
+         а toast_google_unavailable относится только ко входу через Google. -->
+    <string name="toast_server_unavailable">Server is not responding · try again later</string>
 
     <!-- ДЛИННАЯ: зелёный тост по ТЗ Home п.12 после того, как пользователь снял
          оптимизацию батареи. В поставке заказчика ключа нет. -->

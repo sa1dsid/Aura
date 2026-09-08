@@ -306,11 +306,11 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `a refused password reset reads as a network failure`() = runTest {
+    fun `a refused password reset reads as a server outage`() = runTest {
         remote.resetError = httpError(500)
 
         assertEquals(
-            AuthFailure.NETWORK,
+            AuthFailure.SERVER_UNAVAILABLE,
             repository().requestPasswordReset("said@ioaura.app").failure(),
         )
     }

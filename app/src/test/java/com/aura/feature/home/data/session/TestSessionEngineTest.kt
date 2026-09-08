@@ -7,6 +7,7 @@ import com.aura.feature.home.domain.model.SPARK_RATE_WIFI
 import com.aura.feature.home.domain.model.SPARK_WINDOW_SECONDS
 import com.aura.feature.home.domain.model.TestSessionEvent
 import com.aura.feature.home.domain.model.TestSessionState
+import com.aura.feature.home.domain.model.TestStartRejection
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -19,6 +20,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.SocketTimeoutException
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -262,6 +264,41 @@ class TestSessionEngineTest {
         assertTrue(engine.state.value is TestSessionState.Cooldown)
     }
 
+    @Test
+    fun `a start that dies on a live network is not blamed on the network`() = runTest {
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler)
+        remote.startError = SocketTimeoutException("the server never answered")
+        val engine = watchedEngine(remote)
+        val events = collectedEvents(engine)
+
+        engine.start()
+        runCurrent()
+
+        assertEquals(
+            listOf(TestSessionEvent.Rejected(TestStartRejection.Unavailable)),
+            events,
+        )
+        assertEquals(TestSessionState.Ready(REWARD_ION), engine.state.value)
+    }
+
+    @Test
+    fun `a start that dies with the network off names the network`() = runTest {
+        val remote = FakeHomeRemoteDataSource(scheduler = testScheduler)
+        remote.startError = SocketTimeoutException("the phone is offline")
+        val networkMonitor = FakeNetworkMonitor()
+        val engine = watchedEngine(remote, networkMonitor = networkMonitor)
+        val events = collectedEvents(engine)
+        networkMonitor.goOffline()
+
+        engine.start()
+        runCurrent()
+
+        assertEquals(
+            listOf(TestSessionEvent.Rejected(TestStartRejection.NoConnection)),
+            events,
+        )
+    }
+
     private fun TestScope.collectedEvents(engine: TestSessionEngine): List<TestSessionEvent> {
         val events = mutableListOf<TestSessionEvent>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -380,12 +417,13 @@ class TestSessionEngineTest {
     private fun TestScope.watchedEngine(
         remote: FakeHomeRemoteDataSource = FakeHomeRemoteDataSource(scheduler = testScheduler),
         store: TapSessionStore = FakeTapSessionStore(),
+        networkMonitor: FakeNetworkMonitor = FakeNetworkMonitor(),
     ): TestSessionEngine {
         val engine = TestSessionEngine(
             scope = backgroundScope,
             remote = remote,
             tapSessionStore = store,
-            networkMonitor = FakeNetworkMonitor(),
+            networkMonitor = networkMonitor,
             emulatorDetector = EmulatorDetector(),
             pingHistory = FakePingHistoryRepository(),
             timeSource = TimeSource { testScheduler.currentTime },

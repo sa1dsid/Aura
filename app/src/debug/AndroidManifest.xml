@@ -11,6 +11,15 @@
             android:name="com.aura.probe.PushProbeReceiver"
             android:exported="true"
             android:permission="android.permission.DUMP" />
+
+        <receiver
+            android:name="com.aura.probe.CrashProbeReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
     </application>
 
 </manifest>
